@@ -6,6 +6,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCC Duty Management Platform</title>
   <style>
+    /* --- 【新增】自訂啟動畫面樣式 --- */
+#splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f0f2f5; /* 必須和 manifest.json 的 background_color 一致 */
+  z-index: 9999; /* 確保它在最上層 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease-out; /* 為了後面的淡出效果 */
+}
+
+#splash-screen img {
+  width: 128px; /* 您可以自行調整圖示顯示的大小 */
+  height: 128px;
+}
+
+/* 這個 class 用來隱藏啟動畫面 */
+#splash-screen.hidden {
+  opacity: 0;
+  pointer-events: none; /* 讓使用者可以點擊到啟動畫面底下的內容 */
+}
     /* --- 全局與顏色設定 --- */
     :root {
       --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda;
@@ -198,6 +223,9 @@
    </style>
 </head>
 <body>
+<div id="splash-screen">
+    <img src="icon-192.png" alt="應用程式 Logo">
+  </div>
   <div id="login-container">
     <div class="login-box">
       <h1>OCC 值班管理平台</h1>
@@ -395,6 +423,13 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    // 5秒後，為啟動畫面加上 hidden class 讓它淡出
+setTimeout(() => {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    splash.classList.add('hidden');
+  }
+}, 3800); // 3800 毫秒 = 3.8 秒
 
     const loginContainer = document.getElementById('login-container');
     const appWrapper = document.getElementById('app-wrapper');
