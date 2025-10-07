@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+  <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCC Duty Management Platform</title>
@@ -1009,5 +1010,18 @@ DOMElements.sidebarNav.addEventListener('click', e => {
       fetchData();
     }
   </script>
+<script>
+  // 檢查瀏覽器是否支援 Service Worker
+  if ('serviceWorker' in navigator) {
+    // 當頁面載入完成後，註冊 sw.js
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      }).catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+</script>
 </body>
 </html>
