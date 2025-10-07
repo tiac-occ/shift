@@ -1,520 +1,1013 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCC 排班管理儀表板</title>
-    <style>
-        /* --- 全局與顏色設定 (最終版) --- */
-        :root {
-            --starlux-header: #3E4B5C;      /* 您最終指定的新色 #3E4B5C */
-            --starlux-teal-light: #e6f0f3; /* 淺薄荷綠 (夜班) */
-            --starlux-gold-light: #f5eeda; /* 淺金黃 (日班) */
-            --starlux-rose-gold: #f5eeda;   /* 日期欄位背景色 (同日班色) */
-            --starlux-gray: #f0f2f5;
-            --starlux-highlight-a: #7D8C91; /* 搜尋1高亮 */
-            --starlux-highlight-b: #AD9F74; /* 搜尋2高亮 */
-            --text-color: #333;
-            --border-color: #d8dde0;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
-        .header { background-color: var(--starlux-header); color: white; padding: 10px 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
-        .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .month-selector button { background: none; border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; transition: background-color 0.2s; }
-        .month-selector button:hover { background-color: rgba(255,255,255,0.1); }
-        .month-selector h1 { margin: 0 10px; font-size: 1.5em; }
-        nav { display: flex; background-color: rgba(255,255,255,0.8); padding: 5px; border-radius: 8px; margin: 0 auto 10px; max-width: 500px; backdrop-filter: blur(5px); }
-        nav button { flex: 1; padding: 10px; font-size: 1em; background-color: transparent; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--starlux-header); transition: all 0.2s; }
-        nav button.active { background-color: var(--starlux-header); color: white; }
-        main { padding: 10px; max-width: 1400px; margin: 0 auto; }
-        .view { display: none; }
-        .view.active { display: block; }
-        .controls { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
-        .controls label { font-weight: bold; color: var(--starlux-header); }
-        .controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .message-box { text-align: center; padding: 20px; margin: 15px; border-radius: 8px; font-weight: bold; background-color: #e9ecef; }
-        .message-box.error { background-color: #f8d7da; color: #dc3545; }
-        .message-box.success { background-color: #d4edda; color: #155724; }
-        
-        /* --- 1. 每日值班小卡 (Daily Card View) --- */
-        .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
-        .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
-        .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
-        .day-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
-        .day-card.open .day-details { max-height: 1500px; }
-        .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
-        .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
-        .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .assignment { padding: 8px 10px; border-radius: 6px; }
-        .assignment.day-shift { background-color: var(--starlux-gold-light); }
-        .assignment.night-shift { background-color: var(--starlux-teal-light); }
-        .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; }
-        .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OCC Duty Management Platform</title>
+  <style>
+    /* --- 全局與顏色設定 --- */
+    :root {
+      --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda;
+      --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91;
+      --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
 
-        /* --- 2. 全員班表 (Full Table View) --- */
-        .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
-        .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
-        .full-roster-table th, .full-roster-table td { border: 1px solid var(--border-color); padding: 8px; font-size: 0.9em; white-space: pre-line; width: 45px; }
-        .full-roster-table th:first-child, .full-roster-table td:first-child { width: 56px; font-size: 0.85em; }
-        .full-roster-table thead th { position: sticky; top: 0; z-index: 2; }
-        .full-roster-table tbody td:first-child { position: sticky; left: 0; font-weight: bold; z-index: 1; }
-        .full-roster-table thead th:first-child { z-index: 3; }
-        .full-roster-table th.day-shift { background-color: var(--starlux-gold-light); }
-        .full-roster-table th.night-shift { background-color: var(--starlux-teal-light); }
-        .full-roster-table thead th:first-child, .full-roster-table tbody td:first-child { background-color: var(--starlux-rose-gold); }
-        .full-roster-table .highlight-a { background-color: var(--starlux-highlight-a) !important; color: white; font-weight: bold; }
-        .full-roster-table .highlight-b { background-color: var(--starlux-highlight-b) !important; color: white; font-weight: bold; }
-        .full-roster-table th:nth-child(3), .full-roster-table td:nth-child(3) { border-right: 2px solid var(--starlux-header); }
-        .full-roster-table th:nth-child(12), .full-roster-table td:nth-child(12) { border-right: 2px solid var(--starlux-header); }
-        
-        /* --- 3. 個人班表 (Personal Calendar View) --- */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-        .calendar-weekday { font-weight: bold; text-align: center; padding: 8px; color: var(--starlux-header); }
-        .calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); }
-        .calendar-day.empty { background-color: transparent; border: none; box-shadow: none; }
-        .calendar-day .day-number { font-weight: bold; font-size: 0.9em; color: #888; }
-        .calendar-day .shift-info { font-size: 0.8em; margin-top: 5px; white-space: pre-line; line-height: 1.3; font-weight: bold; }
-        .calendar-day.day-shift { background-color: var(--starlux-gold-light); }
-        .calendar-day.night-shift { background-color: var(--starlux-teal-light); }
-        .calendar-day.day-off { background-color: #fff; }
-        
-        /* --- 4. 調代申請 (Shift Change View) --- */
-        .form-container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .form-field { display: flex; flex-direction: column; }
-        .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
-        .form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
-        .submit-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        #swappedShiftContainer { display: none; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    </style>
+    /* --- 登入畫面樣式 --- */
+    #login-container { display: none; justify-content: center; align-items: center; width: 100%; height: 100vh; }
+    .login-box { max-width: 400px; width: 90%; padding: 30px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
+    .login-box h1 { color: var(--starlux-header); }
+    #login-form { display: flex; flex-direction: column; gap: 15px; }
+    .form-field { display: flex; flex-direction: column; text-align: left; }
+    .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
+    .form-field input { font-size: 1em; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+    #login-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; }
+    #login-error { color: #dc3545; margin-top: 15px; min-height: 1.2em; font-size: 0.9em; }
+
+    /* --- 主應用程式樣式 --- */
+    #app-wrapper { display: none; height: 100vh; }
+    #sidebar { width: 220px; background-color: var(--starlux-header); color: white; padding-top: 20px; display: flex; flex-direction: column; transition: transform 0.3s ease; transform: translateX(-100%); position: fixed; height: 100%; z-index: 2000; }
+    #sidebar.open { transform: translateX(0); }
+    #sidebar-header { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    #sidebar-header #user-info { font-weight: bold; word-break: break-all; }
+    
+/* --- 側邊欄主選單 (統一垂直排列) --- */
+
+#sidebar-nav {
+    display: flex;         /* 維持 Flexbox 佈局，方便控制間距 */
+    flex-direction: column;/* <-- 【修改】從 row 改回 column，這是最關鍵的一步 */
+    flex-grow: 1;          /* <-- 【修改】改回 1，讓選單容器能填滿側邊欄的垂直空間 */
+    margin-top: 20px;
+    padding: 0 5px;       /* 保留左右的內邊距 */
+    gap: 10px;             /* 這個 gap 現在會變成項目之間的「垂直」間距 */
+}
+
+#sidebar-nav a {
+    /* flex: 1; 我們不再需要此行，讓按鈕高度由內容和 padding 決定 */
+    color: white;
+    text-decoration: none;
+    padding: 15px 20px;    /* <-- 【修改】恢復較大、適合垂直排列的 padding */
+    font-size: 1.1em;      /* <-- 【修改】恢復較大的字體 */
+    text-align: center;
+    border-radius: 6px;    /* 保留您喜歡的圓角 */
+    border-left: 3px solid transparent; /* <-- 【修改】將指示線從底部改回左側 */
+}
+
+#sidebar-nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* 保留滑鼠懸停效果 */
+}
+
+#sidebar-nav a.active {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-left-color: var(--starlux-gold-light); /* <-- 【修改】將 Active 指示線也改回左側 */
+}
+    #logout-btn { background: none; color: white; text-align: center; border: none; padding: 15px 20px; font-size: 1.1em; cursor: pointer; width: 100%; border-top: 1px solid rgba(255,255,255,0.2); }
+    #logout-btn:hover { background-color: rgba(255,255,255,0.1); }
+    #content-wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; }
+    #sidebar-toggle { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); z-index: 1001; background: none; border: none; color: white; font-size: 2em; cursor: pointer; }
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
+    #sidebar.open ~ #overlay { display: block; }
+
+    /* 【修改】header 佈局，確保中間元素完美置中 */
+    /* --- 請找到並替換成以下內容 --- */
+.header {
+  background-color: var(--starlux-header);
+  color: white;
+  padding: 10px 15px 15px; /* 底部加一點padding即可 */
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow);
+}
+    .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
+    .month-selector button { background: none; border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
+    .month-selector h1 { margin: 0 10px; font-size: 1.5em; }
+
+  nav {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+  border-radius: 8px;
+  margin: 10px auto 0; /* 還原置中，並與上方月份選擇器增加間距 */
+  max-width: 500px;
+  width: 90%; /* 在小螢幕上更好看 */
+  backdrop-filter: blur(5px);
+}
+  .view-selector {
+  display: none;
+}
+    nav button { flex: 1; padding: 10px; font-size: 1em; background: none; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--starlux-header); }
+    nav button.active { background-color: var(--starlux-header); color: white; }
+    main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow-y: auto; flex-grow: 1; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .view { display: none; }
+    .view.active { display: block; }
+    #logout-confirm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; text-align: center; }
+    #logout-confirm p { margin: 0 0 20px; font-size: 1.2em; }
+    #logout-confirm button { padding: 10px 20px; font-size: 1em; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; }
+    #confirm-logout-yes { background-color: #dc3545; color: white; }
+    #confirm-logout-no { background-color: #6c757d; color: white; }
+
+    /* --- 其他所有儀表板樣式 (與前版相同) --- */
+    .controls { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .controls label { font-weight: bold; color: var(--starlux-header); }
+    .controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
+    .message-box { 
+      text-align: center; 
+      padding: 20px; 
+      margin-top: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px; 
+      font-weight: bold; 
+      background-color: #e9ecef; 
+      /* --- ↓↓↓ 新增以下三行來確保置中 ↓↓↓ --- */
+      max-width: 90%; /* 設定最大寬度 */
+      margin-left: auto; /* 自動計算左邊距 */
+      margin-right: auto; /* 自動計算右邊距 */
+    }
+    .message-box.error { background-color: #f8d7da; color: #dc3545; }
+    .message-box.success { background-color: #d4edda; color: #155724; }
+    .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+    .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
+    .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
+    .day-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+    .day-card.open .day-details { max-height: 1500px; }
+    .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
+    .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
+    .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .assignment { padding: 8px 10px; border-radius: 6px; }
+    .assignment.day-shift { background-color: var(--starlux-gold-light); }
+    .assignment.night-shift { background-color: var(--starlux-teal-light); }
+    .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; }
+    .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; }
+    .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
+    .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
+    .full-roster-table th, .full-roster-table td { border: 1px solid var(--border-color); padding: 8px; font-size: 0.9em; white-space: pre-line; width: 45px; }
+    .full-roster-table th:first-child, .full-roster-table td:first-child { width: 56px; font-size: 0.85em; }
+    .full-roster-table thead th { position: sticky; top: 0; z-index: 2; }
+    .full-roster-table tbody td:first-child { position: sticky; left: 0; font-weight: bold; z-index: 1; }
+    .full-roster-table thead th:first-child { z-index: 3; }
+    .full-roster-table th.day-shift { background-color: var(--starlux-gold-light); }
+    .full-roster-table th.night-shift { background-color: var(--starlux-teal-light); }
+    .full-roster-table thead th:first-child, .full-roster-table tbody td:first-child { background-color: var(--starlux-rose-gold); }
+    .full-roster-table .highlight-a { background-color: var(--starlux-highlight-a) !important; color: white; font-weight: bold; }
+    .full-roster-table .highlight-b { background-color: var(--starlux-highlight-b) !important; color: white; font-weight: bold; }
+    .full-roster-table th:nth-child(3), .full-roster-table td:nth-child(3) { border-right: 2px solid var(--starlux-header); }
+    .full-roster-table th:nth-child(12), .full-roster-table td:nth-child(12) { border-right: 2px solid var(--starlux-header); }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .calendar-weekday { font-weight: bold; text-align: center; padding: 8px; color: var(--starlux-header); }
+    .calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); }
+    .calendar-day.empty { background-color: transparent; border: none; box-shadow: none; }
+    .calendar-day .day-number { font-weight: bold; font-size: 0.9em; color: #888; }
+    .calendar-day .shift-info { font-size: 0.8em; margin-top: 5px; white-space: pre-line; line-height: 1.3; font-weight: bold; }
+    .calendar-day.day-shift { background-color: var(--starlux-gold-light); }
+    .calendar-day.night-shift { background-color: var(--starlux-teal-light); }
+    .calendar-day.day-off { background-color: #fff; }
+    .form-container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
+    .form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
+    .submit-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    #swappedShiftContainer { display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+ /* 「誰來接班」新樣式 */
+    #successorView .controls { margin-top: 20px; }
+    #successor-results { margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
+    #successor-list { font-size: 1.1em; line-height: 1.8; }
+ /* --- 【新增】雙月曆比對佈局樣式 --- */
+    .comparison-calendar-container {
+      display: grid;
+      grid-template-columns: 1fr; /* 單欄佈局 */
+      gap: 30px; /* 上下區塊的間距 */
+    }
+    .calendar-section h3 {
+  color: var(--starlux-header);
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center; 
+}
+
+
+   </style>
 </head>
 <body>
-    <header class="header">
-        <div class="month-selector">
-            <button id="prevMonthBtn">&lt;</button>
-            <h1 id="monthTitle"></h1>
-            <button id="nextMonthBtn">&gt;</button>
+  <div id="login-container">
+    <div class="login-box">
+      <h1>OCC 值班管理平台</h1>
+      <form id="login-form">
+        <div class="form-field">
+          <label for="email">電子郵件</label>
+          <input type="email" id="email" required>
         </div>
-        <nav id="viewSelector">
-            <button data-view="dailyCardView" class="active">每日值班</button>
-            <button data-view="fullTableView">全員班表</button>
-            <button data-view="personalCalendarView">個人班表</button>
-            <button data-view="shiftChangeView">調代申請</button>
+        <div class="form-field">
+          <label for="password">密碼</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" id="login-btn">登入</button>
+        <p id="login-error"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-wrapper">
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <span id="user-info"></span>
+      </div>
+      <nav id="sidebar-nav">
+        <a href="#" data-page="home" class="active">首頁</a>
+        <a href="#" data-page="shiftZone">調代專區</a>
+        <a href="#" data-page="account">帳戶管理</a>
+      </nav>
+      <button id="logout-btn">登出</button>
+    </div>
+    <div id="overlay"></div>
+
+    <div id="content-wrapper">
+      <header class="header">
+        <button id="sidebar-toggle">☰</button>
+        <div class="month-selector">
+          <button id="prevMonthBtn">&lt;</button>
+          <h1 id="monthTitle"></h1>
+          <button id="nextMonthBtn">&gt;</button>
+        </div>
+        
+        <nav id="homeViewSelector" class="view-selector">
+          <button data-view="personalCalendarView" class="active">個人班表</button>
+          <button data-view="dailyCardView">每日值班</button>
+          <button data-view="fullTableView">全員班表</button>
         </nav>
-    </header>
-    <main>
-        <div id="dailyCardView" class="view active"></div>
-        <div id="fullTableView" class="view">
+        <nav id="shiftZoneViewSelector" class="view-selector">
+          <button data-view="shiftChangeView" class="active">調代申請</button>
+          <button data-view="successorView">誰來接班</button>
+        </nav>
+        </header>
+
+      <main>
+        <div id="messageContainer"></div>
+
+        <div id="home" class="page active">
+          <div id="dailyCardView" class="view"></div>
+          <div id="fullTableView" class="view">
             <div class="controls">
-                <label for="highlighter1">搜尋1:</label>
-                <select id="highlighter1"><option value="">無</option></select>
-                <label for="highlighter2">搜尋2:</label>
-                <select id="highlighter2"><option value="">無</option></select>
+              <label for="highlighter1">搜尋1:</label>
+              <select id="highlighter1"><option value="">無</option></select>
+              <label for="highlighter2">搜尋2:</label>
+              <select id="highlighter2"><option value="">無</option></select>
             </div>
             <div id="tableContainer"></div>
-        </div>
-        <div id="personalCalendarView" class="view">
-            <div class="controls">
-                <label for="personSelector">選擇人員:</label>
-                <select id="personSelector"><option value="">請選擇人員...</option></select>
+          </div>
+          <div id="personalCalendarView" class="view active">
+            <div class="comparison-calendar-container">
+              <div class="calendar-section">
+                <h3 id="myScheduleTitle">我的班表</h3>
+                <div id="myPersonalCalendarContainer"></div>
+              </div>
+              <div class="calendar-section">
+                <div class="controls">
+                  <label for="personSelector">對照同仁:</label>
+                  <select id="personSelector"><option value="">請選擇人員...</option></select>
+                </div>
+                <div id="colleagueCalendarContainer"></div>
+              </div>
             </div>
-            <div id="calendarContainer"></div>
+          </div>
         </div>
-        <div id="shiftChangeView" class="view">
+
+        <div id="shiftZone" class="page">
+          <div id="shiftChangeView" class="view active">
             <div class="form-container">
-                <div id="formMessageContainer"></div>
-                <form id="shiftChangeForm" class="form-grid">
+              <div id="formMessageContainer"></div>
+              <form id="shiftChangeForm" class="form-grid">
+                <div class="form-field">
+                  <label for="originalPerson">選擇人員 (1)</label>
+                  <select id="originalPerson" name="originalPerson" required></select>
+                </div>
+                <div class="form-row">
+                  <div class="form-field">
+                    <label for="originalDate">日期</label>
+                    <select id="originalDate" name="originalDate" required></select>
+                  </div>
+                  <div class="form-field">
+                    <label for="originalShift">班別</label>
+                    <select id="originalShift" name="originalShift" required></select>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label for="changeType">申請類型</label>
+                  <select id="changeType" name="changeType" required>
+                    <option value="給">給班</option>
+                    <option value="調">調班</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label for="newPerson">選擇人員 (2)</label>
+                  <select id="newPerson" name="newPerson" required></select>
+                </div>
+                <div id="swappedShiftContainer" class="form-grid">
+                  <div class="form-row">
                     <div class="form-field">
-                        <label for="originalPerson">選擇人員 (1)</label>
-                        <select id="originalPerson" name="originalPerson" required></select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="originalDate">日期</label>
-                            <select id="originalDate" name="originalDate" required></select>
-                        </div>
-                        <div class="form-field">
-                            <label for="originalShift">班別</label>
-                            <select id="originalShift" name="originalShift" required></select>
-                        </div>
+                      <label for="swappedDate">交換日期</label>
+                      <select id="swappedDate" name="swappedDate"></select>
                     </div>
                     <div class="form-field">
-                        <label for="changeType">申請類型</label>
-                        <select id="changeType" name="changeType" required>
-                            <option value="給">給班</option>
-                            <option value="調">調班</option>
-                        </select>
+                      <label for="swappedShift">交換班別</label>
+                      <select id="swappedShift" name="swappedShift"></select>
                     </div>
-                    <div class="form-field">
-                        <label for="newPerson">選擇人員 (2)</label>
-                        <select id="newPerson" name="newPerson" required></select>
-                    </div>
-                    <div id="swappedShiftContainer" class="form-grid">
-                        <div class="form-row">
-                            <div class="form-field">
-                                <label for="swappedDate">交換日期</label>
-                                <select id="swappedDate" name="swappedDate"></select>
-                            </div>
-                            <div class="form-field">
-                                <label for="swappedShift">交換班別</label>
-                                <select id="swappedShift" name="swappedShift"></select>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="submit" id="submitBtn" class="submit-btn">送出申請</button>
-                </form>
+                  </div>
+                </div>
+                <button type="submit" id="submitBtn" class="submit-btn">送出申請</button>
+              </form>
             </div>
+          </div>
+          <div id="successorView" class="view">
+            <div class="controls">
+              <label for="successorDate">選擇日期:</label>
+              <select id="successorDate"></select>
+              <label for="successorRole">選擇班別:</label>
+              <select id="successorRole">
+                <option>主任(日)</option>
+                <option>主任(夜)</option>
+                <option>副主任(日)</option>
+                <option>副主任(夜)</option>
+                <option>督導(日)</option>
+                <option>督導(夜)</option>
+              </select>
+              <button id="successorQueryBtn" class="submit-btn" style="padding: 8px 20px; font-size: 1.1em;">查詢</button>
+            </div>
+            <div id="successor-results">
+              <h3>可用人選列表:</h3>
+              <div id="successor-list">(請先選擇日期與班別後查詢)</div>
+            </div>
+          </div>
         </div>
-        <div id="messageContainer"></div>
-    </main>
 
-    <script>
-        const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbxHERrZjBC7JOF-krzf4FkKylUBAN-Bsz7vOBb-BU9uh86IxXWEmVXJywj3PqXXgclw3A/exec';
-         // 【請務必修改】將您收集到的每月檔案 ID 貼到這裡
-        const SPREADSHEET_IDS = {
-            // 格式為 'YYYY-M': '檔案ID'
-            // 例如： '2025-9': '9月份班表檔案的ID貼在這裡',
-            '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA',
-            '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg',
-            '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q',
-            '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk', 
-            // 例如： '2025-11': '11月份班表檔案的ID貼在這裡',
-        };
+        <div id="account" class="page">
+          <div id="changePasswordView" class="view active">
+            <div class="form-container">
+              <h3>更換密碼</h3>
+              <div id="passwordMessageContainer"></div>
+              <form id="changePasswordForm" class="form-grid">
+                <div class="form-field">
+                  <label for="currentPassword">目前密碼</label>
+                  <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-field">
+                  <label for="newPassword">新密碼 (至少8碼/須包含英文大小寫&數字)</label>
+                  <input type="password" id="newPassword" required minlength="8">
+                </div>
+                <div class="form-field">
+                  <label for="confirmNewPassword">確認新密碼</label>
+                  <input type="password" id="confirmNewPassword" required minlength="8">
+                </div>
+                <button type="submit" id="changePasswordBtn" class="submit-btn">確認更換</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div> </div> <div id="logout-confirm">
+    <p>確認登出?</p>
+    <button id="confirm-logout-yes">是，確定</button>
+    <button id="confirm-logout-no">否</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // 【重要！請貼上您的 firebaseConfig】
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLSvbvQ5Zjj1mGm1c595qtqoBLxfnRs6c",
+      authDomain: "occ-shift.firebaseapp.com",
+      projectId: "occ-shift",
+      storageBucket: "occ-shift.firebasestorage.app",
+      messagingSenderId: "67882760777",
+      appId: "1:67882760777:web:72f0fbeb590f097bd89d98"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const loginContainer = document.getElementById('login-container');
+    const appWrapper = document.getElementById('app-wrapper');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+
+    auth.onAuthStateChanged(user => {
+            if (user) {
+
+loginContainer.style.display = 'none';
+
+appWrapper.style.display = 'flex';
+
+if (typeof initializeApp !== 'undefined' && !window.appInitialized) {
+
+// 使用 setTimeout 延遲初始化，確保 DOM 元素在畫面切換後都已準備就緒
+
+setTimeout(() => {
+
+initializeApp(user);
+
+window.appInitialized = true;
+
+}, 100); // 延遲 100 毫秒 (0.1秒)，給瀏覽器足夠的反應時間
+
+}
+
+}
+
+else {
+
+        loginContainer.style.display = 'flex';
+
+        appWrapper.style.display = 'none';
+
+      }
+
+    });
 
 
-        const customNameSortOrder = [
-            '明榮','玉林','玉茹','章育','琦祥','義東','文華','政偉','政昆','偉揚','彥平','建昌','保吉','聲明','志祥',
-            '仲喬','懋荃','子翔','家鋐','佳玲','健凱','映蓉','敬舜','祈雯','佑丞','宥柔','品妍','伊筠','貞瑜','映笛',
-            '家琪','昕珆','詳崴','宗勳','凱程'
-        ];
 
-        const shiftList = [
-            '日_主任','夜_主任', '日_T2副主任','夜_T2副主任', '日_T2作業','日_T2航廈','日_T2通聯','日_T2營運',
-            '夜_T2作業','夜_T2航廈','夜_T2通聯', '日_T1副主任','夜_T1副主任', '日_T1作業','日_T1航廈','日_T1營運',
-            '夜_T1作業','夜_T1航廈','夜_T1營運'
-        ];
-
-        const positions = [
-            { label: '主任\n(日)', type: 'DAY', group: 'DIR' }, { label: '主任\n(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n營運\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n通聯\n(夜)', type: 'NIGHT', group: 'T1' }
-        ];
-
-        const state = { currentView: 'dailyCardView', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '' };
-        const DOMElements = {
-            monthTitle: document.getElementById('monthTitle'), prevMonthBtn: document.getElementById('prevMonthBtn'), nextMonthBtn: document.getElementById('nextMonthBtn'), viewSelector: document.getElementById('viewSelector'),
-            views: document.querySelectorAll('.view'), messageContainer: document.getElementById('messageContainer'), dailyCardView: document.getElementById('dailyCardView'), fullTableView: document.getElementById('fullTableView'),
-            tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'),
-            calendarContainer: document.getElementById('calendarContainer'), highlighter1: document.getElementById('highlighter1'), highlighter2: document.getElementById('highlighter2'),
-            shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'),
-            swappedShiftContainer: document.getElementById('swappedShiftContainer'), changeType: document.getElementById('changeType'), submitBtn: document.getElementById('submitBtn'),
-        };
-
-        function showMessage(type, text, container = DOMElements.messageContainer) {
-            container.innerHTML = `<div class="message-box ${type}">${text}</div>`;
-        }
-
-        function clearAllViews() {
-            DOMElements.dailyCardView.innerHTML = '';
-            DOMElements.tableContainer.innerHTML = '';
-            DOMElements.calendarContainer.innerHTML = '';
-            DOMElements.messageContainer.innerHTML = '';
-            DOMElements.formMessageContainer.innerHTML = '';
-        }
-
-        async function fetchData() {
-            const year = state.currentDate.getFullYear();
-            const month = state.currentDate.getMonth() + 1;
-            const fileKey = `${year}-${month}`;
-            const spreadsheetId = SPREADSHEET_IDS[fileKey];
-            const sheetName = `${month}月_<<預填班表>>`;
-            
-            DOMElements.monthTitle.textContent = `${year}年 ${month}月`;
-            clearAllViews();
-
-            if (googleSheetWebAppUrl.includes('在這裡貼上')) {
-                showMessage('error', '錯誤：您尚未在 index.html 中設定您的 Google Apps Script 網址。');
-                return;
-            }
-            if (!spreadsheetId) {
-                showMessage('error', `錯誤：找不到 ${year}年 ${month}月 的班表檔案設定。請在 SPREADSHEET_IDS 中新增對應的檔案 ID。`);
-                return;
-            }
-
-            if (state.cachedData[fileKey]) {
-                renderAllViews(state.cachedData[fileKey]);
-                return;
-            }
-
-            try {
-                showMessage('loading', `正在載入 ${month} 月班表...`);
-                const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`;
-                const response = await fetch(requestUrl);
-                const data = await response.json();
-                
-                if (data.error) { throw new Error(data.message); }
-                if (!data.schedule || !data.names) {
-                    throw new Error('從 Google Apps Script 收到的資料格式不正確。請確認您已儲存並「重新部署」了最新版的 Apps Script。');
-                }
-                
-                state.cachedData[fileKey] = data;
-                DOMElements.messageContainer.innerHTML = '';
-                renderAllViews(data);
-            } catch (error) {
-                console.error(`抓取 ${sheetName} 資料失敗:`, error);
-                showMessage('error', `無法載入 ${month} 月班表！<br><b>錯誤詳情：</b><br>${error.message}`);
-            }
-        }
-        
-        function renderAllViews(data) {
-            renderDailyCards(data.schedule);
-            const sortedNames = getSortedNames(data.names);
-            populatePersonSelector(sortedNames, DOMElements.personSelector, "請選擇人員...");
-            populatePersonSelector(sortedNames, DOMElements.highlighter1, "無");
-            populatePersonSelector(sortedNames, DOMElements.highlighter2, "無");
-            populateShiftChangeForm(sortedNames, shiftList);
-            renderFullTable(data.schedule);
-            renderPersonalCalendar(data.schedule);
-        }
-        
-        function getSortedNames(apiNames) {
-            return [...apiNames].sort((a, b) => {
-                const indexA = customNameSortOrder.indexOf(a);
-                const indexB = customNameSortOrder.indexOf(b);
-                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                if (indexA !== -1) return -1;
-                if (indexB !== -1) return 1;
-                return a.localeCompare(b, 'zh-Hant');
-            });
-        }
-
-        function populateShiftChangeForm(names, shifts) {
-            const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
-            personSelectors.forEach(selector => {
-                const currentVal = selector.value;
-                selector.innerHTML = '';
-                names.forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    selector.appendChild(option);
-                });
-                if (names.includes(currentVal)) selector.value = currentVal;
-            });
-
-            const shiftSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalShift"], select[name="swappedShift"]');
-            shiftSelectors.forEach(selector => {
-                const currentVal = selector.value;
-                selector.innerHTML = '';
-                shifts.forEach(shift => {
-                    const option = document.createElement('option');
-                    option.value = shift;
-                    option.textContent = shift;
-                    selector.appendChild(option);
-                });
-                if (shifts.includes(currentVal)) selector.value = currentVal;
-            });
-            
-            const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"], select[name="swappedDate"]');
-            const month = state.currentDate.getMonth() + 1;
-            const year = state.currentDate.getFullYear();
-            const daysInMonth = new Date(year, month, 0).getDate();
-            dateSelectors.forEach(selector => {
-                const currentVal = selector.value;
-                selector.innerHTML = '';
-                for (let i = 1; i <= daysInMonth; i++) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = `${month}/${i}`;
-                    selector.appendChild(option);
-                }
-                if (currentVal && parseInt(currentVal) <= daysInMonth) selector.value = currentVal;
-            });
-        }
-        
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            DOMElements.submitBtn.disabled = true;
-            DOMElements.submitBtn.textContent = '處理中...';
-            showMessage('loading', '正在送出申請...', DOMElements.formMessageContainer);
-            
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            
-            const year = state.currentDate.getFullYear();
-            const month = state.currentDate.getMonth() + 1;
-            const fileKey = `${year}-${month}`;
-            const spreadsheetId = SPREADSHEET_IDS[fileKey];
-
-            const payload = { ...data, spreadsheetId, month };
-
-            try {
-                const response = await fetch(googleSheetWebAppUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(payload),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    showMessage('success', result.message, DOMElements.formMessageContainer);
-                    e.target.reset();
-                    DOMElements.swappedShiftContainer.style.display = 'none';
-                    delete state.cachedData[fileKey];
-                    switchView('dailyCardView');
-                    await fetchData();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer);
-            } finally {
-                DOMElements.submitBtn.disabled = false;
-                DOMElements.submitBtn.textContent = '送出申請';
-            }
-        }
-
-        function renderDailyCards(scheduleData) {
-            const fragment = document.createDocumentFragment();
-            scheduleData.forEach(dayData => {
-                const card = document.createElement('div');
-                card.className = 'day-card';
-                const groups = {
-                    group1: { title: '主任 (日) & T2 (日)', html: '' },
-                    group2: { title: '主任 (夜) & T2 (夜)', html: '' },
-                    group3: { title: 'T1 (日)', html: '' },
-                    group4: { title: 'T1 (夜)', html: '' }
-                };
-                dayData.assignments.forEach((name, i) => {
-                    const pos = positions[i];
-                    if (!pos) return;
-                    const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
-                    const assignmentHTML = `<div class="assignment ${shiftClass}"><div class="position">${pos.label}</div><div class="name">${name || '–'}</div></div>`;
-                    if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'DAY') {
-                        groups.group1.html += assignmentHTML;
-                    } else if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'NIGHT') {
-                        groups.group2.html += assignmentHTML;
-                    } else if (pos.group === 'T1' && pos.type === 'DAY') {
-                        groups.group3.html += assignmentHTML;
-                    } else if (pos.group === 'T1' && pos.type === 'NIGHT') {
-                        groups.group4.html += assignmentHTML;
-                    }
-                });
-                let detailsHTML = '';
-                Object.values(groups).forEach(group => {
-                    if (group.html) {
-                        detailsHTML += `<div class="assignment-row"><div class="assignment-row-title">${group.title}</div><div class="assignment-grid">${group.html}</div></div>`;
-                    }
-                });
-                card.innerHTML = `<div class="day-header"><h2>${state.currentDate.getMonth() + 1}/${String(dayData.day).padStart(2, '0')} <span class="weekday">星期${dayData.weekday}</span></h2></div><div class="day-details">${detailsHTML}</div>`;
-                fragment.appendChild(card);
-            });
-            DOMElements.dailyCardView.innerHTML = '';
-            DOMElements.dailyCardView.appendChild(fragment);
-            DOMElements.dailyCardView.querySelectorAll('.day-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
-        }
-        
-        function renderFullTable(scheduleData) {
-            let tableHTML = `<div class="table-container"><table class="full-roster-table"><thead><tr>`;
-            tableHTML += `<th>日期</th>`;
-            positions.forEach((pos, i) => {
-                const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
-                tableHTML += `<th class="${shiftClass}">${pos.label}</th>`;
-            });
-            tableHTML += `</tr></thead><tbody>`;
-            scheduleData.forEach((dayData, rowIndex) => {
-                tableHTML += `<tr>`;
-                tableHTML += `<td>${state.currentDate.getMonth() + 1}/${dayData.day} (${dayData.weekday})</td>`;
-                dayData.assignments.forEach((name, colIndex) => {
-                    let highlightClass = '';
-                    if (state.highlightPerson1 && name === state.highlightPerson1) highlightClass = 'highlight-a';
-                    else if (state.highlightPerson2 && name === state.highlightPerson2) highlightClass = 'highlight-b';
-                    tableHTML += `<td class="${highlightClass}">${name || ''}</td>`;
-                });
-                tableHTML += `</tr>`;
-            });
-            tableHTML += `</tbody></table></div>`;
-            DOMElements.tableContainer.innerHTML = tableHTML;
-        }
-        
-        function populatePersonSelector(names, selector, defaultOptionText) {
-            const currentSelection = selector.value;
-            selector.innerHTML = `<option value="">${defaultOptionText}</option>`;
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                selector.appendChild(option);
-            });
-            if (names.includes(currentSelection)) selector.value = currentSelection;
-        }
-        
-        function renderPersonalCalendar(scheduleData) {
-            const year = state.currentDate.getFullYear();
-            const month = state.currentDate.getMonth();
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const personalShifts = {};
-            if (state.selectedPerson) {
-                scheduleData.forEach(dayData => {
-                    dayData.assignments.forEach((name, i) => {
-                        if (name === state.selectedPerson) {
-                            personalShifts[dayData.day] = { position: positions[i].label, type: positions[i].type };
-                        }
-                    });
-                });
-            }
-            let calendarHTML = `<div class="calendar-grid">`;
-            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-            weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
-            for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
-            for (let day = 1; day <= daysInMonth; day++) {
-                const shift = personalShifts[day];
-                let shiftClass = 'day-off';
-                let shiftInfo = '-';
-                if (shift) {
-                    shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
-                    shiftInfo = shift.position;
-                }
-                calendarHTML += `<div class="calendar-day ${shiftClass}"><div class="day-number">${day}</div><div class="shift-info">${shiftInfo}</div></div>`;
-            }
-            calendarHTML += `</div>`;
-            DOMElements.calendarContainer.innerHTML = calendarHTML;
-        }
-
-        function switchView(viewName) {
-            state.currentView = viewName;
-            DOMElements.views.forEach(v => v.classList.remove('active'));
-            document.getElementById(viewName).classList.add('active');
-            DOMElements.viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-            DOMElements.viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active');
-        }
-
-        DOMElements.viewSelector.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') switchView(e.target.dataset.view); });
-        DOMElements.prevMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); fetchData(); });
-        DOMElements.nextMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); fetchData(); });
-        DOMElements.personSelector.addEventListener('change', e => {
-            state.selectedPerson = e.target.value;
-            const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-            if (state.cachedData[fileKey]) renderPersonalCalendar(state.cachedData[fileKey].schedule);
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = loginForm['email'].value;
+      const password = loginForm['password'].value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(error => {
+          loginError.textContent = '登入失敗：' + error.message;
         });
-        DOMElements.highlighter1.addEventListener('change', e => {
-            state.highlightPerson1 = e.target.value;
-            const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-            if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
-        });
-        DOMElements.highlighter2.addEventListener('change', e => {
-            state.highlightPerson2 = e.target.value;
-            const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-            if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
-        });
-        DOMElements.changeType.addEventListener('change', e => {
-            DOMElements.swappedShiftContainer.style.display = e.target.value === '調' ? 'grid' : 'none';
-        });
-        DOMElements.shiftChangeForm.addEventListener('submit', handleFormSubmit);
+    });
 
-        fetchData();
-    </script>
+    function initializeApp(user) {
+      const state = { currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', loggedInUserName: '' };
+      const DOMElements = {
+        header: document.querySelector('.header'),
+        sidebar: document.getElementById('sidebar'), sidebarToggle: document.getElementById('sidebar-toggle'), overlay: document.getElementById('overlay'),
+        contentWrapper: document.getElementById('content-wrapper'), sidebarNav: document.getElementById('sidebar-nav'),
+        logoutBtn: document.getElementById('logout-btn'), logoutConfirm: document.getElementById('logout-confirm'),
+        confirmLogoutYes: document.getElementById('confirm-logout-yes'), confirmLogoutNo: document.getElementById('confirm-logout-no'),
+        pages: document.querySelectorAll('.page'), userInfo: document.getElementById('user-info'),
+        monthTitle: document.getElementById('monthTitle'), prevMonthBtn: document.getElementById('prevMonthBtn'), nextMonthBtn: document.getElementById('nextMonthBtn'),
+        homeViewSelector: document.getElementById('homeViewSelector'), shiftZoneViewSelector: document.getElementById('shiftZoneViewSelector'),
+        viewSelectors: document.querySelectorAll('.view-selector'),
+        messageContainer: document.getElementById('messageContainer'), dailyCardView: document.getElementById('dailyCardView'), fullTableView: document.getElementById('fullTableView'),
+        tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'),
+        shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'),
+        swappedShiftContainer: document.getElementById('swappedShiftContainer'), changeType: document.getElementById('changeType'), submitBtn: document.getElementById('submitBtn'),
+        highlighter1: document.getElementById('highlighter1'),
+        highlighter2: document.getElementById('highlighter2'),
+
+        // 新增：「誰來接班」元件
+        successorView: document.getElementById('successorView'),
+        successorDate: document.getElementById('successorDate'),
+        successorRole: document.getElementById('successorRole'),
+        successorQueryBtn: document.getElementById('successorQueryBtn'),
+        successorList: document.getElementById('successor-list'),
+        changePasswordView: document.getElementById('changePasswordView'),
+        changePasswordForm: document.getElementById('changePasswordForm'),
+        changePasswordBtn: document.getElementById('changePasswordBtn'),
+        passwordMessageContainer: document.getElementById('passwordMessageContainer'),
+        myScheduleTitle: document.getElementById('myScheduleTitle'),
+        myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'),
+        colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'),
+      };
+
+      state.loggedInUserName = user.displayName || user.email.split('@')[0];
+
+      // 【重要！請貼上您的 Apps Script 網址】
+      const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbyUqr1JydB4Yr3xAY0UFzOktl6wFnsDvoMIkeCZVFy64y0UzGX_q34IHN50ZqwcZ7PWYw/exec';
+      const SPREADSHEET_IDS = {
+        '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA',
+        '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg',
+        '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q',
+        '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk',
+      };
+
+      const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '健凱', '映蓉', '敬舜', '祈雯', '佑丞', '宥柔', '品妍', '伊筠', '貞瑜', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程'];
+      const shiftList = ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'];
+      const positions = [
+        { label: '主任\n(日)', type: 'DAY', group: 'DIR' }, { label: '主任\n(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n營運\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n通聯\n(夜)', type: 'NIGHT', group: 'T1' }
+      ];
+
+
+      // --- 函數定義 ---
+
+      DOMElements.userInfo.textContent = `${state.loggedInUserName}你好! :-)`;
+      DOMElements.myScheduleTitle.textContent = `${state.loggedInUserName} 的班表`;
+
+      function showMessage(type, text, container = DOMElements.messageContainer) {
+        container.innerHTML = `<div class="message-box ${type}">${text}</div>`;
+      }
+
+      function clearAllViews() {
+        DOMElements.dailyCardView.innerHTML = '';
+        DOMElements.tableContainer.innerHTML = '';
+        if (DOMElements.myPersonalCalendarContainer) DOMElements.myPersonalCalendarContainer.innerHTML = '';
+        if (DOMElements.colleagueCalendarContainer) DOMElements.colleagueCalendarContainer.innerHTML = '';
+        DOMElements.messageContainer.innerHTML = '';
+        DOMElements.formMessageContainer.innerHTML = '';
+      }
+
+      async function fetchData() {
+        const year = state.currentDate.getFullYear();
+        const month = state.currentDate.getMonth() + 1;
+        const fileKey = `${year}-${month}`;
+        const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        const sheetName = `${month}月_<<預填班表>>`;
+
+        DOMElements.monthTitle.textContent = `${year}年 ${month}月`;
+        clearAllViews();
+
+        if (googleSheetWebAppUrl.includes('在這裡貼上')) {
+          showMessage('error', '錯誤：您尚未在 index.html 中設定您的 Google Apps Script 網址。');
+          return;
+        }
+        if (!spreadsheetId) {
+          showMessage('error', `錯誤：找不到 ${year}年 ${month}月 的班表檔案設定。請在 SPREADSHEET_IDS 中新增對應的檔案 ID。`);
+          return;
+        }
+
+        if (state.cachedData[fileKey]) {
+          renderAllViews(state.cachedData[fileKey]);
+          return;
+        }
+
+        try {
+          showMessage('loading', `正在載入 ${month} 月班表...`);
+          const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`;
+          const response = await fetch(requestUrl);
+          const data = await response.json();
+
+          if (data.error) { throw new Error(data.message); }
+          if (!data.schedule || !data.names) {
+            throw new Error('從 Google Apps Script 收到的資料格式不正確。請確認您已儲存並「重新部署」了最新版的 Apps Script。');
+          }
+
+          state.cachedData[fileKey] = data;
+          DOMElements.messageContainer.innerHTML = '';
+          renderAllViews(data);
+        } catch (error) {
+          console.error(`抓取 ${sheetName} 資料失敗:`, error);
+          showMessage('error', `無法載入 ${month} 月班表！<br><b>錯誤詳情：</b><br>${error.message}`);
+        }
+      }
+
+      function renderAllViews(data) {
+        renderDailyCards(data.schedule);
+        const sortedNames = getSortedNames(data.names);
+        populatePersonSelector(sortedNames, DOMElements.personSelector, "請選擇人員...");
+        populatePersonSelector(sortedNames, DOMElements.highlighter1, "無");
+        populatePersonSelector(sortedNames, DOMElements.highlighter2, "無");
+        populateShiftChangeForm(sortedNames, shiftList);
+        renderFullTable(data.schedule);
+        renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
+        renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
+      }
+
+      function getSortedNames(apiNames) {
+        return [...apiNames].sort((a, b) => {
+          const indexA = customNameSortOrder.indexOf(a);
+          const indexB = customNameSortOrder.indexOf(b);
+          if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
+          return a.localeCompare(b, 'zh-Hant');
+        });
+      }
+
+      function populateShiftChangeForm(names, shifts) {
+        const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
+        personSelectors.forEach(selector => {
+          const currentVal = selector.value;
+          selector.innerHTML = '';
+          names.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            selector.appendChild(option);
+          });
+          if (names.includes(currentVal)) selector.value = currentVal;
+        });
+
+        const shiftSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalShift"], select[name="swappedShift"]');
+        shiftSelectors.forEach(selector => {
+          const currentVal = selector.value;
+          selector.innerHTML = '';
+          shifts.forEach(shift => {
+            const option = document.createElement('option');
+            option.value = shift;
+            option.textContent = shift;
+            selector.appendChild(option);
+          });
+          if (shifts.includes(currentVal)) selector.value = currentVal;
+        });
+
+        const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"], select[name="swappedDate"]');
+        const month = state.currentDate.getMonth() + 1;
+        const year = state.currentDate.getFullYear();
+        const daysInMonth = new Date(year, month, 0).getDate();
+        dateSelectors.forEach(selector => {
+          const currentVal = selector.value;
+          selector.innerHTML = '';
+          for (let i = 1; i <= daysInMonth; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `${month}/${i}`;
+            selector.appendChild(option);
+          }
+          if (currentVal && parseInt(currentVal) <= daysInMonth) selector.value = currentVal;
+        });
+
+        // 同步填充「誰來接班」日期下拉
+        if (DOMElements.successorDate) {
+          DOMElements.successorDate.innerHTML = '';
+          for (let i = 1; i <= daysInMonth; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `${month}/${i}`;
+            DOMElements.successorDate.appendChild(option);
+          }
+        }
+      }
+
+      async function handleFormSubmit(e) {
+        e.preventDefault();
+        DOMElements.submitBtn.disabled = true;
+        DOMElements.submitBtn.textContent = '處理中...';
+        showMessage('loading', '正在送出申請...', DOMElements.formMessageContainer);
+
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        const year = state.currentDate.getFullYear();
+        const month = state.currentDate.getMonth() + 1;
+        const fileKey = `${year}-${month}`;
+        const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        const payload = { ...data, spreadsheetId, month, submitterName: state.loggedInUserName };
+
+        try {
+          const response = await fetch(googleSheetWebAppUrl, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          });
+          const result = await response.json();
+          if (result.success) {
+            showMessage('success', result.message, DOMElements.formMessageContainer);
+            e.target.reset();
+            DOMElements.swappedShiftContainer.style.display = 'none';
+            delete state.cachedData[fileKey];
+            switchPage('home');
+            switchView('dailyCardView', DOMElements.homeViewSelector);
+            await fetchData();
+          } else { throw new Error(result.message); }
+        } catch (error) {
+          showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer);
+        } finally {
+          DOMElements.submitBtn.disabled = false;
+          DOMElements.submitBtn.textContent = '送出申請';
+        }
+      }
+
+      async function handleChangePassword(e) {
+        e.preventDefault();
+        const btn = DOMElements.changePasswordBtn;
+        const msgContainer = DOMElements.passwordMessageContainer;
+
+        btn.disabled = true;
+        btn.textContent = '處理中...';
+        showMessage('loading', '正在處理您的請求...', msgContainer);
+
+        const currentPassword = DOMElements.changePasswordForm['currentPassword'].value;
+        const newPassword = DOMElements.changePasswordForm['newPassword'].value;
+        const confirmNewPassword = DOMElements.changePasswordForm['confirmNewPassword'].value;
+
+        if (newPassword !== confirmNewPassword) {
+          showMessage('error', '錯誤：新密碼與確認密碼不相符。', msgContainer);
+          btn.disabled = false;
+          btn.textContent = '確認更換';
+          return;
+        }
+
+        try {
+          const user = auth.currentUser;
+          if (!user) {
+            throw new Error("使用者未登入，無法更換密碼。");
+          }
+
+          const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+          await user.reauthenticateWithCredential(credential);
+
+          await user.updatePassword(newPassword);
+
+          showMessage('success', '密碼已成功更新！', msgContainer);
+          DOMElements.changePasswordForm.reset();
+
+        } catch (error) {
+          let errorMessage = '發生未知錯誤。';
+          if (error.code === 'auth/wrong-password') {
+            errorMessage = '您輸入的「目前密碼」不正確。';
+          } else if (error.code === 'auth/weak-password') {
+            errorMessage = '新密碼強度不足，請確認至少有 6 個字元。';
+          } else {
+            errorMessage = error.message;
+          }
+          showMessage('error', `更換密碼失敗：<br>${errorMessage}`, msgContainer);
+          console.error("Change Password Error:", error);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '確認更換';
+        }
+      }
+
+      function renderDailyCards(scheduleData) {
+        const fragment = document.createDocumentFragment();
+        scheduleData.forEach(dayData => {
+          const card = document.createElement('div');
+          card.className = 'day-card';
+          const groups = {
+            group1: { title: '主任 (日) & T2 (日)', html: '' },
+            group2: { title: '主任 (夜) & T2 (夜)', html: '' },
+            group3: { title: 'T1 (日)', html: '' },
+            group4: { title: 'T1 (夜)', html: '' }
+          };
+          dayData.assignments.forEach((name, i) => {
+            const pos = positions[i];
+            if (!pos) return;
+            const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
+            const assignmentHTML = `<div class="assignment ${shiftClass}"><div class="position">${pos.label}</div><div class="name">${name || '–'}</div></div>`;
+            if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'DAY') {
+              groups.group1.html += assignmentHTML;
+            } else if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'NIGHT') {
+              groups.group2.html += assignmentHTML;
+            } else if (pos.group === 'T1' && pos.type === 'DAY') {
+              groups.group3.html += assignmentHTML;
+            } else if (pos.group === 'T1' && pos.type === 'NIGHT') {
+              groups.group4.html += assignmentHTML;
+            }
+          });
+
+          let detailsHTML = '';
+          Object.values(groups).forEach(group => {
+            if (group.html) {
+              detailsHTML += `<div class="assignment-row"><div class="assignment-row-title">${group.title}</div><div class="assignment-grid">${group.html}</div></div>`;
+            }
+          });
+
+          card.innerHTML = `<div class="day-header"><h2>${state.currentDate.getMonth() + 1}/${String(dayData.day).padStart(2, '0')} <span class="weekday">星期${dayData.weekday}</span></h2></div><div class="day-details">${detailsHTML}</div>`;
+          fragment.appendChild(card);
+        });
+        DOMElements.dailyCardView.innerHTML = '';
+        DOMElements.dailyCardView.appendChild(fragment);
+        DOMElements.dailyCardView.querySelectorAll('.day-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+      }
+
+      function renderFullTable(scheduleData) {
+        let tableHTML = `<div class="table-container"><table class="full-roster-table"><thead><tr>`;
+        tableHTML += `<th>日期</th>`;
+        positions.forEach((pos, i) => {
+          const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
+          tableHTML += `<th class="${shiftClass}">${pos.label}</th>`;
+        });
+        tableHTML += `</tr></thead><tbody>`;
+        scheduleData.forEach((dayData, rowIndex) => {
+          tableHTML += `<tr>`;
+          tableHTML += `<td>${state.currentDate.getMonth() + 1}/${dayData.day} (${dayData.weekday})</td>`;
+          dayData.assignments.forEach((name, colIndex) => {
+            let highlightClass = '';
+            if (state.highlightPerson1 && name === state.highlightPerson1) highlightClass = 'highlight-a';
+            else if (state.highlightPerson2 && name === state.highlightPerson2) highlightClass = 'highlight-b';
+            tableHTML += `<td class="${highlightClass}">${name || ''}</td>`;
+          });
+          tableHTML += `</tr>`;
+        });
+        tableHTML += `</tbody></table></div>`;
+        DOMElements.tableContainer.innerHTML = tableHTML;
+      }
+
+      function populatePersonSelector(names, selector, defaultOptionText) {
+        const currentSelection = selector.value;
+        selector.innerHTML = `<option value="">${defaultOptionText}</option>`;
+        names.forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          selector.appendChild(option);
+        });
+        if (names.includes(currentSelection)) selector.value = currentSelection;
+      }
+
+      function renderPersonalCalendar(scheduleData, personName, containerElement) {
+        if (!containerElement) return;
+
+        const year = state.currentDate.getFullYear();
+        const month = state.currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const personalShifts = {};
+        if (personName) {
+          scheduleData.forEach(dayData => {
+            dayData.assignments.forEach((name, i) => {
+              if (name === personName) {
+                personalShifts[dayData.day] = { position: positions[i].label, type: positions[i].type };
+              }
+            });
+          });
+        }
+
+        let calendarHTML = `<div class="calendar-grid">`;
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
+        for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const shift = personalShifts[day];
+          let shiftClass = 'day-off';
+          let shiftInfo = '-';
+          if (shift) {
+            shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
+            shiftInfo = shift.position;
+          }
+          calendarHTML += `<div class="calendar-day ${shiftClass}"><div class="day-number">${day}</div><div class="shift-info">${shiftInfo}</div></div>`;
+        }
+        calendarHTML += `</div>`;
+        containerElement.innerHTML = calendarHTML;
+      }
+
+      function switchPage(pageName) {
+    state.currentPage = pageName;
+
+    // 隱藏所有頁面，然後顯示目標頁面
+    DOMElements.pages.forEach(p => p.classList.remove('active'));
+    document.getElementById(pageName).classList.add('active');
+
+    // 更新側邊欄連結樣式
+    DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active'));
+    DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+
+    // 【新邏輯】根據頁面顯示對應的導覽列
+    // 1. 先隱藏所有導覽列
+    DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none');
+
+    // 2. 根據 pageName 顯示正確的導覽列，並切換到其預設 view
+    if (pageName === 'home') {
+        DOMElements.homeViewSelector.style.display = 'flex';
+        switchView('personalCalendarView', DOMElements.homeViewSelector);
+    } else if (pageName === 'shiftZone') {
+        DOMElements.shiftZoneViewSelector.style.display = 'flex';
+        switchView('shiftChangeView', DOMElements.shiftZoneViewSelector);
+    }
+
+    closeSidebar();
+}
+
+
+      function switchView(viewName, viewSelector) {
+    if (!viewSelector) return;
+
+    // 【新邏輯】先找到當前是哪個 page 是 active 的
+    const currentPageDiv = document.querySelector('.page.active');
+    if (!currentPageDiv) return;
+
+    // 把該 active page 裡面的所有 view 都設為 inactive
+    currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+    // 啟用目標 view
+    const targetView = document.getElementById(viewName);
+    if (targetView) {
+        targetView.classList.add('active');
+    }
+
+    // 更新導覽列按鈕的樣式 (這部分不變)
+    viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+}
+
+      function openSidebar() {
+        DOMElements.sidebar.classList.add('open');
+        DOMElements.overlay.style.display = 'block';
+      }
+      function closeSidebar() {
+        DOMElements.sidebar.classList.remove('open');
+        DOMElements.overlay.style.display = 'none';
+      }
+
+      async function handleSuccessorQuery() {
+        const resultsContainer = DOMElements.successorList;
+        resultsContainer.textContent = '查詢中...';
+
+        const year = state.currentDate.getFullYear();
+        const month = state.currentDate.getMonth() + 1;
+        const fileKey = `${year}-${month}`;
+        const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        const date = DOMElements.successorDate.value;
+        const role = DOMElements.successorRole.value;
+
+        if (!spreadsheetId) {
+          resultsContainer.textContent = '錯誤：找不到該月份的檔案設定。';
+          return;
+        }
+
+        try {
+          const requestUrl = `${googleSheetWebAppUrl}?action=getSuccessors&spreadsheetId=${spreadsheetId}&year=${year}&month=${month}&date=${date}&role=${encodeURIComponent(role)}`;
+          const response = await fetch(requestUrl);
+          const data = await response.json();
+
+          if (data.error) { throw new Error(data.message); }
+
+          if (data.successors && data.successors.length > 0) {
+            resultsContainer.textContent = data.successors.join('、');
+          } else {
+            resultsContainer.textContent = '(無可用人選)';
+          }
+        } catch (error) {
+          resultsContainer.textContent = '查詢失敗：' + error.message;
+        }
+      }
+
+      // --- 事件監聽器 ---
+      console.log("要綁定事件的選單元素是:", DOMElements.sidebarNav); 
+
+DOMElements.sidebarNav.addEventListener('click', e => {
+  console.log("日誌1：側邊欄被點擊了！"); 
+  e.preventDefault();
+  if (e.target.tagName === 'A') {
+    console.log("日誌2：準備切換到頁面:", e.target.dataset.page);
+    switchPage(e.target.dataset.page);
+  }
+});
+      DOMElements.header.addEventListener('click', (e) => {
+  // 檢查被點擊的目標是不是漢堡排按鈕
+  if (e.target.closest('#sidebar-toggle')) {
+    // 為了測試，我們先印出一條訊息確認
+    console.log("Header 總監聽成功觸發開/關側邊欄！"); 
+
+    // 執行原本的開/關功能
+    DOMElements.sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  }
+});
+      DOMElements.overlay.addEventListener('click', closeSidebar);
+      DOMElements.sidebarNav.addEventListener('click', e => {
+  console.log("日誌1：側邊欄被點擊了！"); // <-- 這是我們的第一個間諜
+  e.preventDefault();
+  if (e.target.tagName === 'A') {
+    console.log("日誌2：準備切換到頁面:", e.target.dataset.page); // <-- 這是第二個間諜
+    switchPage(e.target.dataset.page);
+  }
+});
+      DOMElements.logoutBtn.addEventListener('click', () => { DOMElements.logoutConfirm.style.display = 'block'; DOMElements.overlay.style.display = 'block'; });
+      DOMElements.confirmLogoutNo.addEventListener('click', () => { DOMElements.logoutConfirm.style.display = 'none'; if (!DOMElements.sidebar.classList.contains('open')) DOMElements.overlay.style.display = 'none'; });
+      DOMElements.confirmLogoutYes.addEventListener('click', () => { auth.signOut(); DOMElements.logoutConfirm.style.display = 'none'; DOMElements.overlay.style.display = 'none'; });
+
+      DOMElements.homeViewSelector.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') switchView(e.target.dataset.view, DOMElements.homeViewSelector); });
+      DOMElements.shiftZoneViewSelector.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') switchView(e.target.dataset.view, DOMElements.shiftZoneViewSelector); });
+
+      DOMElements.prevMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); fetchData(); });
+      DOMElements.nextMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); fetchData(); });
+
+      DOMElements.personSelector.addEventListener('change', e => {
+        state.selectedPerson = e.target.value;
+        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+        if (state.cachedData[fileKey]) {
+          renderPersonalCalendar(state.cachedData[fileKey].schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
+        }
+      });
+      DOMElements.highlighter1.addEventListener('change', e => {
+        state.highlightPerson1 = e.target.value;
+        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+        if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
+      });
+      DOMElements.highlighter2.addEventListener('change', e => {
+        state.highlightPerson2 = e.target.value;
+        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+        if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
+      });
+      DOMElements.changeType.addEventListener('change', e => {
+        DOMElements.swappedShiftContainer.style.display = e.target.value === '調' ? 'grid' : 'none';
+      });
+
+      // 調代申請表單
+      DOMElements.shiftChangeForm.addEventListener('submit', handleFormSubmit);
+
+      // 更換密碼表單
+      DOMElements.changePasswordForm.addEventListener('submit', handleChangePassword);
+
+      // 綁定「誰來接班」查詢按鈕
+      if (DOMElements.successorQueryBtn) {
+        DOMElements.successorQueryBtn.addEventListener('click', handleSuccessorQuery);
+      }
+
+      // 首次載入
+      switchPage('home');
+      fetchData();
+    }
+  </script>
 </body>
 </html>
