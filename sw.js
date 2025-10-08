@@ -1,7 +1,7 @@
 // --- ▼▼▼ 請用以下全部內容，取代您 sw.js 的所有內容 ▼▼▼ ---
 
 // 步驟 1: 版本號升級！
-const CACHE_NAME = 'shift-platform-cache-v2'; 
+const CACHE_NAME = 'shift-platform-cache-v3'; 
 const urlsToCache = [
   './index.html'
 ];
