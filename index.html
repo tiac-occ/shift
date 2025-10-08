@@ -9,18 +9,13 @@
 <style>
 /* --- 【新增】Header 頂部佈局 --- */
 .header-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  position: relative;
   width: 100%;
+  min-height: 45px; /* 確保容器有足夠的高度 */
+  display: flex; 
+  align-items: center;
 }
-
-.header-placeholder {
-  width: 45px; /* 這個寬度用來平衡左邊的漢堡排按鈕 */
-  flex-shrink: 0;  /* 不被空間壓縮 */
-  margin-right: 15px;
-
-}   
+     
 
  /* --- 【新增】自訂啟動畫面樣式 --- */
 #splash-screen {
@@ -109,17 +104,20 @@
     #logout-btn:hover { background-color: rgba(255,255,255,0.1); }
     #content-wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; }
     #sidebar-toggle {
-  position: static; /* 將 absolute 改為 static */
-  transform: none; /* 移除 transform */
+  position: absolute;
+  left: 15px; /* 離螢幕左邊 15px */
+  top: 50%;   /* 垂直置中於 .header-top-row */
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: white;
   font-size: 2em;
   cursor: pointer;
-  width: 45px;  /* 給定一個固定寬度 */
-  flex-shrink: 0;
-  margin-left: 15px;
+  width: 45px;
+  padding: 0; /* 移除內邊距以精準定位 */
+  z-index: 10; /* 確保它在月份選擇器之上 */
 }
+
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
     #sidebar.open ~ #overlay { display: block; }
 
@@ -136,8 +134,22 @@
   box-shadow: var(--shadow);
 }
     .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
-    .month-selector button { background: none; border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; flex-shrink: 0; }
-    .month-selector h1 { margin: 0 10px; font-size: 1.5em; white-space: nowrap; }
+   .month-selector button {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-size: 1.5em;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  flex-shrink: 0; 
+}
+   .month-selector h1 {
+  margin: 0 10px;
+  font-size: 1.5em;
+  white-space: nowrap;
+}
 
   nav {
   display: flex;
@@ -296,8 +308,7 @@
       <h1 id="monthTitle"></h1>
       <button id="nextMonthBtn">&gt;</button>
     </div>
-    <div class="header-placeholder"></div>
-  </div>
+      </div>
 
   <nav id="homeViewSelector" class="view-selector" style="display: flex;">
     <button data-view="personalCalendarView" class="active">個人班表</button>
