@@ -17,6 +17,8 @@
 
 .header-placeholder {
   width: 45px; /* 這個寬度用來平衡左邊的漢堡排按鈕 */
+  flex-shrink: 0;  /* 不被空間壓縮 */
+
 }   
 
  /* --- 【新增】自訂啟動畫面樣式 --- */
@@ -113,7 +115,8 @@
   color: white;
   font-size: 2em;
   cursor: pointer;
-  width: 45px; /* 給定一個固定寬度 */
+  width: 45px;  /* 給定一個固定寬度 */
+  flex-shrink: 0;
 }
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
     #sidebar.open ~ #overlay { display: block; }
@@ -131,8 +134,8 @@
   box-shadow: var(--shadow);
 }
     .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
-    .month-selector button { background: none; border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
-    .month-selector h1 { margin: 0 10px; font-size: 1.5em; }
+    .month-selector button { background: none; border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; flex-shrink: 0; }
+    .month-selector h1 { margin: 0 10px; font-size: 1.5em; white-space: nowrap; }
 
   nav {
   display: flex;
