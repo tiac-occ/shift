@@ -5,8 +5,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCC Duty Management Platform</title>
-  <style>
-    /* --- 【新增】自訂啟動畫面樣式 --- */
+  
+<style>
+/* --- 【新增】Header 頂部佈局 --- */
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-placeholder {
+  width: 45px; /* 這個寬度用來平衡左邊的漢堡排按鈕 */
+}   
+
+ /* --- 【新增】自訂啟動畫面樣式 --- */
 #splash-screen {
   position: fixed;
   top: 0;
@@ -75,6 +88,7 @@
     text-decoration: none;
     padding: 15px 20px;    /* <-- 【修改】恢復較大、適合垂直排列的 padding */
     font-size: 1.1em;      /* <-- 【修改】恢復較大的字體 */
+    font-weight: bold;     /* <-- 變成粗體*/
     text-align: center;
     border-radius: 6px;    /* 保留您喜歡的圓角 */
     border-left: 3px solid transparent; /* <-- 【修改】將指示線從底部改回左側 */
@@ -91,7 +105,16 @@
     #logout-btn { background: none; color: white; text-align: center; border: none; padding: 15px 20px; font-size: 1.1em; cursor: pointer; width: 100%; border-top: 1px solid rgba(255,255,255,0.2); margin-bottom: 20px; }
     #logout-btn:hover { background-color: rgba(255,255,255,0.1); }
     #content-wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; }
-    #sidebar-toggle { position: absolute; left: 15px; top: 32px; transform: translateY(-50%); z-index: 1001; background: none; border: none; color: white; font-size: 2em; cursor: pointer; }
+    #sidebar-toggle {
+  position: static; /* 將 absolute 改為 static */
+  transform: none; /* 移除 transform */
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2em;
+  cursor: pointer;
+  width: 45px; /* 給定一個固定寬度 */
+}
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
     #sidebar.open ~ #overlay { display: block; }
 
@@ -259,24 +282,29 @@
     <div id="overlay"></div>
 
     <div id="content-wrapper">
-      <header class="header">
-        <button id="sidebar-toggle">☰</button>
-        <div class="month-selector">
-          <button id="prevMonthBtn">&lt;</button>
-          <h1 id="monthTitle"></h1>
-          <button id="nextMonthBtn">&gt;</button>
-        </div>
-        
-        <nav id="homeViewSelector" class="view-selector">
-          <button data-view="personalCalendarView" class="active">個人班表</button>
-          <button data-view="dailyCardView">每日值班</button>
-          <button data-view="fullTableView">全員班表</button>
-        </nav>
-        <nav id="shiftZoneViewSelector" class="view-selector">
-          <button data-view="shiftChangeView" class="active">調代申請</button>
-          <button data-view="successorView">誰來接班</button>
-        </nav>
-        </header>
+      
+<header class="header">
+  <div class="header-top-row">
+    <button id="sidebar-toggle">☰</button>
+    <div class="month-selector">
+      <button id="prevMonthBtn">&lt;</button>
+      <h1 id="monthTitle"></h1>
+      <button id="nextMonthBtn">&gt;</button>
+    </div>
+    <div class="header-placeholder"></div>
+  </div>
+
+  <nav id="homeViewSelector" class="view-selector" style="display: flex;">
+    <button data-view="personalCalendarView" class="active">個人班表</button>
+    <button data-view="dailyCardView">每日值班</button>
+    <button data-view="fullTableView">全員班表</button>
+  </nav>
+  
+  <nav id="shiftZoneViewSelector" class="view-selector" style="display: none;">
+    <button data-view="shiftChangeView" class="active">調代申請</button>
+    <button data-view="successorView">誰來接班</button>
+  </nav>
+</header>
 
       <main>
         <div id="messageContainer"></div>
