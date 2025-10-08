@@ -22,7 +22,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #f0f2f5; /* 必須和 manifest.json 的 background_color 一致 */
+  background-color: #4A5052; 
   z-index: 9999; /* 確保它在最上層 */
   display: flex;
   justify-content: center;
@@ -142,6 +142,11 @@
   height: 40px;
   cursor: pointer;
   flex-shrink: 0; 
+  display: flex;
+  justify-content: center; /* 水平置中 */
+  align-items: center;     /* 垂直置中 */
+  padding: 0;              /* 移除或統一瀏覽器預設的按鈕內邊距 */
+  padding-bottom: 3px;
 }
    .month-selector h1 {
   margin: 0 10px;
@@ -471,7 +476,7 @@ setTimeout(() => {
   if (splash) {
     splash.classList.add('hidden');
   }
-}, 3800); // 3800 毫秒 = 3.8 秒
+}, 2300); // 2300 毫秒 = 2.3 秒
 
     const loginContainer = document.getElementById('login-container');
     const appWrapper = document.getElementById('app-wrapper');

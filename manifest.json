@@ -3,7 +3,7 @@
   "short_name": "OCC班表",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#f0f2f5",
+  "background_color": "#4A5052",
   "theme_color": "#3E4B5C",
   "description": "OCC 值班與調代申請管理平台",
   "icons": [
