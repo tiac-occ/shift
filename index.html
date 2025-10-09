@@ -7,6 +7,37 @@
   <title>OCC Duty Management Platform</title>
   
 <style>
+/* --- 【新增】標示今天日期的圈圈樣式 --- */
+.calendar-day.today {
+  position: relative; /* 為了讓圈圈可以定位在格子裡 */
+}
+
+.calendar-day.today::after {
+  content: '';
+  position: absolute;
+  top: -2px;         /* 微調圈圈的垂直位置 */
+  left: -2px;          /* 微調圈圈的水平位置 */
+  right: -2px;
+  bottom: -2px;
+  border: 3px solid #71564A; /* 圈圈的粗細與顏色 */
+  border-radius: 25px;       /* 讓方框變圓，數值越大越像手繪的不規則圓 */
+  box-sizing: border-box;
+  animation: draw-circle 0.5s ease-in-out forwards; /* 加入一個簡單的繪製動畫 */
+}
+
+/* (可選) 簡單的繪製動畫 */
+@keyframes draw-circle {
+  from {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
 /* --- 【新增】Header 頂部佈局 --- */
 .header-top-row {
   position: relative;
@@ -886,24 +917,58 @@ else {
         if (names.includes(currentSelection)) selector.value = currentSelection;
       }
 
-      function renderPersonalCalendar(scheduleData, personName, containerElement) {
-        if (!containerElement) return;
+      // --- ▼▼▼ 新版本的 renderPersonalCalendar 函式 ▼▼▼ ---
+function renderPersonalCalendar(scheduleData, personName, containerElement) {
+  if (!containerElement) return;
 
-        const year = state.currentDate.getFullYear();
-        const month = state.currentDate.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // 【新增】獲取真實的今天日期 (會根據您的時區 GMT+8，是正確的)
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const currentDay = today.getDate();
 
-        const personalShifts = {};
-        if (personName) {
-          scheduleData.forEach(dayData => {
-            dayData.assignments.forEach((name, i) => {
-              if (name === personName) {
-                personalShifts[dayData.day] = { position: positions[i].label, type: positions[i].type };
-              }
-            });
-          });
+  const year = state.currentDate.getFullYear();
+  const month = state.currentDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const personalShifts = {};
+  if (personName) {
+    scheduleData.forEach(dayData => {
+      dayData.assignments.forEach((name, i) => {
+        if (name === personName) {
+          personalShifts[dayData.day] = { position: positions[i].label, type: positions[i].type };
         }
+      });
+    });
+  }
+
+  let calendarHTML = `<div class="calendar-grid">`;
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
+  for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const shift = personalShifts[day];
+    let shiftClass = 'day-off';
+    let shiftInfo = '-';
+    if (shift) {
+      shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
+      shiftInfo = shift.position;
+    }
+
+    // 【新增】判斷是否為今天，並加上 'today' class
+    let todayClass = '';
+    if (year === currentYear && month === currentMonth && day === currentDay) {
+      todayClass = ' today';
+    }
+
+    calendarHTML += `<div class="calendar-day ${shiftClass}${todayClass}"><div class="day-number">${day}</div><div class="shift-info">${shiftInfo}</div></div>`;
+  }
+  calendarHTML += `</div>`;
+  containerElement.innerHTML = calendarHTML;
+}
+
 
         let calendarHTML = `<div class="calendar-grid">`;
         const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
