@@ -970,25 +970,6 @@ function renderPersonalCalendar(scheduleData, personName, containerElement) {
 }
 
 
-        let calendarHTML = `<div class="calendar-grid">`;
-        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-        weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
-        for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const shift = personalShifts[day];
-          let shiftClass = 'day-off';
-          let shiftInfo = '-';
-          if (shift) {
-            shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
-            shiftInfo = shift.position;
-          }
-          calendarHTML += `<div class="calendar-day ${shiftClass}"><div class="day-number">${day}</div><div class="shift-info">${shiftInfo}</div></div>`;
-        }
-        calendarHTML += `</div>`;
-        containerElement.innerHTML = calendarHTML;
-      }
-
       function switchPage(pageName) {
     state.currentPage = pageName;
 
