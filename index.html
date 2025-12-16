@@ -592,7 +592,7 @@ else {
             
             const todayCard = document.getElementById('card-today');
             if (todayCard) {
-                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 state.hasScrolledToToday = true; // 標記為已完成，之後不再執行
             }
         }, 300);
@@ -1251,4 +1251,5 @@ DOMElements.sidebarNav.addEventListener('click', e => {
   }
 </script>
 </body>
+
 </html>
