@@ -7,376 +7,213 @@
   <title>OCC Duty Management Platform</title>
   
 <style>
-/* --- 【新增】標示今天日期的圈圈樣式 --- */
+/* --- 【新增】標示今天日期的圈圈樣式 (個人月曆用) --- */
 .calendar-day.today {
-  position: relative; /* 為了讓圈圈可以定位在格子裡 */
+  position: relative;
 }
 
 .calendar-day.today::after {
   content: '';
   position: absolute;
-  top: -3px;         /* 微調圈圈的垂直位置 */
-  left: -3px;          /* 微調圈圈的水平位置 */
-  right: -3px;
-  bottom: -3px;
-  border: 4px outset #CC9B86; /* 圈圈的粗細與顏色 */
-  border-radius: 8px;        /* 讓方框變圓，數值越大越像手繪的不規則圓 */
-  box-sizing: border-box;
-  animation: draw-circle 0.5s ease-in-out forwards; /* 加入一個簡單的繪製動畫 */
-}
-
-/* (可選) 簡單的繪製動畫 */
-@keyframes draw-circle {
-  from {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-
-/* --- 【新增】Header 頂部佈局 --- */
-.header-top-row {
-  position: relative;
-  width: 100%;
-  min-height: 45px; /* 確保容器有足夠的高度 */
-}
-     
-
- /* --- 【新增】自訂啟動畫面樣式 --- */
-#splash-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #4A5052; 
-  z-index: 9999; /* 確保它在最上層 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: opacity 0.5s ease-out; /* 為了後面的淡出效果 */
-}
-
-#splash-screen img {
-  width: 300px; /* 您可以自行調整圖示顯示的大小 */
-  height: 300px;
-}
-
-/* 這個 class 用來隱藏啟動畫面 */
-#splash-screen.hidden {
-  opacity: 0;
-  pointer-events: none; /* 讓使用者可以點擊到啟動畫面底下的內容 */
-}
-    /* --- 全局與顏色設定 --- */
-    :root {
-      --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda;
-      --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91;
-      --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0;
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
-
-    /* --- 登入畫面樣式 --- */
-    #login-container { display: none; justify-content: center; align-items: center; width: 100%; height: 100vh; }
-    .login-box { max-width: 400px; width: 90%; padding: 30px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
-    .login-box h1 { color: var(--starlux-header); }
-    #login-form { display: flex; flex-direction: column; gap: 15px; }
-    .form-field { display: flex; flex-direction: column; text-align: left; }
-    .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
-    .form-field input { font-size: 1em; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-    #login-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; }
-    #login-error { color: #dc3545; margin-top: 15px; min-height: 1.2em; font-size: 0.9em; }
-
-    /* --- 主應用程式樣式 --- */
-    #app-wrapper { display: none; height: 100vh; }
-    #sidebar { width: 220px; background-color: var(--starlux-header); color: white; padding-top: 20px; display: flex; flex-direction: column; transition: transform 0.3s ease; transform: translateX(-100%); position: fixed; height: 100%; z-index: 2000; }
-    #sidebar.open { transform: translateX(0); }
-    #sidebar-header { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
-    #sidebar-header #user-info { font-weight: bold; word-break: break-all; }
-    
-/* --- 側邊欄主選單 (統一垂直排列) --- */
-
-#sidebar-nav {
-    display: flex;         /* 維持 Flexbox 佈局，方便控制間距 */
-    flex-direction: column;/* <-- 【修改】從 row 改回 column，這是最關鍵的一步 */
-    flex-grow: 1;          /* <-- 【修改】改回 1，讓選單容器能填滿側邊欄的垂直空間 */
-    margin-top: 20px;
-    padding: 0 5px;       /* 保留左右的內邊距 */
-    gap: 10px;             /* 這個 gap 現在會變成項目之間的「垂直」間距 */
-}
-
-#sidebar-nav a {
-    /* flex: 1; 我們不再需要此行，讓按鈕高度由內容和 padding 決定 */
-    color: white;
-    text-decoration: none;
-    padding: 15px 20px;    /* <-- 【修改】恢復較大、適合垂直排列的 padding */
-    font-size: 1.1em;      /* <-- 【修改】恢復較大的字體 */
-    font-weight: bold;     /* <-- 變成粗體*/
-    text-align: center;
-    border-radius: 6px;    /* 保留您喜歡的圓角 */
-    border-left: 3px solid transparent; /* <-- 【修改】將指示線從底部改回左側 */
-}
-
-#sidebar-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* 保留滑鼠懸停效果 */
-}
-
-#sidebar-nav a.active {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-left-color: var(--starlux-gold-light); /* <-- 【修改】將 Active 指示線也改回左側 */
-}
-    #logout-btn { background: none; color: white; text-align: center; border: none; padding: 15px 20px; font-size: 1.1em; cursor: pointer; width: 100%; border-top: 1px solid rgba(255,255,255,0.2); margin-bottom: 20px; }
-    #logout-btn:hover { background-color: rgba(255,255,255,0.1); }
-    #content-wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; }
-    #sidebar-toggle {
-  position: absolute;
-  left: 15px; /* 離螢幕左邊 15px */
-  top: 50%;   /* 垂直置中於 .header-top-row */
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2em;
-  cursor: pointer;
-  width: 45px;
-  padding: 0; /* 移除內邊距以精準定位 */
-  z-index: 10; /* 確保它在月份選擇器之上 */
-}
-
-    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
-    #sidebar.open ~ #overlay { display: block; }
-
-    /* 【修改】header 佈局，確保中間元素完美置中 */
-.header {
-  background-color: var(--starlux-header);
-  color: white;
-  padding: 10px 0px 15px; /* 底部加一點padding即可 */
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: var(--shadow);
-}
-    .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
-   .month-selector button {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  color: white;
-  font-size: 1.5em;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  flex-shrink: 0; 
-  display: flex;
-  justify-content: center; /* 水平置中 */
-  align-items: center;     /* 垂直置中 */
-  padding: 0;              /* 移除或統一瀏覽器預設的按鈕內邊距 */
-  padding-bottom: 3px;
-}
-   .month-selector h1 {
-  margin: 0 10px;
-  font-size: 1.5em;
-  white-space: nowrap;
-}
-
-  nav {
-  display: flex;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 5px;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border: 4px outset #CC9B86;
   border-radius: 8px;
-  margin: 10px auto 0; /* 還原置中，並與上方月份選擇器增加間距 */
-  max-width: 500px;
-  width: 90%; /* 在小螢幕上更好看 */
-  backdrop-filter: blur(5px);
-}
-  .view-selector {
-  display: none;
-}
-    nav button { flex: 1; padding: 10px; font-size: 1em; background: none; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--starlux-header); }
-    nav button.active { background-color: var(--starlux-header); color: white; }
-    main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow-y: auto; flex-grow: 1; }
-    .page { display: none; }
-    .page.active { display: block; }
-    .view { display: none; }
-    .view.active { display: block; }
-    #logout-confirm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; text-align: center; }
-    #logout-confirm p { margin: 0 0 20px; font-size: 1.2em; }
-    #logout-confirm button { padding: 10px 20px; font-size: 1em; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; }
-    #confirm-logout-yes { background-color: #dc3545; color: white; }
-    #confirm-logout-no { background-color: #6c757d; color: white; }
-
-    /* --- 其他所有儀表板樣式 (與前版相同) --- */
-    .controls { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .controls label { font-weight: bold; color: var(--starlux-header); }
-    .controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
-    .message-box { 
-      text-align: center; 
-      padding: 20px; 
-      margin-top: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px; 
-      font-weight: bold; 
-      background-color: #e9ecef; 
-      /* --- ↓↓↓ 新增以下三行來確保置中 ↓↓↓ --- */
-      max-width: 90%; /* 設定最大寬度 */
-      margin-left: auto; /* 自動計算左邊距 */
-      margin-right: auto; /* 自動計算右邊距 */
-    }
-    .message-box.error { background-color: #f8d7da; color: #dc3545; }
-    .message-box.success { background-color: #d4edda; color: #155724; }
-    .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
-    .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
-    .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
-    .day-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
-    .day-card.open .day-details { max-height: 1500px; }
-    .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
-    .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
-    .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-    .assignment { padding: 8px 10px; border-radius: 6px; }
-    .assignment.day-shift { background-color: var(--starlux-gold-light); }
-    .assignment.night-shift { background-color: var(--starlux-teal-light); }
-    .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; }
-    .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; }
-    .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
-    .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
-    .full-roster-table th, .full-roster-table td { border: 1px solid var(--border-color); padding: 8px; font-size: 0.9em; white-space: pre-line; width: 45px; }
-    .full-roster-table th:first-child, .full-roster-table td:first-child { width: 56px; font-size: 0.85em; }
-    .full-roster-table thead th { position: sticky; top: 0; z-index: 2; }
-    .full-roster-table tbody td:first-child { position: sticky; left: 0; font-weight: bold; z-index: 1; }
-    .full-roster-table thead th:first-child { z-index: 3; }
-    .full-roster-table th.day-shift { background-color: var(--starlux-gold-light); }
-    .full-roster-table th.night-shift { background-color: var(--starlux-teal-light); }
-    .full-roster-table thead th:first-child, .full-roster-table tbody td:first-child { background-color: var(--starlux-rose-gold); }
-    .full-roster-table .highlight-a { background-color: var(--starlux-highlight-a) !important; color: white; font-weight: bold; }
-    .full-roster-table .highlight-b { background-color: var(--starlux-highlight-b) !important; color: white; font-weight: bold; }
-    .full-roster-table th:nth-child(3), .full-roster-table td:nth-child(3) { border-right: 2px solid var(--starlux-header); }
-    .full-roster-table th:nth-child(12), .full-roster-table td:nth-child(12) { border-right: 2px solid var(--starlux-header); }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-    .calendar-weekday { font-weight: bold; text-align: center; padding: 8px; color: var(--starlux-header); }
-    .calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); }
-    .calendar-day.empty { background-color: transparent; border: none; box-shadow: none; }
-    .calendar-day .day-number { font-weight: bold; font-size: 0.9em; color: #888; }
-    .calendar-day .shift-info { font-size: 0.8em; margin-top: 5px; white-space: pre-line; line-height: 1.3; font-weight: bold; }
-    .calendar-day.day-shift { background-color: var(--starlux-gold-light); }
-    .calendar-day.night-shift { background-color: var(--starlux-teal-light); }
-    .calendar-day.day-off { background-color: #fff; }
-    .form-container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
-    .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-    .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
-    .form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
-    .submit-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    /* #swappedShiftContainer { display: none; } <--- 已廢棄，改用新的月曆邏輯 */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
- /* 「誰來接班」新樣式 */
-    #successorView .controls { margin-top: 20px; }
-    #successor-results { margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
-    #successor-list { font-size: 1.1em; line-height: 1.8; }
- /* --- 【新增】雙月曆比對佈局樣式 --- */
-    .comparison-calendar-container {
-      display: grid;
-      grid-template-columns: 1fr; /* 單欄佈局 */
-      gap: 30px; /* 上下區塊的間距 */
-    }
-    .calendar-section h3 {
-  color: var(--starlux-header);
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
-  text-align: center; 
+  box-sizing: border-box;
+  animation: draw-circle 0.5s ease-in-out forwards;
 }
 
-/* --- 【新增】表單用互動式月曆樣式 --- */
-.interactive-calendar .calendar-day {
-  cursor: pointer;
-  transition: transform 0.1s ease, border-color 0.2s;
-}
-
-.interactive-calendar .calendar-day:hover {
-  transform: scale(1.02);
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-/* 讓沒有班的格子游標顯示為禁止 (防止選到空班) */
-.interactive-calendar .calendar-day[data-has-shift="false"] {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* 被選取的班表樣式 - 使用 Starlux 金色邊框與光暈 */
-.calendar-day.selected-shift {
-  border: 3px solid var(--starlux-header) !important;
-  background-color: rgba(173, 159, 116, 0.15) !important; /* 淡金色背景 */
-  position: relative;
-  box-shadow: 0 0 10px rgba(62, 75, 92, 0.3);
-  transform: scale(1.05);
-  z-index: 10;
-}
-
-/* --- 【新增】確認彈出視窗 (Modal) 樣式 --- */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 5000;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(3px);
-}
-
-.modal-box {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 450px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-  text-align: center;
-  border: 1px solid var(--starlux-gold-light);
-  animation: popIn 0.3s ease-out;
-}
-
-@keyframes popIn {
-  from { transform: scale(0.8); opacity: 0; }
+@keyframes draw-circle {
+  from { transform: scale(1.5); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
-.modal-content {
-  font-size: 1.2em;
-  margin-bottom: 25px;
-  line-height: 1.6;
-  color: var(--starlux-header);
-  font-weight: bold;
+/* --- Header 頂部佈局 --- */
+.header-top-row {
+  position: relative;
+  width: 100%;
+  min-height: 45px;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
+/* --- 啟動畫面樣式 --- */
+#splash-screen {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: #4A5052; 
+  z-index: 9999;
+  display: flex; justify-content: center; align-items: center;
+  transition: opacity 0.5s ease-out;
 }
+#splash-screen img { width: 300px; height: 300px; }
+#splash-screen.hidden { opacity: 0; pointer-events: none; }
 
-.modal-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1.1em;
-  cursor: pointer;
-  font-weight: bold;
+/* --- 全局與顏色設定 --- */
+:root {
+  --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda;
+  --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91;
+  --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
 
+/* --- 登入畫面樣式 --- */
+#login-container { display: none; justify-content: center; align-items: center; width: 100%; height: 100vh; }
+.login-box { max-width: 400px; width: 90%; padding: 30px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
+.login-box h1 { color: var(--starlux-header); }
+#login-form { display: flex; flex-direction: column; gap: 15px; }
+.form-field { display: flex; flex-direction: column; text-align: left; }
+.form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
+.form-field input { font-size: 1em; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+#login-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; }
+#login-error { color: #dc3545; margin-top: 15px; min-height: 1.2em; font-size: 0.9em; }
+
+/* --- 主應用程式樣式 --- */
+#app-wrapper { display: none; height: 100vh; }
+#sidebar { width: 220px; background-color: var(--starlux-header); color: white; padding-top: 20px; display: flex; flex-direction: column; transition: transform 0.3s ease; transform: translateX(-100%); position: fixed; height: 100%; z-index: 2000; }
+#sidebar.open { transform: translateX(0); }
+#sidebar-header { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+#sidebar-header #user-info { font-weight: bold; word-break: break-all; }
+
+/* --- 側邊欄主選單 --- */
+#sidebar-nav { display: flex; flex-direction: column; flex-grow: 1; margin-top: 20px; padding: 0 5px; gap: 10px; }
+#sidebar-nav a { color: white; text-decoration: none; padding: 15px 20px; font-size: 1.1em; font-weight: bold; text-align: center; border-radius: 6px; border-left: 3px solid transparent; }
+#sidebar-nav a:hover { background-color: rgba(255, 255, 255, 0.1); }
+#sidebar-nav a.active { background-color: rgba(0, 0, 0, 0.2); border-left-color: var(--starlux-gold-light); }
+#logout-btn { background: none; color: white; text-align: center; border: none; padding: 15px 20px; font-size: 1.1em; cursor: pointer; width: 100%; border-top: 1px solid rgba(255,255,255,0.2); margin-bottom: 20px; }
+#logout-btn:hover { background-color: rgba(255,255,255,0.1); }
+#content-wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; }
+#sidebar-toggle { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 2em; cursor: pointer; width: 45px; padding: 0; z-index: 10; }
+#overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
+#sidebar.open ~ #overlay { display: block; }
+
+/* --- Header --- */
+.header { background-color: var(--starlux-header); color: white; padding: 10px 0px 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
+.month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
+.month-selector button { background: none; border: 1px solid rgba(255, 255, 255, 0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; flex-shrink: 0; display: flex; justify-content: center; align-items: center; padding: 0; padding-bottom: 3px; }
+.month-selector h1 { margin: 0 10px; font-size: 1.5em; white-space: nowrap; }
+
+nav { display: flex; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 8px; margin: 10px auto 0; max-width: 500px; width: 90%; backdrop-filter: blur(5px); }
+.view-selector { display: none; }
+nav button { flex: 1; padding: 10px; font-size: 1em; background: none; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--starlux-header); }
+nav button.active { background-color: var(--starlux-header); color: white; }
+main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow-y: auto; flex-grow: 1; }
+.page { display: none; }
+.page.active { display: block; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* --- Logout Confirm --- */
+#logout-confirm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; text-align: center; }
+#logout-confirm p { margin: 0 0 20px; font-size: 1.2em; }
+#logout-confirm button { padding: 10px 20px; font-size: 1em; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; }
+#confirm-logout-yes { background-color: #dc3545; color: white; }
+#confirm-logout-no { background-color: #6c757d; color: white; }
+
+/* --- 其他元件 --- */
+.controls { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+.controls label { font-weight: bold; color: var(--starlux-header); }
+.controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
+.message-box { text-align: center; padding: 20px; margin-top: 15px; margin-bottom: 15px; border-radius: 8px; font-weight: bold; background-color: #e9ecef; max-width: 90%; margin-left: auto; margin-right: auto; }
+.message-box.error { background-color: #f8d7da; color: #dc3545; }
+.message-box.success { background-color: #d4edda; color: #155724; }
+
+/* --- 每日卡片樣式 --- */
+.day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+.day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
+.day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
+.day-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+.day-card.open .day-details { max-height: 1500px; }
+.assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
+.assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
+.assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.assignment { padding: 8px 10px; border-radius: 6px; }
+.assignment.day-shift { background-color: var(--starlux-gold-light); }
+.assignment.night-shift { background-color: var(--starlux-teal-light); }
+.assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; }
+.assignment .name { font-weight: bold; font-size: 0.95em; color: #000; }
+
+/* --- 全員表格 --- */
+.table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
+.full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
+.full-roster-table th, .full-roster-table td { border: 1px solid var(--border-color); padding: 8px; font-size: 0.9em; white-space: pre-line; width: 45px; }
+.full-roster-table th:first-child, .full-roster-table td:first-child { width: 56px; font-size: 0.85em; }
+.full-roster-table thead th { position: sticky; top: 0; z-index: 2; }
+.full-roster-table tbody td:first-child { position: sticky; left: 0; font-weight: bold; z-index: 1; }
+.full-roster-table thead th:first-child { z-index: 3; }
+.full-roster-table th.day-shift { background-color: var(--starlux-gold-light); }
+.full-roster-table th.night-shift { background-color: var(--starlux-teal-light); }
+.full-roster-table thead th:first-child, .full-roster-table tbody td:first-child { background-color: var(--starlux-rose-gold); }
+.full-roster-table .highlight-a { background-color: var(--starlux-highlight-a) !important; color: white; font-weight: bold; }
+.full-roster-table .highlight-b { background-color: var(--starlux-highlight-b) !important; color: white; font-weight: bold; }
+.full-roster-table th:nth-child(3), .full-roster-table td:nth-child(3) { border-right: 2px solid var(--starlux-header); }
+.full-roster-table th:nth-child(12), .full-roster-table td:nth-child(12) { border-right: 2px solid var(--starlux-header); }
+
+/* --- 月曆共用 --- */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.calendar-weekday { font-weight: bold; text-align: center; padding: 8px; color: var(--starlux-header); }
+.calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); }
+.calendar-day.empty { background-color: transparent; border: none; box-shadow: none; }
+.calendar-day .day-number { font-weight: bold; font-size: 0.9em; color: #888; }
+.calendar-day .shift-info { font-size: 0.8em; margin-top: 5px; white-space: pre-line; line-height: 1.3; font-weight: bold; }
+.calendar-day.day-shift { background-color: var(--starlux-gold-light); }
+.calendar-day.night-shift { background-color: var(--starlux-teal-light); }
+.calendar-day.day-off { background-color: #fff; }
+
+/* --- 表單 --- */
+.form-container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+.form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
+.form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
+.submit-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+/* --- 誰來接班 --- */
+#successorView .controls { margin-top: 20px; }
+#successor-results { margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
+#successor-list { font-size: 1.1em; line-height: 1.8; }
+
+/* --- 雙月曆比對 --- */
+.comparison-calendar-container { display: grid; grid-template-columns: 1fr; gap: 30px; }
+.calendar-section h3 { color: var(--starlux-header); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); text-align: center; }
+
+/* --- 表單用互動式月曆 --- */
+.interactive-calendar .calendar-day { cursor: pointer; transition: transform 0.1s ease, border-color 0.2s; }
+.interactive-calendar .calendar-day:hover { transform: scale(1.02); background-color: rgba(0, 0, 0, 0.02); }
+.interactive-calendar .calendar-day[data-has-shift="false"] { cursor: not-allowed; opacity: 0.6; }
+.calendar-day.selected-shift { border: 3px solid var(--starlux-header) !important; background-color: rgba(173, 159, 116, 0.15) !important; position: relative; box-shadow: 0 0 10px rgba(62, 75, 92, 0.3); transform: scale(1.05); z-index: 10; }
+
+/* --- 確認彈出視窗 (Modal) --- */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 5000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+.modal-box { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; border: 1px solid var(--starlux-gold-light); animation: popIn 0.3s ease-out; }
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-content { font-size: 1.2em; margin-bottom: 25px; line-height: 1.6; color: var(--starlux-header); font-weight: bold; }
+.modal-actions { display: flex; gap: 15px; justify-content: center; }
+.modal-btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
 .btn-cancel { background-color: #d8dde0; color: #555; }
 .btn-confirm { background-color: var(--starlux-header); color: white; }
 
-   </style>
+/* --- 【新增】每日值班：當天日期的高亮與自動展開樣式 --- */
+.day-card.today-highlight {
+  border: 3px solid #CC9B86 !important; /* 強制使用金色邊框 */
+  box-shadow: 0 0 15px rgba(204, 155, 134, 0.5); /* 加一點金色光暈 */
+  animation: pulse-border 2s infinite; /* 呼吸燈效果 */
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(204, 155, 134, 0.6); }
+  100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
+}
+
+/* --- 【新增】主任職稱特別調整 (解決對齊問題) --- */
+.assignment .position.director-style {
+  font-size: 1.25em;   /* 字體加大 */
+  line-height: 1.4;    /* 行高加大 */
+  padding-bottom: 5px; /* 增加底部內邊距 */
+  margin-bottom: 5px;  /* 增加底部外邊距，確保把名字往下擠 */
+  color: #5d4037;      /* 稍微加深顏色突顯主管 */
+}
+</style>
 </head>
 <body>
 <div id="splash-screen">
@@ -590,7 +427,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
 
   <script>
-    // 【重要！請貼上您的 firebaseConfig】
     const firebaseConfig = {
       apiKey: "AIzaSyBLSvbvQ5Zjj1mGm1c595qtqoBLxfnRs6c",
       authDomain: "occ-shift.firebaseapp.com",
@@ -608,7 +444,7 @@ setTimeout(() => {
   if (splash) {
     splash.classList.add('hidden');
   }
-}, 2300); // 2300 毫秒 = 2.3 秒
+}, 2300);
 
     const loginContainer = document.getElementById('login-container');
     const appWrapper = document.getElementById('app-wrapper');
@@ -617,38 +453,20 @@ setTimeout(() => {
 
     auth.onAuthStateChanged(user => {
             if (user) {
-
 loginContainer.style.display = 'none';
-
 appWrapper.style.display = 'flex';
-
 if (typeof initializeApp !== 'undefined' && !window.appInitialized) {
-
-// 使用 setTimeout 延遲初始化，確保 DOM 元素在畫面切換後都已準備就緒
-
 setTimeout(() => {
-
 initializeApp(user);
-
 window.appInitialized = true;
-
-}, 100); // 延遲 100 毫秒 (0.1秒)，給瀏覽器足夠的反應時間
-
+}, 100);
 }
-
 }
-
 else {
-
         loginContainer.style.display = 'flex';
-
         appWrapper.style.display = 'none';
-
       }
-
     });
-
-
 
     loginForm.addEventListener('submit', e => {
       e.preventDefault();
@@ -676,14 +494,12 @@ else {
         tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'),
         shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'),
         
-        // 【修改】新版調代 ID
         changeType: document.getElementById('changeType'), 
-        submitBtn: document.getElementById('submitBtn'), // 注意：這可能已經移除，改用 preSubmitBtn
+        submitBtn: document.getElementById('submitBtn'), 
         preSubmitBtn: document.getElementById('preSubmitBtn'),
         highlighter1: document.getElementById('highlighter1'),
         highlighter2: document.getElementById('highlighter2'),
 
-        // 新增：「誰來接班」元件
         successorView: document.getElementById('successorView'),
         successorDate: document.getElementById('successorDate'),
         successorRole: document.getElementById('successorRole'),
@@ -697,7 +513,6 @@ else {
         myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'),
         colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'),
 
-        // 【新增】調代申請新元件
         sourceCalendarContainer: document.getElementById('sourceCalendarContainer'),
         targetCalendarContainer: document.getElementById('targetCalendarContainer'),
         targetCalendarWrapper: document.getElementById('targetCalendarWrapper'),
@@ -713,7 +528,6 @@ else {
 
       state.loggedInUserName = user.displayName || user.email.split('@')[0];
 
-      // 【重要！請貼上您的 Apps Script 網址】
       const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbyUqr1JydB4Yr3xAY0UFzOktl6wFnsDvoMIkeCZVFy64y0UzGX_q34IHN50ZqwcZ7PWYw/exec';
       const SPREADSHEET_IDS = {
         '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA',
@@ -814,13 +628,11 @@ else {
         });
       }
 
-      // 【修改】只填充人員，不需要填充 Date/Shift 下拉選單了
       function populateShiftChangeForm(names, shifts) {
         const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
         personSelectors.forEach(selector => {
           const currentVal = selector.value;
           selector.innerHTML = '';
-          // 加入預設空白選項，強迫使用者選擇觸發 change 事件
           const defaultOpt = document.createElement('option');
           defaultOpt.value = "";
           defaultOpt.text = "請選擇人員...";
@@ -835,8 +647,7 @@ else {
           if (names.includes(currentVal)) selector.value = currentVal;
         });
 
-        // 同步填充「誰來接班」日期下拉
-        const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"]'); // 這裡只是為了取天數
+        const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"]');
         const month = state.currentDate.getMonth() + 1;
         const year = state.currentDate.getFullYear();
         const daysInMonth = new Date(year, month, 0).getDate();
@@ -853,16 +664,14 @@ else {
       }
 
       async function handleFormSubmit(e) {
-        // e 可能是假的事件物件 (來自 Modal 確認)，也可能是真實的 (雖然現在都走 Modal 流程)
         if(e.preventDefault) e.preventDefault();
         
-        const btn = DOMElements.preSubmitBtn; // 使用新的按鈕
+        const btn = DOMElements.preSubmitBtn; 
         btn.disabled = true;
         btn.textContent = '處理中...';
         showMessage('loading', '正在送出申請...', DOMElements.formMessageContainer);
 
-        // 使用 hidden inputs 的值來建立 payload
-        const formData = new FormData(DOMElements.shiftChangeForm); // 讀取整個表單資料 (包含 hidden inputs)
+        const formData = new FormData(DOMElements.shiftChangeForm); 
         const data = Object.fromEntries(formData.entries());
         const year = state.currentDate.getFullYear();
         const month = state.currentDate.getMonth() + 1;
@@ -880,11 +689,9 @@ else {
           if (result.success) {
             showMessage('success', result.message, DOMElements.formMessageContainer);
             DOMElements.shiftChangeForm.reset();
-            // 清空月曆顯示
             DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)";
             DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)";
             DOMElements.targetCalendarWrapper.style.display = 'none';
-            // 清空隱藏欄位
             DOMElements.originalDateInput.value = "";
             DOMElements.originalShiftInput.value = "";
             DOMElements.swappedDateInput.value = "";
@@ -954,22 +761,53 @@ else {
         }
       }
 
+      // --- 【修改】每日值班卡片：支援「今天亮框」、「自動展開」、「主任字體放大」 ---
       function renderDailyCards(scheduleData) {
+        // 1. 取得真實世界的「今天」
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();   // 注意：JS月份是 0-11
+        const currentDay = today.getDate();
+
+        // 取得目前顯示資料的年月 (從 state 取得)
+        const viewYear = state.currentDate.getFullYear();
+        const viewMonth = state.currentDate.getMonth(); // 這裡保持 0-11 比較方便比對
+
         const fragment = document.createDocumentFragment();
+        
         scheduleData.forEach(dayData => {
           const card = document.createElement('div');
-          card.className = 'day-card';
+          
+          // 2. 判斷是否為「今天」
+          let isToday = (viewYear === currentYear && viewMonth === currentMonth && dayData.day === currentDay);
+          
+          // 如果是今天：加上 'today-highlight' (亮框) 以及 'open' (預設展開)
+          card.className = isToday ? 'day-card today-highlight open' : 'day-card';
+
           const groups = {
             group1: { title: '主任 (日) & T2 (日)', html: '' },
             group2: { title: '主任 (夜) & T2 (夜)', html: '' },
             group3: { title: 'T1 (日)', html: '' },
             group4: { title: 'T1 (夜)', html: '' }
           };
+
           dayData.assignments.forEach((name, i) => {
             const pos = positions[i];
             if (!pos) return;
             const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
-            const assignmentHTML = `<div class="assignment ${shiftClass}"><div class="position">${pos.label}</div><div class="name">${name || '–'}</div></div>`;
+            
+            // 3. 【修改】針對「主任」做特殊處理 (排除副主任)
+            let posSpecialClass = '';
+            if (pos.label.includes('主任') && !pos.label.includes('副')) {
+                posSpecialClass = ' director-style';
+            }
+
+            const assignmentHTML = `
+              <div class="assignment ${shiftClass}">
+                <div class="position${posSpecialClass}">${pos.label}</div>
+                <div class="name">${name || '–'}</div>
+              </div>`;
+
             if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'DAY') {
               groups.group1.html += assignmentHTML;
             } else if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'NIGHT') {
@@ -988,12 +826,23 @@ else {
             }
           });
 
+          if (isToday) card.id = "card-today";
+
           card.innerHTML = `<div class="day-header"><h2>${state.currentDate.getMonth() + 1}/${String(dayData.day).padStart(2, '0')} <span class="weekday">星期${dayData.weekday}</span></h2></div><div class="day-details">${detailsHTML}</div>`;
           fragment.appendChild(card);
         });
+
         DOMElements.dailyCardView.innerHTML = '';
         DOMElements.dailyCardView.appendChild(fragment);
         DOMElements.dailyCardView.querySelectorAll('.day-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+        
+        // (額外優化) 如果是今天，自動捲動到該卡片位置
+        setTimeout(() => {
+            const todayCard = document.getElementById('card-today');
+            if (todayCard) {
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 500); 
       }
 
       function renderFullTable(scheduleData) {
@@ -1031,7 +880,6 @@ else {
         if (names.includes(currentSelection)) selector.value = currentSelection;
       }
 
-      // --- 【修改】支援互動模式的 renderPersonalCalendar ---
       function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
         if (!containerElement) return;
 
@@ -1050,11 +898,10 @@ else {
           scheduleData.forEach(dayData => {
             dayData.assignments.forEach((name, i) => {
               if (name === personName) {
-                // 儲存更多資訊以便互動使用
                 personalShifts[dayData.day] = { 
                   position: positions[i].label, 
                   type: positions[i].type,
-                  fullLabel: positions[i].label.replace(/\n/g, '') // 移除換行符號供顯示用
+                  fullLabel: positions[i].label.replace(/\n/g, '') 
                 };
               }
             });
@@ -1078,7 +925,6 @@ else {
             shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
             shiftInfo = shift.position;
             hasShift = "true";
-            // 將班別資訊塞入 data attribute
             shiftDataStr = `data-shift-name="${shift.fullLabel}" data-shift-type="${shift.type}"`;
           }
 
@@ -1087,7 +933,6 @@ else {
             todayClass = ' today';
           }
 
-          // 加入 data-day 和 data-has-shift 屬性
           calendarHTML += `
             <div class="calendar-day ${shiftClass}${todayClass}" 
                 data-day="${day}" 
@@ -1100,16 +945,12 @@ else {
         calendarHTML += `</div>`;
         containerElement.innerHTML = calendarHTML;
 
-        // --- 綁定點擊事件 (如果是互動模式) ---
         if (isInteractive && onDayClick) {
           const days = containerElement.querySelectorAll('.calendar-day[data-has-shift="true"]');
           days.forEach(dayEl => {
             dayEl.addEventListener('click', () => {
-              // 1. 移除該容器內其他格子的 selected 樣式
               containerElement.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-shift'));
-              // 2. 加上自己的 selected 樣式
               dayEl.classList.add('selected-shift');
-              // 3. 觸發回調函式，回傳日期與班別
               const day = dayEl.getAttribute('data-day');
               const shiftName = dayEl.getAttribute('data-shift-name');
               onDayClick(day, shiftName);
@@ -1121,20 +962,11 @@ else {
 
       function switchPage(pageName) {
     state.currentPage = pageName;
-
-    // 隱藏所有頁面，然後顯示目標頁面
     DOMElements.pages.forEach(p => p.classList.remove('active'));
     document.getElementById(pageName).classList.add('active');
-
-    // 更新側邊欄連結樣式
     DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active'));
     DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active');
-
-    // 【新邏輯】根據頁面顯示對應的導覽列
-    // 1. 先隱藏所有導覽列
     DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none');
-
-    // 2. 根據 pageName 顯示正確的導覽列，並切換到其預設 view
     if (pageName === 'home') {
         DOMElements.homeViewSelector.style.display = 'flex';
         switchView('personalCalendarView', DOMElements.homeViewSelector);
@@ -1142,28 +974,18 @@ else {
         DOMElements.shiftZoneViewSelector.style.display = 'flex';
         switchView('shiftChangeView', DOMElements.shiftZoneViewSelector);
     }
-
     closeSidebar();
 }
 
-
       function switchView(viewName, viewSelector) {
     if (!viewSelector) return;
-
-    // 【新邏輯】先找到當前是哪個 page 是 active 的
     const currentPageDiv = document.querySelector('.page.active');
     if (!currentPageDiv) return;
-
-    // 把該 active page 裡面的所有 view 都設為 inactive
     currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-
-    // 啟用目標 view
     const targetView = document.getElementById(viewName);
     if (targetView) {
         targetView.classList.add('active');
     }
-
-    // 更新導覽列按鈕的樣式 (這部分不變)
     viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active');
 }
@@ -1219,9 +1041,7 @@ DOMElements.sidebarNav.addEventListener('click', e => {
   }
 });
       DOMElements.header.addEventListener('click', (e) => {
-  // 檢查被點擊的目標是不是漢堡排按鈕
   if (e.target.closest('#sidebar-toggle')) {
-    // 執行原本的開/關功能
     DOMElements.sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
   }
 });
@@ -1255,16 +1075,12 @@ DOMElements.sidebarNav.addEventListener('click', e => {
         if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
       });
       
-      // 【修改】新的調代班表單事件監聽
-
-      // 1. 當申請人改變時，渲染左側互動月曆
       DOMElements.shiftChangeForm.querySelector('#originalPerson').addEventListener('change', e => {
           const person = e.target.value;
           const year = state.currentDate.getFullYear();
           const month = state.currentDate.getMonth() + 1;
           const fileKey = `${year}-${month}`;
           
-          // 清空隱藏值
           DOMElements.originalDateInput.value = "";
           DOMElements.originalShiftInput.value = "";
 
@@ -1273,9 +1089,8 @@ DOMElements.sidebarNav.addEventListener('click', e => {
                   state.cachedData[fileKey].schedule, 
                   person, 
                   DOMElements.sourceCalendarContainer, 
-                  true, // 啟用互動
+                  true, 
                   (day, shiftName) => {
-                      // 點擊後更新隱藏欄位
                       DOMElements.originalDateInput.value = day;
                       DOMElements.originalShiftInput.value = shiftName;
                   }
@@ -1283,28 +1098,23 @@ DOMElements.sidebarNav.addEventListener('click', e => {
           }
       });
 
-      // 2. 當類型改變時，切換「對象月曆」的顯示/隱藏
       DOMElements.changeType.addEventListener('change', e => {
           const isSwap = e.target.value === '調';
           DOMElements.targetCalendarWrapper.style.display = isSwap ? 'block' : 'none';
           
-          // 如果切換回 "給"，清空對象的選擇
           if (!isSwap) {
               DOMElements.swappedDateInput.value = "";
               DOMElements.swappedShiftInput.value = "";
-              // 移除選取樣式
               DOMElements.targetCalendarContainer.querySelectorAll('.selected-shift').forEach(el => el.classList.remove('selected-shift'));
           }
       });
 
-      // 3. 當對象改變時，渲染右側互動月曆 (即使是給班，預先渲染也沒關係，只是 hidden)
       DOMElements.shiftChangeForm.querySelector('#newPerson').addEventListener('change', e => {
           const person = e.target.value;
           const year = state.currentDate.getFullYear();
           const month = state.currentDate.getMonth() + 1;
           const fileKey = `${year}-${month}`;
 
-          // 清空對象的隱藏值
           DOMElements.swappedDateInput.value = "";
           DOMElements.swappedShiftInput.value = "";
 
@@ -1313,9 +1123,8 @@ DOMElements.sidebarNav.addEventListener('click', e => {
                   state.cachedData[fileKey].schedule, 
                   person, 
                   DOMElements.targetCalendarContainer, 
-                  true, // 啟用互動
+                  true, 
                   (day, shiftName) => {
-                      // 點擊後更新隱藏欄位
                       DOMElements.swappedDateInput.value = day;
                       DOMElements.swappedShiftInput.value = shiftName;
                   }
@@ -1323,7 +1132,6 @@ DOMElements.sidebarNav.addEventListener('click', e => {
           }
       });
 
-      // 4. 按下「送出申請」按鈕 (取代原本的 submit)
       DOMElements.preSubmitBtn.addEventListener('click', () => {
           const form = DOMElements.shiftChangeForm;
           const type = form.changeType.value;
@@ -1332,7 +1140,6 @@ DOMElements.sidebarNav.addEventListener('click', e => {
           const s1 = DOMElements.originalShiftInput.value;
           const p2 = form.newPerson.value;
           
-          // 驗證
           if (!p1 || !d1 || !s1) {
               alert("請選擇申請人，並點選行事曆上的班別！");
               return;
@@ -1352,7 +1159,6 @@ DOMElements.sidebarNav.addEventListener('click', e => {
                   alert("調班模式下，請點選對象行事曆上欲交換的班別！");
                   return;
               }
-              // 建立確認訊息 HTML
               confirmMsg = `
                 <div style="text-align:left; display:inline-block;">
                   <span style="color:#7D8C91;">${p1}</span> ${month}/${d1} ${s1}<br>
@@ -1360,7 +1166,6 @@ DOMElements.sidebarNav.addEventListener('click', e => {
                   <span style="color:#7D8C91;">${p2}</span> ${month}/${d2} ${s2}
                 </div>`;
           } else {
-              // 給班
               confirmMsg = `
                 <div style="text-align:left; display:inline-block;">
                   <span style="color:#7D8C91;">${p1}</span> ${month}/${d1} ${s1}<br>
@@ -1369,39 +1174,31 @@ DOMElements.sidebarNav.addEventListener('click', e => {
                 </div>`;
           }
 
-          // 顯示 Modal
           DOMElements.modalContent.innerHTML = confirmMsg;
           DOMElements.confirmModal.style.display = 'flex';
       });
 
-      // 5. Modal 按鈕事件
       DOMElements.modalCancel.addEventListener('click', () => {
           DOMElements.confirmModal.style.display = 'none';
       });
 
       DOMElements.modalConfirm.addEventListener('click', () => {
           DOMElements.confirmModal.style.display = 'none';
-          // 觸發真正的表單送出邏輯 (複用舊有邏輯，傳入 fake event)
           handleFormSubmit({ target: DOMElements.shiftChangeForm, preventDefault: () => {} });
       });
 
-      // 更換密碼表單
       DOMElements.changePasswordForm.addEventListener('submit', handleChangePassword);
 
-      // 綁定「誰來接班」查詢按鈕
       if (DOMElements.successorQueryBtn) {
         DOMElements.successorQueryBtn.addEventListener('click', handleSuccessorQuery);
       }
 
-      // 首次載入
       switchPage('home');
       fetchData();
     }
   </script>
 <script>
-  // 檢查瀏覽器是否支援 Service Worker
   if ('serviceWorker' in navigator) {
-    // 當頁面載入完成後，註冊 sw.js
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(registration => {
         console.log('ServiceWorker registration successful with scope: ', registration.scope);
