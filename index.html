@@ -116,7 +116,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .message-box.error { background-color: #f8d7da; color: #dc3545; }
 .message-box.success { background-color: #d4edda; color: #155724; }
 
-/* --- 每日卡片樣式 (核心修改處) --- */
+/* --- 每日卡片樣式 (本次修正重點) --- */
 .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
 .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
 .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
@@ -131,42 +131,42 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   gap: 10px; 
 }
 
-/* 【修改】利用 Flexbox 強制對齊 */
+/* 【修改】卡片容器設定 */
 .assignment { 
   padding: 8px 10px; 
   border-radius: 6px;
-  /* 讓卡片變成 Flex 容器 (直向) */
+  /* Flexbox 佈局：直向排列 */
   display: flex;
   flex-direction: column;
-  height: 100%; /* 確保它填滿 grid 的高度 */
+  height: 100%; /* 確保撐滿 Grid 高度 */
   box-sizing: border-box;
 }
 
 .assignment.day-shift { background-color: var(--starlux-gold-light); }
 .assignment.night-shift { background-color: var(--starlux-teal-light); }
 
-/* 【修改】職稱區塊樣式 */
+/* 【修改】職稱區塊：靠左、垂直置中、佔滿剩餘空間 */
 .assignment .position { 
   font-size: 0.85em; 
   color: #555; 
   white-space: pre-line; 
   line-height: 1.2; 
   margin-bottom: 4px;
-  /* 讓職稱區塊可以伸展，並垂直置中內容 */
-  flex-grow: 1;
+  
+  /* Flex 屬性讓文字垂直置中 */
+  flex-grow: 1;             /* 佔據上方空間 */
   display: flex;
-  align-items: center; /* 讓 2行字或 3行字都垂直置中 */
-  justify-content: center; /* 水平置中 */
-  text-align: center;
+  align-items: center;      /* 垂直方向：置中 */
+  justify-content: flex-start; /* 水平方向：靠左 */
+  text-align: left;         /* 文字本身靠左 */
 }
 
-/* 【修改】姓名區塊樣式 */
+/* 【修改】姓名區塊：強制推到底部 */
 .assignment .name { 
   font-weight: bold; 
   font-size: 0.95em; 
   color: #000; 
-  /* 雖然 flex-grow 在上方已經大致解決，但可確保名字在底部 */
-  margin-top: auto; 
+  margin-top: auto; /* 這是關鍵：把名字永遠推到最下面 */
 }
 
 /* --- 全員表格 --- */
@@ -242,8 +242,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   50% { box-shadow: 0 0 20px rgba(204, 155, 134, 0.6); }
   100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
 }
-
-/* 移除上一版的 .director-style，改用上述的 Flexbox 對齊即可 */
 
 </style>
 </head>
@@ -793,7 +791,6 @@ else {
         }
       }
 
-      // --- 每日值班卡片 (核心邏輯：移除字體判斷，保留當天判斷) ---
       function renderDailyCards(scheduleData) {
         const today = new Date();
         const currentYear = today.getFullYear();
@@ -823,8 +820,6 @@ else {
             const pos = positions[i];
             if (!pos) return;
             const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
-            
-            // 這裡已經移除 director-style 的判斷，完全依賴 CSS Flexbox
             
             const assignmentHTML = `
               <div class="assignment ${shiftClass}">
