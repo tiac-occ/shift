@@ -592,7 +592,7 @@ else {
             
             const todayCard = document.getElementById('card-today');
             if (todayCard) {
-                todayCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 state.hasScrolledToToday = true; // 標記為已完成，之後不再執行
             }
         }, 300);
@@ -938,7 +938,9 @@ else {
                 personalShifts[dayData.day] = { 
                   position: positions[i].label, 
                   type: positions[i].type,
-                  fullLabel: positions[i].label.replace(/\n/g, '') 
+                  fullLabel: positions[i].label.replace(/\n/g, ''),
+                  // 【修正重點 1】這裡要抓取 shiftList[i] 作為後端需要的正確值
+                  backendValue: shiftList[i] 
                 };
               }
             });
@@ -962,7 +964,8 @@ else {
             shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
             shiftInfo = shift.position;
             hasShift = "true";
-            shiftDataStr = `data-shift-name="${shift.fullLabel}" data-shift-type="${shift.type}"`;
+            // 【修正重點 2】在 HTML 屬性中儲存 backendValue (例如 '日_主任')，而不是顯示用的 label
+            shiftDataStr = `data-shift-name="${shift.fullLabel}" data-shift-value="${shift.backendValue}" data-shift-type="${shift.type}"`;
           }
 
           let todayClass = '';
@@ -989,8 +992,10 @@ else {
               containerElement.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-shift'));
               dayEl.classList.add('selected-shift');
               const day = dayEl.getAttribute('data-day');
-              const shiftName = dayEl.getAttribute('data-shift-name');
-              onDayClick(day, shiftName);
+              // 【修正重點 3】取出 data-shift-value (正確代號)
+              const shiftValue = dayEl.getAttribute('data-shift-value'); 
+              // 我們直接把 shiftValue 傳回去給表單
+              onDayClick(day, shiftValue); 
             });
           });
         }
@@ -1251,5 +1256,4 @@ DOMElements.sidebarNav.addEventListener('click', e => {
   }
 </script>
 </body>
-
 </html>
