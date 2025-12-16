@@ -20,7 +20,7 @@
   right: -3px;
   bottom: -3px;
   border: 4px outset #CC9B86; /* 圈圈的粗細與顏色 */
-  border-radius: 8px;       /* 讓方框變圓，數值越大越像手繪的不規則圓 */
+  border-radius: 8px;        /* 讓方框變圓，數值越大越像手繪的不規則圓 */
   box-sizing: border-box;
   animation: draw-circle 0.5s ease-in-out forwards; /* 加入一個簡單的繪製動畫 */
 }
@@ -151,7 +151,6 @@
     #sidebar.open ~ #overlay { display: block; }
 
     /* 【修改】header 佈局，確保中間元素完美置中 */
-    /* --- 請找到並替換成以下內容 --- */
 .header {
   background-color: var(--starlux-header);
   color: white;
@@ -216,18 +215,18 @@
     .controls label { font-weight: bold; color: var(--starlux-header); }
     .controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
     .message-box { 
-      text-align: center; 
-      padding: 20px; 
-      margin-top: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px; 
-      font-weight: bold; 
-      background-color: #e9ecef; 
-      /* --- ↓↓↓ 新增以下三行來確保置中 ↓↓↓ --- */
-      max-width: 90%; /* 設定最大寬度 */
-      margin-left: auto; /* 自動計算左邊距 */
-      margin-right: auto; /* 自動計算右邊距 */
-    }
+      text-align: center; 
+      padding: 20px; 
+      margin-top: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px; 
+      font-weight: bold; 
+      background-color: #e9ecef; 
+      /* --- ↓↓↓ 新增以下三行來確保置中 ↓↓↓ --- */
+      max-width: 90%; /* 設定最大寬度 */
+      margin-left: auto; /* 自動計算左邊距 */
+      margin-right: auto; /* 自動計算右邊距 */
+    }
     .message-box.error { background-color: #f8d7da; color: #dc3545; }
     .message-box.success { background-color: #d4edda; color: #155724; }
     .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
@@ -272,7 +271,7 @@
     .form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
     .submit-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
     .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    #swappedShiftContainer { display: none; }
+    /* #swappedShiftContainer { display: none; } <--- 已廢棄，改用新的月曆邏輯 */
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
  /* 「誰來接班」新樣式 */
@@ -293,6 +292,89 @@
   text-align: center; 
 }
 
+/* --- 【新增】表單用互動式月曆樣式 --- */
+.interactive-calendar .calendar-day {
+  cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.2s;
+}
+
+.interactive-calendar .calendar-day:hover {
+  transform: scale(1.02);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* 讓沒有班的格子游標顯示為禁止 (防止選到空班) */
+.interactive-calendar .calendar-day[data-has-shift="false"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 被選取的班表樣式 - 使用 Starlux 金色邊框與光暈 */
+.calendar-day.selected-shift {
+  border: 3px solid var(--starlux-header) !important;
+  background-color: rgba(173, 159, 116, 0.15) !important; /* 淡金色背景 */
+  position: relative;
+  box-shadow: 0 0 10px rgba(62, 75, 92, 0.3);
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+/* --- 【新增】確認彈出視窗 (Modal) 樣式 --- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 5000;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(3px);
+}
+
+.modal-box {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  text-align: center;
+  border: 1px solid var(--starlux-gold-light);
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-content {
+  font-size: 1.2em;
+  margin-bottom: 25px;
+  line-height: 1.6;
+  color: var(--starlux-header);
+  font-weight: bold;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1em;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-cancel { background-color: #d8dde0; color: #555; }
+.btn-confirm { background-color: var(--starlux-header); color: white; }
 
    </style>
 </head>
@@ -333,7 +415,7 @@
     <div id="overlay"></div>
 
     <div id="content-wrapper">
-      
+       
 <header class="header">
   <div class="header-top-row">
     <button id="sidebar-toggle">☰</button>
@@ -388,72 +470,77 @@
         </div>
 
         <div id="shiftZone" class="page">
-          <div id="shiftChangeView" class="view active">
-            <div class="form-container">
-              <div id="formMessageContainer"></div>
-              <form id="shiftChangeForm" class="form-grid">
-                <div class="form-field">
-                  <label for="originalPerson">選擇人員 (1)</label>
-                  <select id="originalPerson" name="originalPerson" required></select>
-                </div>
-                <div class="form-row">
+            <div id="shiftChangeView" class="view active">
+              <div class="form-container">
+                <div id="formMessageContainer"></div>
+                
+                <form id="shiftChangeForm" class="form-grid">
+                  <input type="hidden" id="originalDate" name="originalDate">
+                  <input type="hidden" id="originalShift" name="originalShift">
+                  <input type="hidden" id="swappedDate" name="swappedDate">
+                  <input type="hidden" id="swappedShift" name="swappedShift">
+                
                   <div class="form-field">
-                    <label for="originalDate">日期</label>
-                    <select id="originalDate" name="originalDate" required></select>
+                    <label for="originalPerson">選擇申請人員 (1)</label>
+                    <select id="originalPerson" name="originalPerson" required></select>
                   </div>
+                  
                   <div class="form-field">
-                    <label for="originalShift">班別</label>
-                    <select id="originalShift" name="originalShift" required></select>
+                    <label>請點選欲調整的班別：</label>
+                    <div id="sourceCalendarContainer" class="interactive-calendar" style="min-height:200px;">
+                      (請先選擇人員)
+                    </div>
                   </div>
-                </div>
-                <div class="form-field">
-                  <label for="changeType">申請類型</label>
-                  <select id="changeType" name="changeType" required>
-                    <option value="給">給班</option>
-                    <option value="調">調班</option>
-                  </select>
-                </div>
-                <div class="form-field">
-                  <label for="newPerson">選擇人員 (2)</label>
-                  <select id="newPerson" name="newPerson" required></select>
-                </div>
-                <div id="swappedShiftContainer" class="form-grid">
+                
+                  <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
+                
                   <div class="form-row">
                     <div class="form-field">
-                      <label for="swappedDate">交換日期</label>
-                      <select id="swappedDate" name="swappedDate"></select>
+                      <label for="changeType">申請類型</label>
+                      <select id="changeType" name="changeType" required>
+                        <option value="給">給班</option>
+                        <option value="調">調班</option>
+                      </select>
                     </div>
                     <div class="form-field">
-                      <label for="swappedShift">交換班別</label>
-                      <select id="swappedShift" name="swappedShift"></select>
+                      <label for="newPerson">選擇對象人員 (2)</label>
+                      <select id="newPerson" name="newPerson" required></select>
                     </div>
                   </div>
-                </div>
-                <button type="submit" id="submitBtn" class="submit-btn">送出申請</button>
-              </form>
+                
+                  <div id="targetCalendarWrapper" class="form-field" style="display:none;">
+                    <label>請點選對象欲交換的班別：</label>
+                    <div id="targetCalendarContainer" class="interactive-calendar" style="min-height:200px;">
+                      (請先選擇對象人員)
+                    </div>
+                  </div>
+                
+                  <button type="button" id="preSubmitBtn" class="submit-btn">送出申請</button>
+                </form>
+
+              </div>
+            </div>
+            <div id="successorView" class="view">
+              <div class="controls">
+                <label for="successorDate">選擇日期:</label>
+                <select id="successorDate"></select>
+                <label for="successorRole">選擇班別:</label>
+                <select id="successorRole">
+                  <option>主任(日)</option>
+                  <option>主任(夜)</option>
+                  <option>副主任(日)</option>
+                  <option>副主任(夜)</option>
+                  <option>督導(日)</option>
+                  <option>督導(夜)</option>
+                </select>
+                <button id="successorQueryBtn" class="submit-btn" style="padding: 8px 20px; font-size: 1.1em;">查詢</button>
+              </div>
+              <div id="successor-results">
+                <h3>可用人選列表:</h3>
+                <div id="successor-list">(請先選擇日期與班別後查詢)</div>
+              </div>
             </div>
           </div>
-          <div id="successorView" class="view">
-            <div class="controls">
-              <label for="successorDate">選擇日期:</label>
-              <select id="successorDate"></select>
-              <label for="successorRole">選擇班別:</label>
-              <select id="successorRole">
-                <option>主任(日)</option>
-                <option>主任(夜)</option>
-                <option>副主任(日)</option>
-                <option>副主任(夜)</option>
-                <option>督導(日)</option>
-                <option>督導(夜)</option>
-              </select>
-              <button id="successorQueryBtn" class="submit-btn" style="padding: 8px 20px; font-size: 1.1em;">查詢</button>
-            </div>
-            <div id="successor-results">
-              <h3>可用人選列表:</h3>
-              <div id="successor-list">(請先選擇日期與班別後查詢)</div>
-            </div>
-          </div>
-        </div>
 
         <div id="account" class="page">
           <div id="changePasswordView" class="view active">
@@ -479,11 +566,25 @@
           </div>
         </div>
       </main>
-    </div> </div> <div id="logout-confirm">
+    </div> </div> 
+    
+    <div id="logout-confirm">
     <p>確認登出?</p>
     <button id="confirm-logout-yes">是，確定</button>
     <button id="confirm-logout-no">否</button>
   </div>
+
+  <div id="confirmModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>申請確認</h3>
+    <div id="modalContent" class="modal-content">
+      </div>
+    <div class="modal-actions">
+      <button id="modalCancel" class="modal-btn btn-cancel">取消</button>
+      <button id="modalConfirm" class="modal-btn btn-confirm">確認送出</button>
+    </div>
+  </div>
+</div>
 
   <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
@@ -539,13 +640,13 @@ window.appInitialized = true;
 
 else {
 
-        loginContainer.style.display = 'flex';
+        loginContainer.style.display = 'flex';
 
-        appWrapper.style.display = 'none';
+        appWrapper.style.display = 'none';
 
-      }
+      }
 
-    });
+    });
 
 
 
@@ -574,7 +675,11 @@ else {
         messageContainer: document.getElementById('messageContainer'), dailyCardView: document.getElementById('dailyCardView'), fullTableView: document.getElementById('fullTableView'),
         tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'),
         shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'),
-        swappedShiftContainer: document.getElementById('swappedShiftContainer'), changeType: document.getElementById('changeType'), submitBtn: document.getElementById('submitBtn'),
+        
+        // 【修改】新版調代 ID
+        changeType: document.getElementById('changeType'), 
+        submitBtn: document.getElementById('submitBtn'), // 注意：這可能已經移除，改用 preSubmitBtn
+        preSubmitBtn: document.getElementById('preSubmitBtn'),
         highlighter1: document.getElementById('highlighter1'),
         highlighter2: document.getElementById('highlighter2'),
 
@@ -591,6 +696,19 @@ else {
         myScheduleTitle: document.getElementById('myScheduleTitle'),
         myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'),
         colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'),
+
+        // 【新增】調代申請新元件
+        sourceCalendarContainer: document.getElementById('sourceCalendarContainer'),
+        targetCalendarContainer: document.getElementById('targetCalendarContainer'),
+        targetCalendarWrapper: document.getElementById('targetCalendarWrapper'),
+        originalDateInput: document.getElementById('originalDate'),
+        originalShiftInput: document.getElementById('originalShift'),
+        swappedDateInput: document.getElementById('swappedDate'),
+        swappedShiftInput: document.getElementById('swappedShift'),
+        confirmModal: document.getElementById('confirmModal'),
+        modalContent: document.getElementById('modalContent'),
+        modalCancel: document.getElementById('modalCancel'),
+        modalConfirm: document.getElementById('modalConfirm'),
       };
 
       state.loggedInUserName = user.displayName || user.email.split('@')[0];
@@ -696,11 +814,18 @@ else {
         });
       }
 
+      // 【修改】只填充人員，不需要填充 Date/Shift 下拉選單了
       function populateShiftChangeForm(names, shifts) {
         const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
         personSelectors.forEach(selector => {
           const currentVal = selector.value;
           selector.innerHTML = '';
+          // 加入預設空白選項，強迫使用者選擇觸發 change 事件
+          const defaultOpt = document.createElement('option');
+          defaultOpt.value = "";
+          defaultOpt.text = "請選擇人員...";
+          selector.appendChild(defaultOpt);
+
           names.forEach(name => {
             const option = document.createElement('option');
             option.value = name;
@@ -710,36 +835,12 @@ else {
           if (names.includes(currentVal)) selector.value = currentVal;
         });
 
-        const shiftSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalShift"], select[name="swappedShift"]');
-        shiftSelectors.forEach(selector => {
-          const currentVal = selector.value;
-          selector.innerHTML = '';
-          shifts.forEach(shift => {
-            const option = document.createElement('option');
-            option.value = shift;
-            option.textContent = shift;
-            selector.appendChild(option);
-          });
-          if (shifts.includes(currentVal)) selector.value = currentVal;
-        });
-
-        const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"], select[name="swappedDate"]');
+        // 同步填充「誰來接班」日期下拉
+        const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"]'); // 這裡只是為了取天數
         const month = state.currentDate.getMonth() + 1;
         const year = state.currentDate.getFullYear();
         const daysInMonth = new Date(year, month, 0).getDate();
-        dateSelectors.forEach(selector => {
-          const currentVal = selector.value;
-          selector.innerHTML = '';
-          for (let i = 1; i <= daysInMonth; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `${month}/${i}`;
-            selector.appendChild(option);
-          }
-          if (currentVal && parseInt(currentVal) <= daysInMonth) selector.value = currentVal;
-        });
-
-        // 同步填充「誰來接班」日期下拉
+        
         if (DOMElements.successorDate) {
           DOMElements.successorDate.innerHTML = '';
           for (let i = 1; i <= daysInMonth; i++) {
@@ -752,12 +853,16 @@ else {
       }
 
       async function handleFormSubmit(e) {
-        e.preventDefault();
-        DOMElements.submitBtn.disabled = true;
-        DOMElements.submitBtn.textContent = '處理中...';
+        // e 可能是假的事件物件 (來自 Modal 確認)，也可能是真實的 (雖然現在都走 Modal 流程)
+        if(e.preventDefault) e.preventDefault();
+        
+        const btn = DOMElements.preSubmitBtn; // 使用新的按鈕
+        btn.disabled = true;
+        btn.textContent = '處理中...';
         showMessage('loading', '正在送出申請...', DOMElements.formMessageContainer);
 
-        const formData = new FormData(e.target);
+        // 使用 hidden inputs 的值來建立 payload
+        const formData = new FormData(DOMElements.shiftChangeForm); // 讀取整個表單資料 (包含 hidden inputs)
         const data = Object.fromEntries(formData.entries());
         const year = state.currentDate.getFullYear();
         const month = state.currentDate.getMonth() + 1;
@@ -774,8 +879,17 @@ else {
           const result = await response.json();
           if (result.success) {
             showMessage('success', result.message, DOMElements.formMessageContainer);
-            e.target.reset();
-            DOMElements.swappedShiftContainer.style.display = 'none';
+            DOMElements.shiftChangeForm.reset();
+            // 清空月曆顯示
+            DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)";
+            DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)";
+            DOMElements.targetCalendarWrapper.style.display = 'none';
+            // 清空隱藏欄位
+            DOMElements.originalDateInput.value = "";
+            DOMElements.originalShiftInput.value = "";
+            DOMElements.swappedDateInput.value = "";
+            DOMElements.swappedShiftInput.value = "";
+
             delete state.cachedData[fileKey];
             switchPage('home');
             switchView('dailyCardView', DOMElements.homeViewSelector);
@@ -784,8 +898,8 @@ else {
         } catch (error) {
           showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer);
         } finally {
-          DOMElements.submitBtn.disabled = false;
-          DOMElements.submitBtn.textContent = '送出申請';
+          btn.disabled = false;
+          btn.textContent = '送出申請';
         }
       }
 
@@ -917,57 +1031,92 @@ else {
         if (names.includes(currentSelection)) selector.value = currentSelection;
       }
 
-      // --- ▼▼▼ 新版本的 renderPersonalCalendar 函式 ▼▼▼ ---
-function renderPersonalCalendar(scheduleData, personName, containerElement) {
-  if (!containerElement) return;
+      // --- 【修改】支援互動模式的 renderPersonalCalendar ---
+      function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
+        if (!containerElement) return;
 
-  // 【新增】獲取真實的今天日期 (會根據您的時區 GMT+8，是正確的)
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth();
-  const currentDay = today.getDate();
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+        const currentDay = today.getDate();
 
-  const year = state.currentDate.getFullYear();
-  const month = state.currentDate.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const year = state.currentDate.getFullYear();
+        const month = state.currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const personalShifts = {};
-  if (personName) {
-    scheduleData.forEach(dayData => {
-      dayData.assignments.forEach((name, i) => {
-        if (name === personName) {
-          personalShifts[dayData.day] = { position: positions[i].label, type: positions[i].type };
+        const personalShifts = {};
+        if (personName) {
+          scheduleData.forEach(dayData => {
+            dayData.assignments.forEach((name, i) => {
+              if (name === personName) {
+                // 儲存更多資訊以便互動使用
+                personalShifts[dayData.day] = { 
+                  position: positions[i].label, 
+                  type: positions[i].type,
+                  fullLabel: positions[i].label.replace(/\n/g, '') // 移除換行符號供顯示用
+                };
+              }
+            });
+          });
         }
-      });
-    });
-  }
 
-  let calendarHTML = `<div class="calendar-grid">`;
-  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-  weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
-  for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
+        let calendarHTML = `<div class="calendar-grid">`;
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
+        
+        for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const shift = personalShifts[day];
-    let shiftClass = 'day-off';
-    let shiftInfo = '-';
-    if (shift) {
-      shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
-      shiftInfo = shift.position;
-    }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const shift = personalShifts[day];
+          let shiftClass = 'day-off';
+          let shiftInfo = '-';
+          let hasShift = "false";
+          let shiftDataStr = "";
 
-    // 【新增】判斷是否為今天，並加上 'today' class
-    let todayClass = '';
-    if (year === currentYear && month === currentMonth && day === currentDay) {
-      todayClass = ' today';
-    }
+          if (shift) {
+            shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
+            shiftInfo = shift.position;
+            hasShift = "true";
+            // 將班別資訊塞入 data attribute
+            shiftDataStr = `data-shift-name="${shift.fullLabel}" data-shift-type="${shift.type}"`;
+          }
 
-    calendarHTML += `<div class="calendar-day ${shiftClass}${todayClass}"><div class="day-number">${day}</div><div class="shift-info">${shiftInfo}</div></div>`;
-  }
-  calendarHTML += `</div>`;
-  containerElement.innerHTML = calendarHTML;
-}
+          let todayClass = '';
+          if (year === currentYear && month === currentMonth && day === currentDay) {
+            todayClass = ' today';
+          }
+
+          // 加入 data-day 和 data-has-shift 屬性
+          calendarHTML += `
+            <div class="calendar-day ${shiftClass}${todayClass}" 
+                data-day="${day}" 
+                data-has-shift="${hasShift}" 
+                ${shiftDataStr}>
+              <div class="day-number">${day}</div>
+              <div class="shift-info">${shiftInfo}</div>
+            </div>`;
+        }
+        calendarHTML += `</div>`;
+        containerElement.innerHTML = calendarHTML;
+
+        // --- 綁定點擊事件 (如果是互動模式) ---
+        if (isInteractive && onDayClick) {
+          const days = containerElement.querySelectorAll('.calendar-day[data-has-shift="true"]');
+          days.forEach(dayEl => {
+            dayEl.addEventListener('click', () => {
+              // 1. 移除該容器內其他格子的 selected 樣式
+              containerElement.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-shift'));
+              // 2. 加上自己的 selected 樣式
+              dayEl.classList.add('selected-shift');
+              // 3. 觸發回調函式，回傳日期與班別
+              const day = dayEl.getAttribute('data-day');
+              const shiftName = dayEl.getAttribute('data-shift-name');
+              onDayClick(day, shiftName);
+            });
+          });
+        }
+      }
 
 
       function switchPage(pageName) {
@@ -1062,35 +1211,22 @@ function renderPersonalCalendar(scheduleData, personName, containerElement) {
       }
 
       // --- 事件監聽器 ---
-      console.log("要綁定事件的選單元素是:", DOMElements.sidebarNav); 
-
+      
 DOMElements.sidebarNav.addEventListener('click', e => {
-  console.log("日誌1：側邊欄被點擊了！"); 
   e.preventDefault();
   if (e.target.tagName === 'A') {
-    console.log("日誌2：準備切換到頁面:", e.target.dataset.page);
     switchPage(e.target.dataset.page);
   }
 });
       DOMElements.header.addEventListener('click', (e) => {
   // 檢查被點擊的目標是不是漢堡排按鈕
   if (e.target.closest('#sidebar-toggle')) {
-    // 為了測試，我們先印出一條訊息確認
-    console.log("Header 總監聽成功觸發開/關側邊欄！"); 
-
     // 執行原本的開/關功能
     DOMElements.sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
   }
 });
       DOMElements.overlay.addEventListener('click', closeSidebar);
-      DOMElements.sidebarNav.addEventListener('click', e => {
-  console.log("日誌1：側邊欄被點擊了！"); // <-- 這是我們的第一個間諜
-  e.preventDefault();
-  if (e.target.tagName === 'A') {
-    console.log("日誌2：準備切換到頁面:", e.target.dataset.page); // <-- 這是第二個間諜
-    switchPage(e.target.dataset.page);
-  }
-});
+      
       DOMElements.logoutBtn.addEventListener('click', () => { DOMElements.logoutConfirm.style.display = 'block'; DOMElements.overlay.style.display = 'block'; });
       DOMElements.confirmLogoutNo.addEventListener('click', () => { DOMElements.logoutConfirm.style.display = 'none'; if (!DOMElements.sidebar.classList.contains('open')) DOMElements.overlay.style.display = 'none'; });
       DOMElements.confirmLogoutYes.addEventListener('click', () => { auth.signOut(); DOMElements.logoutConfirm.style.display = 'none'; DOMElements.overlay.style.display = 'none'; });
@@ -1118,12 +1254,136 @@ DOMElements.sidebarNav.addEventListener('click', e => {
         const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
         if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
       });
-      DOMElements.changeType.addEventListener('change', e => {
-        DOMElements.swappedShiftContainer.style.display = e.target.value === '調' ? 'grid' : 'none';
+      
+      // 【修改】新的調代班表單事件監聽
+
+      // 1. 當申請人改變時，渲染左側互動月曆
+      DOMElements.shiftChangeForm.querySelector('#originalPerson').addEventListener('change', e => {
+          const person = e.target.value;
+          const year = state.currentDate.getFullYear();
+          const month = state.currentDate.getMonth() + 1;
+          const fileKey = `${year}-${month}`;
+          
+          // 清空隱藏值
+          DOMElements.originalDateInput.value = "";
+          DOMElements.originalShiftInput.value = "";
+
+          if(state.cachedData[fileKey]) {
+              renderPersonalCalendar(
+                  state.cachedData[fileKey].schedule, 
+                  person, 
+                  DOMElements.sourceCalendarContainer, 
+                  true, // 啟用互動
+                  (day, shiftName) => {
+                      // 點擊後更新隱藏欄位
+                      DOMElements.originalDateInput.value = day;
+                      DOMElements.originalShiftInput.value = shiftName;
+                  }
+              );
+          }
       });
 
-      // 調代申請表單
-      DOMElements.shiftChangeForm.addEventListener('submit', handleFormSubmit);
+      // 2. 當類型改變時，切換「對象月曆」的顯示/隱藏
+      DOMElements.changeType.addEventListener('change', e => {
+          const isSwap = e.target.value === '調';
+          DOMElements.targetCalendarWrapper.style.display = isSwap ? 'block' : 'none';
+          
+          // 如果切換回 "給"，清空對象的選擇
+          if (!isSwap) {
+              DOMElements.swappedDateInput.value = "";
+              DOMElements.swappedShiftInput.value = "";
+              // 移除選取樣式
+              DOMElements.targetCalendarContainer.querySelectorAll('.selected-shift').forEach(el => el.classList.remove('selected-shift'));
+          }
+      });
+
+      // 3. 當對象改變時，渲染右側互動月曆 (即使是給班，預先渲染也沒關係，只是 hidden)
+      DOMElements.shiftChangeForm.querySelector('#newPerson').addEventListener('change', e => {
+          const person = e.target.value;
+          const year = state.currentDate.getFullYear();
+          const month = state.currentDate.getMonth() + 1;
+          const fileKey = `${year}-${month}`;
+
+          // 清空對象的隱藏值
+          DOMElements.swappedDateInput.value = "";
+          DOMElements.swappedShiftInput.value = "";
+
+          if(state.cachedData[fileKey]) {
+              renderPersonalCalendar(
+                  state.cachedData[fileKey].schedule, 
+                  person, 
+                  DOMElements.targetCalendarContainer, 
+                  true, // 啟用互動
+                  (day, shiftName) => {
+                      // 點擊後更新隱藏欄位
+                      DOMElements.swappedDateInput.value = day;
+                      DOMElements.swappedShiftInput.value = shiftName;
+                  }
+              );
+          }
+      });
+
+      // 4. 按下「送出申請」按鈕 (取代原本的 submit)
+      DOMElements.preSubmitBtn.addEventListener('click', () => {
+          const form = DOMElements.shiftChangeForm;
+          const type = form.changeType.value;
+          const p1 = form.originalPerson.value;
+          const d1 = DOMElements.originalDateInput.value;
+          const s1 = DOMElements.originalShiftInput.value;
+          const p2 = form.newPerson.value;
+          
+          // 驗證
+          if (!p1 || !d1 || !s1) {
+              alert("請選擇申請人，並點選行事曆上的班別！");
+              return;
+          }
+          if (!p2) {
+              alert("請選擇對象人員！");
+              return;
+          }
+          
+          let confirmMsg = "";
+          const month = state.currentDate.getMonth() + 1;
+
+          if (type === '調') {
+              const d2 = DOMElements.swappedDateInput.value;
+              const s2 = DOMElements.swappedShiftInput.value;
+              if (!d2 || !s2) {
+                  alert("調班模式下，請點選對象行事曆上欲交換的班別！");
+                  return;
+              }
+              // 建立確認訊息 HTML
+              confirmMsg = `
+                <div style="text-align:left; display:inline-block;">
+                  <span style="color:#7D8C91;">${p1}</span> ${month}/${d1} ${s1}<br>
+                  <div style="text-align:center; color:#CC9B86; margin: 5px 0;">⇅ 互調</div>
+                  <span style="color:#7D8C91;">${p2}</span> ${month}/${d2} ${s2}
+                </div>`;
+          } else {
+              // 給班
+              confirmMsg = `
+                <div style="text-align:left; display:inline-block;">
+                  <span style="color:#7D8C91;">${p1}</span> ${month}/${d1} ${s1}<br>
+                  <div style="text-align:center; color:#CC9B86; margin: 5px 0;">➔ 給班</div>
+                  <span style="color:#7D8C91;">${p2}</span>
+                </div>`;
+          }
+
+          // 顯示 Modal
+          DOMElements.modalContent.innerHTML = confirmMsg;
+          DOMElements.confirmModal.style.display = 'flex';
+      });
+
+      // 5. Modal 按鈕事件
+      DOMElements.modalCancel.addEventListener('click', () => {
+          DOMElements.confirmModal.style.display = 'none';
+      });
+
+      DOMElements.modalConfirm.addEventListener('click', () => {
+          DOMElements.confirmModal.style.display = 'none';
+          // 觸發真正的表單送出邏輯 (複用舊有邏輯，傳入 fake event)
+          handleFormSubmit({ target: DOMElements.shiftChangeForm, preventDefault: () => {} });
+      });
 
       // 更換密碼表單
       DOMElements.changePasswordForm.addEventListener('submit', handleChangePassword);
