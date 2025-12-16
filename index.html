@@ -116,7 +116,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .message-box.error { background-color: #f8d7da; color: #dc3545; }
 .message-box.success { background-color: #d4edda; color: #155724; }
 
-/* --- 每日卡片樣式 (本次修正重點) --- */
+/* --- 每日卡片樣式 (維持上一版正確的 CSS) --- */
 .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
 .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
 .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
@@ -125,48 +125,41 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
 .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
 
-.assignment-grid { 
-  display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-  gap: 10px; 
-}
+.assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 
-/* 【修改】卡片容器設定 */
+/* 卡片容器：Flexbox 直向排列 */
 .assignment { 
   padding: 8px 10px; 
   border-radius: 6px;
-  /* Flexbox 佈局：直向排列 */
   display: flex;
   flex-direction: column;
-  height: 100%; /* 確保撐滿 Grid 高度 */
+  height: 100%;
   box-sizing: border-box;
 }
 
 .assignment.day-shift { background-color: var(--starlux-gold-light); }
 .assignment.night-shift { background-color: var(--starlux-teal-light); }
 
-/* 【修改】職稱區塊：靠左、垂直置中、佔滿剩餘空間 */
+/* 職稱區塊：靠左、垂直置中、佔滿上方 */
 .assignment .position { 
   font-size: 0.85em; 
   color: #555; 
   white-space: pre-line; 
   line-height: 1.2; 
   margin-bottom: 4px;
-  
-  /* Flex 屬性讓文字垂直置中 */
-  flex-grow: 1;             /* 佔據上方空間 */
+  flex-grow: 1;
   display: flex;
-  align-items: center;      /* 垂直方向：置中 */
-  justify-content: flex-start; /* 水平方向：靠左 */
-  text-align: left;         /* 文字本身靠左 */
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
 }
 
-/* 【修改】姓名區塊：強制推到底部 */
+/* 姓名區塊：推到底部 */
 .assignment .name { 
   font-weight: bold; 
   font-size: 0.95em; 
   color: #000; 
-  margin-top: auto; /* 這是關鍵：把名字永遠推到最下面 */
+  margin-top: auto;
 }
 
 /* --- 全員表格 --- */
@@ -509,7 +502,19 @@ else {
     });
 
     function initializeApp(user) {
-      const state = { currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', loggedInUserName: '' };
+      // 1. 在 state 中新增 hasScrolledToToday 旗標
+      const state = { 
+        currentView: 'personalCalendarView', 
+        currentPage: 'home', 
+        currentDate: new Date(), 
+        cachedData: {}, 
+        selectedPerson: '', 
+        highlightPerson1: '', 
+        highlightPerson2: '', 
+        loggedInUserName: '',
+        hasScrolledToToday: false // 新增：紀錄是否已自動滑動
+      };
+
       const DOMElements = {
         header: document.querySelector('.header'),
         sidebar: document.getElementById('sidebar'), sidebarToggle: document.getElementById('sidebar-toggle'), overlay: document.getElementById('overlay'),
@@ -574,6 +579,24 @@ else {
 
 
       // --- 函數定義 ---
+      
+      // 2. 新增「嘗試滑動到今天」的輔助函式
+      function attemptScrollToToday() {
+        if (state.hasScrolledToToday) return; // 如果已經滑過，就跳出
+        
+        // 稍微延遲以確保畫面已經渲染/顯示
+        setTimeout(() => {
+            const dailyView = document.getElementById('dailyCardView');
+            // 必須確認該頁面是開啟狀態 (有 active class)
+            if (!dailyView.classList.contains('active')) return;
+            
+            const todayCard = document.getElementById('card-today');
+            if (todayCard) {
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                state.hasScrolledToToday = true; // 標記為已完成，之後不再執行
+            }
+        }, 300);
+      }
 
       DOMElements.userInfo.textContent = `${state.loggedInUserName}你好! :-)`;
       DOMElements.myScheduleTitle.textContent = `${state.loggedInUserName} 的班表`;
@@ -855,12 +878,8 @@ else {
         DOMElements.dailyCardView.appendChild(fragment);
         DOMElements.dailyCardView.querySelectorAll('.day-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
         
-        setTimeout(() => {
-            const todayCard = document.getElementById('card-today');
-            if (todayCard) {
-                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 500); 
+        // 3. 在資料渲染完成後，嘗試滑動到今天
+        attemptScrollToToday();
       }
 
       function renderFullTable(scheduleData) {
@@ -1006,6 +1025,11 @@ else {
     }
     viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+
+    // 4. 切換到每日值班頁面時，也嘗試執行滑動
+    if (viewName === 'dailyCardView') {
+        attemptScrollToToday();
+    }
 }
 
       function openSidebar() {
