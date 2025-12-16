@@ -116,7 +116,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .message-box.error { background-color: #f8d7da; color: #dc3545; }
 .message-box.success { background-color: #d4edda; color: #155724; }
 
-/* --- 每日卡片樣式 --- */
+/* --- 每日卡片樣式 (核心修改處) --- */
 .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
 .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
 .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
@@ -124,12 +124,50 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .day-card.open .day-details { max-height: 1500px; }
 .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
 .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
-.assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-.assignment { padding: 8px 10px; border-radius: 6px; }
+
+.assignment-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+  gap: 10px; 
+}
+
+/* 【修改】利用 Flexbox 強制對齊 */
+.assignment { 
+  padding: 8px 10px; 
+  border-radius: 6px;
+  /* 讓卡片變成 Flex 容器 (直向) */
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* 確保它填滿 grid 的高度 */
+  box-sizing: border-box;
+}
+
 .assignment.day-shift { background-color: var(--starlux-gold-light); }
 .assignment.night-shift { background-color: var(--starlux-teal-light); }
-.assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; }
-.assignment .name { font-weight: bold; font-size: 0.95em; color: #000; }
+
+/* 【修改】職稱區塊樣式 */
+.assignment .position { 
+  font-size: 0.85em; 
+  color: #555; 
+  white-space: pre-line; 
+  line-height: 1.2; 
+  margin-bottom: 4px;
+  /* 讓職稱區塊可以伸展，並垂直置中內容 */
+  flex-grow: 1;
+  display: flex;
+  align-items: center; /* 讓 2行字或 3行字都垂直置中 */
+  justify-content: center; /* 水平置中 */
+  text-align: center;
+}
+
+/* 【修改】姓名區塊樣式 */
+.assignment .name { 
+  font-weight: bold; 
+  font-size: 0.95em; 
+  color: #000; 
+  /* 雖然 flex-grow 在上方已經大致解決，但可確保名字在底部 */
+  margin-top: auto; 
+}
 
 /* --- 全員表格 --- */
 .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
@@ -192,7 +230,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .btn-cancel { background-color: #d8dde0; color: #555; }
 .btn-confirm { background-color: var(--starlux-header); color: white; }
 
-/* --- 【新增】每日值班：當天日期的高亮與自動展開樣式 --- */
+/* --- 每日值班：當天日期的高亮與自動展開樣式 --- */
 .day-card.today-highlight {
   border: 3px solid #CC9B86 !important; /* 強制使用金色邊框 */
   box-shadow: 0 0 15px rgba(204, 155, 134, 0.5); /* 加一點金色光暈 */
@@ -205,14 +243,8 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
 }
 
-/* --- 【新增】主任職稱特別調整 (解決對齊問題) --- */
-.assignment .position.director-style {
-  font-size: 1.25em;   /* 字體加大 */
-  line-height: 1.4;    /* 行高加大 */
-  padding-bottom: 5px; /* 增加底部內邊距 */
-  margin-bottom: 5px;  /* 增加底部外邊距，確保把名字往下擠 */
-  color: #5d4037;      /* 稍微加深顏色突顯主管 */
-}
+/* 移除上一版的 .director-style，改用上述的 Flexbox 對齊即可 */
+
 </style>
 </head>
 <body>
@@ -761,27 +793,23 @@ else {
         }
       }
 
-      // --- 【修改】每日值班卡片：支援「今天亮框」、「自動展開」、「主任字體放大」 ---
+      // --- 每日值班卡片 (核心邏輯：移除字體判斷，保留當天判斷) ---
       function renderDailyCards(scheduleData) {
-        // 1. 取得真實世界的「今天」
         const today = new Date();
         const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth();   // 注意：JS月份是 0-11
+        const currentMonth = today.getMonth(); 
         const currentDay = today.getDate();
 
-        // 取得目前顯示資料的年月 (從 state 取得)
         const viewYear = state.currentDate.getFullYear();
-        const viewMonth = state.currentDate.getMonth(); // 這裡保持 0-11 比較方便比對
+        const viewMonth = state.currentDate.getMonth();
 
         const fragment = document.createDocumentFragment();
         
         scheduleData.forEach(dayData => {
           const card = document.createElement('div');
           
-          // 2. 判斷是否為「今天」
           let isToday = (viewYear === currentYear && viewMonth === currentMonth && dayData.day === currentDay);
           
-          // 如果是今天：加上 'today-highlight' (亮框) 以及 'open' (預設展開)
           card.className = isToday ? 'day-card today-highlight open' : 'day-card';
 
           const groups = {
@@ -796,15 +824,11 @@ else {
             if (!pos) return;
             const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
             
-            // 3. 【修改】針對「主任」做特殊處理 (排除副主任)
-            let posSpecialClass = '';
-            if (pos.label.includes('主任') && !pos.label.includes('副')) {
-                posSpecialClass = ' director-style';
-            }
-
+            // 這裡已經移除 director-style 的判斷，完全依賴 CSS Flexbox
+            
             const assignmentHTML = `
               <div class="assignment ${shiftClass}">
-                <div class="position${posSpecialClass}">${pos.label}</div>
+                <div class="position">${pos.label}</div>
                 <div class="name">${name || '–'}</div>
               </div>`;
 
@@ -836,7 +860,6 @@ else {
         DOMElements.dailyCardView.appendChild(fragment);
         DOMElements.dailyCardView.querySelectorAll('.day-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
         
-        // (額外優化) 如果是今天，自動捲動到該卡片位置
         setTimeout(() => {
             const todayCard = document.getElementById('card-today');
             if (todayCard) {
