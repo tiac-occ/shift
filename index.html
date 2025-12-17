@@ -236,6 +236,12 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
 }
 
+.interactive-calendar .calendar-day.today::after {
+  content: none !important;
+  display: none !important;
+  border: none !important;
+  animation: none !important;
+}
 </style>
 </head>
 <body>
@@ -1258,3 +1264,4 @@ DOMElements.sidebarNav.addEventListener('click', e => {
 </body>
 
 </html>
+
