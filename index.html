@@ -236,12 +236,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
 }
 
-.interactive-calendar .calendar-day.today::after {
-  content: none !important;
-  display: none !important;
-  border: none !important;
-  animation: none !important;
-}
+
 </style>
 </head>
 <body>
@@ -923,6 +918,8 @@ else {
         if (names.includes(currentSelection)) selector.value = currentSelection;
       }
 
+// 【修正版 V2】月曆渲染邏輯
+      // 修正點：在互動模式下 (isInteractive == true)，直接不產生 today class
       function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
         if (!containerElement) return;
 
@@ -945,7 +942,6 @@ else {
                   position: positions[i].label, 
                   type: positions[i].type,
                   fullLabel: positions[i].label.replace(/\n/g, ''),
-                  // 【修正重點 1】這裡要抓取 shiftList[i] 作為後端需要的正確值
                   backendValue: shiftList[i] 
                 };
               }
@@ -970,12 +966,14 @@ else {
             shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
             shiftInfo = shift.position;
             hasShift = "true";
-            // 【修正重點 2】在 HTML 屬性中儲存 backendValue (例如 '日_主任')，而不是顯示用的 label
             shiftDataStr = `data-shift-name="${shift.fullLabel}" data-shift-value="${shift.backendValue}" data-shift-type="${shift.type}"`;
           }
 
           let todayClass = '';
-          if (year === currentYear && month === currentMonth && day === currentDay) {
+          // 【關鍵修改在這裡】
+          // 只有在 "非互動模式 (!isInteractive)" 時，才去判斷是否為今天
+          // 這樣調班頁面 (isInteractive 為 true) 就永遠不會有 todayClass
+          if (!isInteractive && year === currentYear && month === currentMonth && day === currentDay) {
             todayClass = ' today';
           }
 
@@ -998,9 +996,7 @@ else {
               containerElement.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-shift'));
               dayEl.classList.add('selected-shift');
               const day = dayEl.getAttribute('data-day');
-              // 【修正重點 3】取出 data-shift-value (正確代號)
               const shiftValue = dayEl.getAttribute('data-shift-value'); 
-              // 我們直接把 shiftValue 傳回去給表單
               onDayClick(day, shiftValue); 
             });
           });
@@ -1262,6 +1258,4 @@ DOMElements.sidebarNav.addEventListener('click', e => {
   }
 </script>
 </body>
-
 </html>
-
