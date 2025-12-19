@@ -7,6 +7,50 @@
   <title>OCC Duty Management Platform</title>
   
 <style>
+
+/* --- 【新增】備註功能相關樣式 --- */
+
+/* 行事曆格子右上角的小三角形 (有備註時顯示) */
+.calendar-day.has-note::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 12px 12px 0; /* 三角形大小 */
+  border-color: transparent #e74c3c transparent transparent; /* 紅色三角形 */
+  z-index: 5;
+}
+
+/* 備註輸入視窗 (Modal) 的特殊樣式 */
+#noteModal textarea {
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+  font-size: 1.1em;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  resize: none; /* 禁止拉大拉小 */
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  font-family: inherit;
+}
+
+#noteModal .modal-actions {
+  display: flex;
+  gap: 10px; 
+}
+/* 刪除按鈕特別用紅色 */
+#btn-delete-note {
+  background-color: #dc3545;
+  color: white;
+  flex: 0.5; /* 比較小顆一點 */
+}
+
+
+
 /* --- 【新增】標示今天日期的圈圈樣式 (個人月曆用) --- */
 .calendar-day.today {
   position: relative;
@@ -447,8 +491,23 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   </div>
 </div>
 
+<div id="noteModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 id="noteModalTitle">備註</h3>
+    <div class="modal-content">
+      <textarea id="noteInput" placeholder="請在此輸入行程備註..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button id="btn-delete-note" class="modal-btn">刪除</button>
+      <button id="btn-cancel-note" class="modal-btn btn-cancel">取消</button>
+      <button id="btn-save-note" class="modal-btn btn-confirm">儲存</button>
+    </div>
+  </div>
+</div>
+
   <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -462,6 +521,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
     // 5秒後，為啟動畫面加上 hidden class 讓它淡出
 setTimeout(() => {
   const splash = document.getElementById('splash-screen');
@@ -514,6 +574,8 @@ else {
         highlightPerson2: '', 
         loggedInUserName: '',
         hasScrolledToToday: false // 新增：紀錄是否已自動滑動
+        notesData: {}, // 用來存抓下來的備註
+        currentNoteDate: null // 紀錄目前正在編輯哪一天的備註
       };
 
       const DOMElements = {
@@ -560,6 +622,12 @@ else {
         modalContent: document.getElementById('modalContent'),
         modalCancel: document.getElementById('modalCancel'),
         modalConfirm: document.getElementById('modalConfirm'),
+        noteModal: document.getElementById('noteModal'),
+        noteModalTitle: document.getElementById('noteModalTitle'),
+        noteInput: document.getElementById('noteInput'),
+        btnDeleteNote: document.getElementById('btn-delete-note'),
+        btnCancelNote: document.getElementById('btn-cancel-note'),
+        btnSaveNote: document.getElementById('btn-save-note'),
       };
 
       state.loggedInUserName = user.displayName || user.email.split('@')[0];
@@ -572,8 +640,8 @@ else {
         '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk',
         '2026-1': '1evaYVTyuU3BhzjnI7U6kenvqBzBWb2rI9O11GtMIPB8',
         '2026-2': '1_OmJdSlq8PC-oDX3unvUi2aXzsSpSok0aGQAzBhhXFE',
-      };  
-       
+      };
+
       const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '健凱', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '貞瑜', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
       const shiftList = ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'];
       const positions = [
@@ -599,6 +667,91 @@ else {
                 state.hasScrolledToToday = true; // 標記為已完成，之後不再執行
             }
         }, 300);
+      }
+
+// --- 備註功能核心邏輯 ---
+
+      // 1. 監聽 Firestore 資料變更 (即時更新)
+      function subscribeToNotes() {
+        const userId = auth.currentUser.uid;
+        // 監聽路徑：users/{userId}/notes
+        db.collection('users').doc(userId).collection('notes')
+          .onSnapshot((snapshot) => {
+            const notes = {};
+            snapshot.forEach(doc => {
+              notes[doc.id] = doc.data().content;
+            });
+            state.notesData = notes; // 更新狀態
+            
+            // 如果畫面上有月曆，就重新渲染一次，把小三角形畫上去
+            const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+            if (state.cachedData[fileKey]) {
+               // 只更新個人月曆即可
+               renderPersonalCalendar(state.cachedData[fileKey].schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
+            }
+          });
+      }
+
+      // 2. 開啟備註視窗
+      function openNoteModal(year, month, day) {
+        // 格式化日期 key，例如 "2025-12-20"
+        const dateKey = `${year}-${month + 1}-${day}`;
+        state.currentNoteDate = dateKey; // 記住現在正在編輯哪一天
+
+        // 設定標題與內容
+        DOMElements.noteModalTitle.textContent = `${month + 1}/${day} 行程備註`;
+        DOMElements.noteInput.value = state.notesData[dateKey] || ''; // 有資料就顯示，沒資料就留白
+
+        // 顯示視窗
+        DOMElements.noteModal.style.display = 'flex';
+        DOMElements.noteInput.focus();
+      }
+
+      // 3. 儲存備註
+      async function saveNote() {
+        const userId = auth.currentUser.uid;
+        const dateKey = state.currentNoteDate;
+        const content = DOMElements.noteInput.value.trim();
+        const btn = DOMElements.btnSaveNote;
+
+        if (!dateKey) return;
+
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+
+        try {
+          if (content) {
+            // 有內容 -> 寫入資料庫
+            await db.collection('users').doc(userId).collection('notes').doc(dateKey).set({
+              content: content,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } else {
+            // 內容是空的 -> 等同於刪除
+            await deleteNote(false); // false 代表不顯示刪除成功的提示，因為是存成空
+            return; 
+          }
+          DOMElements.noteModal.style.display = 'none';
+        } catch (error) {
+          alert('儲存失敗：' + error.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '儲存';
+        }
+      }
+
+      // 4. 刪除備註
+      async function deleteNote(showAlert = true) {
+        const userId = auth.currentUser.uid;
+        const dateKey = state.currentNoteDate;
+        if (!dateKey) return;
+
+        try {
+          await db.collection('users').doc(userId).collection('notes').doc(dateKey).delete();
+          if (showAlert) DOMElements.noteModal.style.display = 'none';
+        } catch (error) {
+          alert('刪除失敗：' + error.message);
+        }
       }
 
       DOMElements.userInfo.textContent = `${state.loggedInUserName}你好! :-)`;
@@ -920,8 +1073,7 @@ else {
         if (names.includes(currentSelection)) selector.value = currentSelection;
       }
 
-// 【修正版 V2】月曆渲染邏輯
-      // 修正點：在互動模式下 (isInteractive == true)，直接不產生 today class
+// 【最終進化版】月曆渲染邏輯 (含備註功能)
       function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
         if (!containerElement) return;
 
@@ -972,15 +1124,23 @@ else {
           }
 
           let todayClass = '';
-          // 【關鍵修改在這裡】
-          // 只有在 "非互動模式 (!isInteractive)" 時，才去判斷是否為今天
-          // 這樣調班頁面 (isInteractive 為 true) 就永遠不會有 todayClass
+          // 這裡依然保留了您的要求：非互動模式才顯示今天
           if (!isInteractive && year === currentYear && month === currentMonth && day === currentDay) {
             todayClass = ' today';
           }
 
+          // --- 新增：檢查是否有備註 (只在個人班表顯示，調班模式不顯示) ---
+          let noteClass = '';
+          // 只有在「非互動模式(個人班表)」且「目前顯示的是登入者本人」時，才顯示三角形
+          if (!isInteractive && personName === state.loggedInUserName) {
+             const dateKey = `${year}-${month + 1}-${day}`;
+             if (state.notesData[dateKey]) {
+               noteClass = ' has-note';
+             }
+          }
+
           calendarHTML += `
-            <div class="calendar-day ${shiftClass}${todayClass}" 
+            <div class="calendar-day ${shiftClass}${todayClass}${noteClass}" 
                 data-day="${day}" 
                 data-has-shift="${hasShift}" 
                 ${shiftDataStr}>
@@ -991,6 +1151,9 @@ else {
         calendarHTML += `</div>`;
         containerElement.innerHTML = calendarHTML;
 
+        // --- 事件綁定區 ---
+        
+        // 情況 A: 調班模式 (互動選取)
         if (isInteractive && onDayClick) {
           const days = containerElement.querySelectorAll('.calendar-day[data-has-shift="true"]');
           days.forEach(dayEl => {
@@ -1001,6 +1164,19 @@ else {
               const shiftValue = dayEl.getAttribute('data-shift-value'); 
               onDayClick(day, shiftValue); 
             });
+          });
+        } 
+        
+        // 情況 B: 個人班表模式 (點擊寫備註)
+        // 只有「登入者本人」看「自己的班表」時，才可以點擊寫筆記
+        else if (!isInteractive && personName === state.loggedInUserName) {
+          const days = containerElement.querySelectorAll('.calendar-day:not(.empty)');
+          days.forEach(dayEl => {
+             dayEl.style.cursor = 'pointer'; // 讓滑鼠變成手指形狀
+             dayEl.addEventListener('click', () => {
+                const day = parseInt(dayEl.getAttribute('data-day'));
+                openNoteModal(year, month, day);
+             });
           });
         }
       }
@@ -1244,7 +1420,22 @@ DOMElements.sidebarNav.addEventListener('click', e => {
         DOMElements.successorQueryBtn.addEventListener('click', handleSuccessorQuery);
       }
 
+      // 備註 Modal 按鈕事件
+      // 1. 取消按鈕：單純把視窗關掉 (隱藏)
+      DOMElements.btnCancelNote.addEventListener('click', () => { 
+          DOMElements.noteModal.style.display = 'none'; 
+      });
+
+      // 2. 儲存按鈕：執行 saveNote 函式
+      DOMElements.btnSaveNote.addEventListener('click', saveNote);
+
+      // 3. 刪除按鈕：先跳出確認視窗，使用者按確定後才執行 deleteNote
+      DOMElements.btnDeleteNote.addEventListener('click', () => { 
+          if(confirm('確定要刪除此備註嗎？')) deleteNote(); 
+      });
+
       switchPage('home');
+      subscribeToNotes();
       fetchData();
     }
   </script>
@@ -1260,6 +1451,4 @@ DOMElements.sidebarNav.addEventListener('click', e => {
   }
 </script>
 </body>
-
 </html>
-
