@@ -7,15 +7,11 @@
   <title>OCC Duty Management Platform</title>
    
 <style>
-
 /* --- 【新增】1. 精準版紅包雨特效 --- */
 .red-envelope {
-  position: fixed;
-  top: -50px; 
-  z-index: 9998; 
+  position: fixed; top: -50px; z-index: 9998; 
   pointer-events: none; /* 讓滑鼠點擊穿透紅包，不影響操作 */
-  user-select: none;
-  font-size: 26px; 
+  user-select: none; font-size: 26px; 
   animation: envelope-fall linear forwards;
 }
 
@@ -26,66 +22,52 @@
   100% { transform: translateY(140px) rotate(180deg) translateX(20px); opacity: 0; }
 }
 
-/* --- 【新增】2. 公事包與標題的完美對齊網格 --- */
+/* --- 【新增】2. 公事包與標題的精準置中網格 (水平與垂直完美對齊) --- */
 .calendar-section-header {
   display: grid; 
-  grid-template-columns: repeat(7, 1fr); /* 完美的七等份，與下方月曆同步 */
-  gap: 5px; 
-  margin-bottom: 15px; 
-  height: 40px;
+  grid-template-columns: repeat(7, 1fr); /* 星期六垂直對齊依據 */
+  height: 40px; margin-bottom: 15px; position: relative;
 }
 
-/* 標題層：佔滿七格，完美置中 */
-.title-wrapper {
-  grid-column: 1 / 8; 
-  display: flex; justify-content: center; align-items: center;
-  pointer-events: none; /* 避免擋住按鈕點擊 */
+/* 標題與圖標層：強制幾何中心對齊 */
+.title-wrapper, .action-wrapper {
+  grid-row: 1; display: flex; align-items: center; pointer-events: none;
 }
 
+/* 標題層：佔滿七格，幾何置中 */
+.title-wrapper { grid-column: 1 / 8; justify-content: center; }
 .title-wrapper h3 { 
   margin: 0; color: var(--starlux-header); 
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+  line-height: 1; /* 消除文字上下空間，達成絕對幾何中心 */
 }
 
 /* 展開時被推擠的特效 */
-.title-wrapper h3.pushed {
-  transform: translateX(-75px); 
-}
+.title-wrapper h3.pushed { transform: translateX(-75px); }
 
-/* 按鈕層：永遠鎖死在第 7 格 (星期六) 的正中央 */
-.action-wrapper {
-  grid-column: 7; 
-  display: flex; justify-content: center; align-items: center;
-  position: relative; /* 讓數據面板以此為基準向左長 */
-}
+/* 按鈕層：幾何置中於第 7 格 (六) */
+.action-wrapper { grid-column: 7; justify-content: center; position: relative; }
 
 /* 隱藏的數據面板 */
 .stats-panel {
   display: flex; align-items: center; gap: 8px; background-color: #fff;
-  padding: 0; width: 0; height: 35px; border-radius: 20px; overflow: hidden;
+  padding: 0; width: 0; height: 34px; border-radius: 20px; overflow: hidden;
   box-shadow: var(--shadow); opacity: 0; 
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
   white-space: nowrap; border: 1px solid transparent;
-  position: absolute; right: 38px; /* 固定從圖標的左側滑出 */
-  z-index: 10;
+  position: absolute; right: 38px; z-index: 10; pointer-events: auto;
 }
+.stats-panel.show { width: auto; padding: 0 12px; opacity: 1; border-color: var(--border-color); }
 
-/* 展開時的數據面板 */
-.stats-panel.show { 
-  width: auto; padding: 0 12px; opacity: 1; border-color: var(--border-color); 
-}
-
-.stat-mini { display: flex; align-items: center; font-size: 0.9em; font-weight: bold; color: #555; }
+.stat-mini { display: flex; align-items: center; font-size: 0.9em; font-weight: bold; color: #555; line-height: 1;}
 .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; display: inline-block; }
-.dot.day { background-color: #AD9F74; } 
-.dot.night { background-color: #3E4B5C; } 
-.dot.off { background-color: #28a745; }
+.dot.day { background-color: #AD9F74; } .dot.night { background-color: #3E4B5C; } .dot.off { background-color: #28a745; }
 
 /* 選項 B: 圓環統計圖按鈕設計 */
 .icon-btn {
-  display: flex; justify-content: center; align-items: center;
+  display: flex; justify-content: center; align-items: center; box-sizing: border-box;
   width: 34px; height: 34px; border: 1.5px solid #AD9F74; border-radius: 50%;
-  background: transparent; cursor: pointer; color: #AD9F74; pointer-events: auto;
+  background: transparent; cursor: pointer; color: #AD9F74; pointer-events: auto; /* 恢復按鈕點擊 */
   transition: all 0.2s; padding: 0; outline: none; -webkit-tap-highlight-color: transparent;
 }
 .icon-btn:hover { background: rgba(173, 159, 116, 0.1); transform: scale(1.05); }
@@ -94,12 +76,10 @@
 
 /* --- 【新增】3. MY CREW 專屬高亮樣式 --- */
 .assignment-row.current-duty-group { 
-  border: 2px solid var(--starlux-highlight-b); 
-  background-color: rgba(173, 159, 116, 0.1); 
+  border: 2px solid var(--starlux-highlight-b); background-color: rgba(173, 159, 116, 0.1); 
   border-radius: 8px; padding: 8px 15px; margin: 5px 15px 10px 15px; position: relative; 
   box-shadow: 0 0 10px rgba(173, 159, 116, 0.3);
 }
-
 .assignment-row.current-duty-group::after { 
   content: 'MY CREW'; position: absolute; top: 0; right: 0; 
   background-color: var(--starlux-highlight-b); color: white; 
@@ -107,41 +87,34 @@
 }
 
 /* --- 原有樣式開始 --- */
-
 .calendar-day.has-note::after { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 12px 12px 0; border-color: transparent #e74c3c transparent transparent; z-index: 5;}
 #noteModal textarea { width: 100%; height: 150px; padding: 10px; font-size: 1.1em; border: 1px solid var(--border-color); border-radius: 8px; resize: none; box-sizing: border-box; margin-bottom: 15px; font-family: inherit;}
 #noteModal .modal-actions { display: flex; gap: 10px; }
 #btn-delete-note { background-color: #dc3545; color: white; flex: 0.5; }
-
 .calendar-day.today { position: relative; }
 .calendar-day.today::after { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 4px outset #CC9B86; border-radius: 8px; box-sizing: border-box; animation: draw-circle 0.5s ease-in-out forwards;}
 @keyframes draw-circle { from { transform: scale(1.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
 .header-top-row { position: relative; width: 100%; min-height: 45px; }
-
 #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #4A5052; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out;}
 #splash-screen img { width: 300px; height: 300px; }
 #splash-screen.hidden { opacity: 0; pointer-events: none; }
 
 :root { --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda; --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91; --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0; --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);}
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
-
 #login-container { display: none; justify-content: center; align-items: center; width: 100%; height: 100vh; }
 .login-box { max-width: 400px; width: 90%; padding: 30px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
 .login-box h1 { color: var(--starlux-header); }
 #login-form { display: flex; flex-direction: column; gap: 15px; }
 .form-field { display: flex; flex-direction: column; text-align: left; }
 .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
-.form-field input { font-size: 1em; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-#login-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; }
+.form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
+#login-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s;}
 #login-error { color: #dc3545; margin-top: 15px; min-height: 1.2em; font-size: 0.9em; }
-
 #app-wrapper { display: none; height: 100vh; }
 #sidebar { width: 220px; background-color: var(--starlux-header); color: white; padding-top: 20px; display: flex; flex-direction: column; transition: transform 0.3s ease; transform: translateX(-100%); position: fixed; height: 100%; z-index: 2000; }
 #sidebar.open { transform: translateX(0); }
 #sidebar-header { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
 #sidebar-header #user-info { font-weight: bold; word-break: break-all; }
-
 #sidebar-nav { display: flex; flex-direction: column; flex-grow: 1; margin-top: 20px; padding: 0 5px; gap: 10px; }
 #sidebar-nav a { color: white; text-decoration: none; padding: 15px 20px; font-size: 1.1em; font-weight: bold; text-align: center; border-radius: 6px; border-left: 3px solid transparent; }
 #sidebar-nav a:hover { background-color: rgba(255, 255, 255, 0.1); }
@@ -152,35 +125,27 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 #sidebar-toggle { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 2em; cursor: pointer; width: 45px; padding: 0; z-index: 10; }
 #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
 #sidebar.open ~ #overlay { display: block; }
-
 .header { background-color: var(--starlux-header); color: white; padding: 10px 0px 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
 .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
 .month-selector button { background: none; border: 1px solid rgba(255, 255, 255, 0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; flex-shrink: 0; display: flex; justify-content: center; align-items: center; padding: 0; padding-bottom: 3px; }
 .month-selector h1 { margin: 0 10px; font-size: 1.5em; white-space: nowrap; }
-
-nav { display: flex; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 8px; margin: 10px auto 0; max-width: 500px; width: 90%; backdrop-filter: blur(5px); }
-.view-selector { display: none; }
-nav button { flex: 1; padding: 10px; font-size: 1em; background: none; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--starlux-header); }
-nav button.active { background-color: var(--starlux-header); color: white; }
+nav.view-selector { display: flex; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 8px; margin: 10px auto 0; max-width: 500px; width: 90%; backdrop-filter: blur(5px); }
+nav.view-selector button { flex: 1; padding: 10px; font-size: 1em; background: none; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--starlux-header); }
+nav.view-selector button.active { background-color: var(--starlux-header); color: white; }
 main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow-y: auto; flex-grow: 1; }
-.page { display: none; }
-.page.active { display: block; }
-.view { display: none; }
-.view.active { display: block; }
-
+.page { display: none; } .page.active { display: block; }
+.view { display: none; } .view.active { display: block; }
 #logout-confirm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; text-align: center; }
 #logout-confirm p { margin: 0 0 20px; font-size: 1.2em; }
 #logout-confirm button { padding: 10px 20px; font-size: 1em; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; }
 #confirm-logout-yes { background-color: #dc3545; color: white; }
 #confirm-logout-no { background-color: #6c757d; color: white; }
-
 .controls { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
 .controls label { font-weight: bold; color: var(--starlux-header); }
 .controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
 .message-box { text-align: center; padding: 20px; margin-top: 15px; margin-bottom: 15px; border-radius: 8px; font-weight: bold; background-color: #e9ecef; max-width: 90%; margin-left: auto; margin-right: auto; }
 .message-box.error { background-color: #f8d7da; color: #dc3545; }
 .message-box.success { background-color: #d4edda; color: #155724; }
-
 .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
 .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
 .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
@@ -188,14 +153,12 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .day-card.open .day-details { max-height: 1500px; }
 .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
 .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
-
 .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .assignment { padding: 8px 10px; border-radius: 6px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
 .assignment.day-shift { background-color: var(--starlux-gold-light); }
 .assignment.night-shift { background-color: var(--starlux-teal-light); }
 .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; text-align: left; }
 .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; margin-top: auto; }
-
 .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
 .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
 .full-roster-table th, .full-roster-table td { border: 1px solid var(--border-color); padding: 8px; font-size: 0.9em; white-space: pre-line; width: 45px; }
@@ -210,36 +173,27 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .full-roster-table .highlight-b { background-color: var(--starlux-highlight-b) !important; color: white; font-weight: bold; }
 .full-roster-table th:nth-child(3), .full-roster-table td:nth-child(3) { border-right: 2px solid var(--starlux-header); }
 .full-roster-table th:nth-child(12), .full-roster-table td:nth-child(12) { border-right: 2px solid var(--starlux-header); }
-
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .calendar-weekday { font-weight: bold; text-align: center; padding: 8px; color: var(--starlux-header); }
-.calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); position: relative; }
-.calendar-day.empty { background-color: transparent; border: none; box-shadow: none; }
+.calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); position: relative; cursor: pointer; transition: transform 0.1s ease, border-color 0.2s;}
+.calendar-day.empty { background-color: transparent; border: none; box-shadow: none; cursor: default; }
 .calendar-day .day-number { font-weight: bold; font-size: 0.9em; color: #888; }
 .calendar-day .shift-info { font-size: 0.8em; margin-top: 5px; white-space: pre-line; line-height: 1.3; font-weight: bold; }
 .calendar-day.day-shift { background-color: var(--starlux-gold-light); }
 .calendar-day.night-shift { background-color: var(--starlux-teal-light); }
 .calendar-day.day-off { background-color: #fff; }
-
 .form-container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
 .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-.form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
-.form-field input, .form-field select { font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; }
 .submit-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
 .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
 #successorView .controls { margin-top: 20px; }
 #successor-results { margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
 #successor-list { font-size: 1.1em; line-height: 1.8; }
-
 .comparison-calendar-container { display: grid; grid-template-columns: 1fr; gap: 30px; }
-
-.interactive-calendar .calendar-day { cursor: pointer; transition: transform 0.1s ease, border-color 0.2s; }
 .interactive-calendar .calendar-day:hover { transform: scale(1.02); background-color: rgba(0, 0, 0, 0.02); }
 .interactive-calendar .calendar-day[data-has-shift="false"] { cursor: not-allowed; opacity: 0.6; }
 .calendar-day.selected-shift { border: 3px solid var(--starlux-header) !important; background-color: rgba(173, 159, 116, 0.15) !important; position: relative; box-shadow: 0 0 10px rgba(62, 75, 92, 0.3); transform: scale(1.05); z-index: 10; }
-
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 5000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
 .modal-box { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; border: 1px solid var(--starlux-gold-light); animation: popIn 0.3s ease-out; }
 @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -248,7 +202,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
 .btn-cancel { background-color: #d8dde0; color: #555; }
 .btn-confirm { background-color: var(--starlux-header); color: white; }
-
 .day-card.today-highlight { border: 3px solid #CC9B86 !important; box-shadow: 0 0 15px rgba(204, 155, 134, 0.5); animation: pulse-border 2s infinite; }
 @keyframes pulse-border { 0% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); } 50% { box-shadow: 0 0 20px rgba(204, 155, 134, 0.6); } 100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); } }
 
@@ -420,10 +373,10 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // --- 【新增】1. 精準紅包雨啟動腳本 ---
+  // --- 【新增】紅包雨啟動腳本 ---
   function startContinuousRedEnvelopeRain() {
     const container = document.body;
-    const emojis = ['🧧', '💰', '🍊']; // 只留這三種
+    const emojis = ['🧧', '💰', '🍊']; 
     setInterval(() => {
       const envelope = document.createElement('div');
       envelope.classList.add('red-envelope');
@@ -440,11 +393,9 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   }
   window.addEventListener('DOMContentLoaded', () => { startContinuousRedEnvelopeRain(); });
 
-  // --- 【新增】2. 公事包展開切換與推擠特效 ---
+  // --- 【新增】公事包展開切換與推擠特效 ---
   window.toggleStats = function() {
-      // 展開面板
       document.getElementById('myStatsPanel').classList.toggle('show');
-      // 將標題往左推
       document.getElementById('myScheduleTitle').classList.toggle('pushed');
   };
 
@@ -502,9 +453,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
     const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbyUqr1JydB4Yr3xAY0UFzOktl6wFnsDvoMIkeCZVFy64y0UzGX_q34IHN50ZqwcZ7PWYw/exec';
     const SPREADSHEET_IDS = { '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA', '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg', '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q', '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk', '2026-1': '1evaYVTyuU3BhzjnI7U6kenvqBzBWb2rI9O11GtMIPB8', '2026-2': '1_OmJdSlq8PC-oDX3unvUi2aXzsSpSok0aGQAzBhhXFE', '2026-3': '1PTaskSJvXvxTK7o0at4tGH2hdOmgMYm0njtpYuXB2PU', '2026-4': '1bRNBvoI48d9AJAyG3p5PFc36-VBL0xjpz43T4UnhFZY', '2026-5': '12frPrVMu4afbwSwH2zGqj9mMNA4qctL-V72rGee-R4g' };
-    const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒", "俊揚": "黃俊揚", "泉延": "林泉延", "曜華": "游曜華", "品蓉": "陳品蓉", "嘉珣": "張嘉珣", "如蘭": "李如蘭", "晴涵": "張晴涵", "瑀芯": "張瑀芯", "微儀": "陳微儀", "心慈": "徐心慈", "李昇": "李昇", "欣伶": "俞欣伶", "沛容": "沛容", "T1公務帳號": "T1公務帳號", "T2公務帳號": "T2公務帳號" };
-    const hiddenStaff = ["俊揚", "泉延", "曜華", "品蓉", "嘉珣", "如蘭", "晴涵", "瑀芯", "微儀", "心慈", "李昇", "欣伶"];
-    
+    const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒" };
     function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
     const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '健凱', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
     const shiftList = ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'];
@@ -560,7 +509,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       renderDailyCards(data.schedule); const sortedNames = getSortedNames(data.names); populatePersonSelector(sortedNames, DOMElements.personSelector, "請選擇人員..."); populatePersonSelector(sortedNames, DOMElements.highlighter1, "無"); populatePersonSelector(sortedNames, DOMElements.highlighter2, "無"); populateShiftChangeForm(sortedNames, shiftList); renderFullTable(data.schedule); renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer); renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
     }
 
-    function getSortedNames(apiNames) { return [...apiNames].filter(name => !hiddenStaff.includes(name)).sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
+    function getSortedNames(apiNames) { return [...apiNames].sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
 
     function populateShiftChangeForm(names, shifts) {
       const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
@@ -582,7 +531,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       try { const user = auth.currentUser; if (!user) throw new Error("使用者未登入。"); const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword); await user.reauthenticateWithCredential(credential); await user.updatePassword(newPassword); showMessage('success', '密碼已成功更新！', msgContainer); DOMElements.changePasswordForm.reset(); } catch (error) { showMessage('error', `更換密碼失敗：<br>${error.message}`, msgContainer); } finally { btn.disabled = false; btn.textContent = '確認更換'; }
     }
 
-    // --- 【新增】3. 每日值班 MY CREW 自動判斷邏輯 ---
+    // --- 【新增】3. 每日值班 MY CREW 自動判斷與分流邏輯 ---
     function renderDailyCards(scheduleData) {
       const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDay = today.getDate();
       const viewYear = state.currentDate.getFullYear(); const viewMonth = state.currentDate.getMonth();
@@ -658,7 +607,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       names.forEach(name => { const option = document.createElement('option'); option.value = name; option.textContent = getDisplayName(name); selector.appendChild(option); }); if (names.includes(currentSelection)) selector.value = currentSelection;
     }
 
-    // --- 【新增】2. 月曆渲染時順便更新公事包內的統計資料 ---
+    // --- 【新增】2. 月曆渲染與統計資料更新 ---
     function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
       if (!containerElement) return;
       const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDay = today.getDate();
@@ -679,7 +628,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         });
       }
 
-      // 將統計數據寫入上方公事包展開區塊
+      // 將統計數據寫入上方圖標展開區塊
       if (personName === state.loggedInUserName && !isInteractive) {
           const statDayEl = document.getElementById('stat-day'); const statNightEl = document.getElementById('stat-night'); const statOffEl = document.getElementById('stat-off');
           if (statDayEl) statDayEl.innerText = '日 ' + stats.day;
