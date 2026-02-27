@@ -28,7 +28,7 @@
 
 /* --- 【新增】2. 選項 B (圓環統計) 與動態推擠特效 --- */
 .calendar-section-header {
-  display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; height: 40px; position: relative;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; height: 40px; position: relative;
 }
 
 .calendar-section-header h3 { 
@@ -331,19 +331,24 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
             
             <div class="calendar-section">
               <div class="calendar-section-header" id="myScheduleHeader">
-                <h3 id="myScheduleTitle">我的班表</h3>
-                <div class="stats-panel" id="myStatsPanel">
-                  <div class="stat-mini"><span class="dot day"></span><span id="stat-day">0</span></div>
-                  <div class="stat-mini"><span class="dot night"></span><span id="stat-night">0</span></div>
-                  <div class="stat-mini"><span class="dot off"></span><span id="stat-off">0</span></div>
-                </div>
-                <button class="icon-btn" onclick="toggleStats()" title="班務統計">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-                    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-                  </svg>
-                </button>
-              </div>
+  <div style="flex: 1;"></div>
+  
+  <h3 id="myScheduleTitle" style="text-align: center; white-space: nowrap;">我的班表</h3>
+  
+  <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
+    <div class="stats-panel" id="myStatsPanel">
+      <div class="stat-mini"><span class="dot day"></span><span id="stat-day">0</span></div>
+      <div class="stat-mini"><span class="dot night"></span><span id="stat-night">0</span></div>
+      <div class="stat-mini"><span class="dot off"></span><span id="stat-off">0</span></div>
+    </div>
+    <button class="icon-btn" onclick="toggleStats()" title="班務統計">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+        <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+      </svg>
+    </button>
+  </div>
+</div>
               <div id="myPersonalCalendarContainer"></div>
             </div>
 
