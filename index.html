@@ -8,98 +8,98 @@
    
 <style>
 
-/* --- 【新增】備註功能相關樣式 --- */
-
-/* 行事曆格子右上角的小三角形 (有備註時顯示) */
-.calendar-day.has-note::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 12px 12px 0; /* 三角形大小 */
-  border-color: transparent #e74c3c transparent transparent; /* 紅色三角形 */
-  z-index: 5;
-}
-
-/* 備註輸入視窗 (Modal) 的特殊樣式 */
-#noteModal textarea {
-  width: 100%;
-  height: 150px;
-  padding: 10px;
-  font-size: 1.1em;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  resize: none; /* 禁止拉大拉小 */
-  box-sizing: border-box;
-  margin-bottom: 15px;
-  font-family: inherit;
-}
-
-#noteModal .modal-actions {
-  display: flex;
-  gap: 10px; 
-}
-/* 刪除按鈕特別用紅色 */
-#btn-delete-note {
-  background-color: #dc3545;
-  color: white;
-  flex: 0.5; /* 比較小顆一點 */
-}
-
-
-
-/* --- 【新增】標示今天日期的圈圈樣式 (個人月曆用) --- */
-.calendar-day.today {
-  position: relative;
-}
-
-.calendar-day.today::after {
-  content: '';
-  position: absolute;
-  top: -3px; left: -3px; right: -3px; bottom: -3px;
-  border: 4px outset #CC9B86;
-  border-radius: 8px;
-  box-sizing: border-box;
-  animation: draw-circle 0.5s ease-in-out forwards;
-}
-
-@keyframes draw-circle {
-  from { transform: scale(1.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-/* --- Header 頂部佈局 --- */
-.header-top-row {
-  position: relative;
-  width: 100%;
-  min-height: 45px;
-}
-
-/* --- 啟動畫面樣式 --- */
-#splash-screen {
+/* --- 【新增】1. 精準版紅包雨特效 --- */
+.red-envelope {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-color: #4A5052; 
-  z-index: 9999;
-  display: flex; justify-content: center; align-items: center;
-  transition: opacity 0.5s ease-out;
+  top: -50px; 
+  z-index: 9998; 
+  pointer-events: none; /* 絕對關鍵：讓滑鼠點擊穿透紅包，完全不影響操作 */
+  user-select: none;
+  font-size: 26px; 
+  animation: envelope-fall linear forwards;
 }
+
+/* 掉落到藍色 Header 下緣 (大約 140px) 就消失，不干擾班表 */
+@keyframes envelope-fall {
+  0% { transform: translateY(-50px) rotate(0deg) translateX(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(140px) rotate(180deg) translateX(20px); opacity: 0; }
+}
+
+/* --- 【新增】2. 公事包動態推擠特效相關樣式 --- */
+.calendar-section-header {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; height: 40px; position: relative;
+}
+
+.calendar-section-header h3 { 
+  margin: 0; color: var(--starlux-header); 
+  /* 設定平滑移動的動畫 */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
+
+/* 隱藏的數據面板 */
+.stats-panel {
+  display: flex; align-items: center; gap: 8px; background-color: #fff;
+  padding: 0; width: 0; height: 35px; border-radius: 20px; overflow: hidden;
+  box-shadow: var(--shadow); opacity: 0; 
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+  white-space: nowrap; border: 1px solid transparent;
+}
+
+/* 展開時的數據面板 (自然會把旁邊的 h3 往左推) */
+.stats-panel.show { 
+  width: auto; padding: 0 12px; opacity: 1; border-color: var(--border-color); 
+}
+
+.stat-mini { display: flex; align-items: center; font-size: 0.9em; font-weight: bold; color: #555; }
+.dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; display: inline-block; }
+.dot.day { background-color: #AD9F74; } 
+.dot.night { background-color: #3E4B5C; } 
+.dot.off { background-color: #28a745; }
+
+/* 乾淨透明的公事包按鈕 */
+.briefcase-btn { 
+  background: none; border: none; font-size: 1.8em; cursor: pointer; 
+  padding: 0; transition: transform 0.2s; outline: none; -webkit-tap-highlight-color: transparent;
+}
+.briefcase-btn:hover { transform: scale(1.15); }
+.briefcase-btn:active { transform: scale(0.95); }
+
+
+/* --- 【新增】3. MY CREW 專屬高亮樣式 --- */
+.assignment-row.current-duty-group { 
+  border: 2px solid var(--starlux-highlight-b); 
+  background-color: rgba(173, 159, 116, 0.1); 
+  border-radius: 8px; padding: 8px 15px; margin: 5px 15px 10px 15px; position: relative; 
+  box-shadow: 0 0 10px rgba(173, 159, 116, 0.3);
+}
+
+.assignment-row.current-duty-group::after { 
+  content: 'MY CREW'; position: absolute; top: 0; right: 0; 
+  background-color: var(--starlux-highlight-b); color: white; 
+  font-size: 0.75em; padding: 3px 10px; border-radius: 0 6px 0 6px; font-weight: bold; letter-spacing: 1px;
+}
+
+
+/* --- 以下為原有的樣式 --- */
+.calendar-day.has-note::after { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 12px 12px 0; border-color: transparent #e74c3c transparent transparent; z-index: 5;}
+#noteModal textarea { width: 100%; height: 150px; padding: 10px; font-size: 1.1em; border: 1px solid var(--border-color); border-radius: 8px; resize: none; box-sizing: border-box; margin-bottom: 15px; font-family: inherit;}
+#noteModal .modal-actions { display: flex; gap: 10px; }
+#btn-delete-note { background-color: #dc3545; color: white; flex: 0.5; }
+
+.calendar-day.today { position: relative; }
+.calendar-day.today::after { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 4px outset #CC9B86; border-radius: 8px; box-sizing: border-box; animation: draw-circle 0.5s ease-in-out forwards;}
+@keyframes draw-circle { from { transform: scale(1.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.header-top-row { position: relative; width: 100%; min-height: 45px; }
+
+#splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #4A5052;  z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out;}
 #splash-screen img { width: 300px; height: 300px; }
 #splash-screen.hidden { opacity: 0; pointer-events: none; }
 
-/* --- 全局與顏色設定 --- */
-:root {
-  --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda;
-  --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91;
-  --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
+:root { --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda; --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91; --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0; --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);}
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
 
-/* --- 登入畫面樣式 --- */
 #login-container { display: none; justify-content: center; align-items: center; width: 100%; height: 100vh; }
 .login-box { max-width: 400px; width: 90%; padding: 30px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
 .login-box h1 { color: var(--starlux-header); }
@@ -110,14 +110,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 #login-btn { padding: 12px; font-size: 1.2em; background-color: var(--starlux-header); color: white; border: none; border-radius: 8px; cursor: pointer; }
 #login-error { color: #dc3545; margin-top: 15px; min-height: 1.2em; font-size: 0.9em; }
 
-/* --- 主應用程式樣式 --- */
 #app-wrapper { display: none; height: 100vh; }
 #sidebar { width: 220px; background-color: var(--starlux-header); color: white; padding-top: 20px; display: flex; flex-direction: column; transition: transform 0.3s ease; transform: translateX(-100%); position: fixed; height: 100%; z-index: 2000; }
 #sidebar.open { transform: translateX(0); }
 #sidebar-header { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
 #sidebar-header #user-info { font-weight: bold; word-break: break-all; }
 
-/* --- 側邊欄主選單 --- */
 #sidebar-nav { display: flex; flex-direction: column; flex-grow: 1; margin-top: 20px; padding: 0 5px; gap: 10px; }
 #sidebar-nav a { color: white; text-decoration: none; padding: 15px 20px; font-size: 1.1em; font-weight: bold; text-align: center; border-radius: 6px; border-left: 3px solid transparent; }
 #sidebar-nav a:hover { background-color: rgba(255, 255, 255, 0.1); }
@@ -129,7 +127,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
 #sidebar.open ~ #overlay { display: block; }
 
-/* --- Header --- */
 .header { background-color: var(--starlux-header); color: white; padding: 10px 0px 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
 .month-selector { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0; }
 .month-selector button { background: none; border: 1px solid rgba(255, 255, 255, 0.5); color: white; font-size: 1.5em; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; flex-shrink: 0; display: flex; justify-content: center; align-items: center; padding: 0; padding-bottom: 3px; }
@@ -145,14 +142,12 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .view { display: none; }
 .view.active { display: block; }
 
-/* --- Logout Confirm --- */
 #logout-confirm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; text-align: center; }
 #logout-confirm p { margin: 0 0 20px; font-size: 1.2em; }
 #logout-confirm button { padding: 10px 20px; font-size: 1em; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; }
 #confirm-logout-yes { background-color: #dc3545; color: white; }
 #confirm-logout-no { background-color: #6c757d; color: white; }
 
-/* --- 其他元件 --- */
 .controls { margin-bottom: 15px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
 .controls label { font-weight: bold; color: var(--starlux-header); }
 .controls select { font-size: 1.1em; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
@@ -160,7 +155,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .message-box.error { background-color: #f8d7da; color: #dc3545; }
 .message-box.success { background-color: #d4edda; color: #155724; }
 
-/* --- 每日卡片樣式 (維持上一版正確的 CSS) --- */
 .day-card { background-color: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
 .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
 .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
@@ -170,43 +164,12 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
 
 .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-
-/* 卡片容器：Flexbox 直向排列 */
-.assignment { 
-  padding: 8px 10px; 
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  box-sizing: border-box;
-}
-
+.assignment { padding: 8px 10px; border-radius: 6px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
 .assignment.day-shift { background-color: var(--starlux-gold-light); }
 .assignment.night-shift { background-color: var(--starlux-teal-light); }
+.assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; text-align: left;}
+.assignment .name { font-weight: bold; font-size: 0.95em; color: #000; margin-top: auto; }
 
-/* 職稱區塊：靠左、垂直置中、佔滿上方 */
-.assignment .position { 
-  font-size: 0.85em; 
-  color: #555; 
-  white-space: pre-line; 
-  line-height: 1.2; 
-  margin-bottom: 4px;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-/* 姓名區塊：推到底部 */
-.assignment .name { 
-  font-weight: bold; 
-  font-size: 0.95em; 
-  color: #000; 
-  margin-top: auto;
-}
-
-/* --- 全員表格 --- */
 .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
 .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
 .full-roster-table th, .full-roster-table td { border: 1px solid var(--border-color); padding: 8px; font-size: 0.9em; white-space: pre-line; width: 45px; }
@@ -222,7 +185,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .full-roster-table th:nth-child(3), .full-roster-table td:nth-child(3) { border-right: 2px solid var(--starlux-header); }
 .full-roster-table th:nth-child(12), .full-roster-table td:nth-child(12) { border-right: 2px solid var(--starlux-header); }
 
-/* --- 月曆共用 --- */
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .calendar-weekday { font-weight: bold; text-align: center; padding: 8px; color: var(--starlux-header); }
 .calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 100px; padding: 5px; background-color: #fff; box-shadow: var(--shadow); position: relative; }
@@ -233,7 +195,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .calendar-day.night-shift { background-color: var(--starlux-teal-light); }
 .calendar-day.day-off { background-color: #fff; }
 
-/* --- 表單 --- */
 .form-container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
 .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
 .form-field label { font-weight: bold; margin-bottom: 5px; color: var(--starlux-header); }
@@ -242,22 +203,17 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-/* --- 誰來接班 --- */
 #successorView .controls { margin-top: 20px; }
 #successor-results { margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
 #successor-list { font-size: 1.1em; line-height: 1.8; }
 
-/* --- 雙月曆比對 --- */
 .comparison-calendar-container { display: grid; grid-template-columns: 1fr; gap: 30px; }
-.calendar-section h3 { color: var(--starlux-header); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); text-align: center; }
 
-/* --- 表單用互動式月曆 --- */
 .interactive-calendar .calendar-day { cursor: pointer; transition: transform 0.1s ease, border-color 0.2s; }
 .interactive-calendar .calendar-day:hover { transform: scale(1.02); background-color: rgba(0, 0, 0, 0.02); }
 .interactive-calendar .calendar-day[data-has-shift="false"] { cursor: not-allowed; opacity: 0.6; }
 .calendar-day.selected-shift { border: 3px solid var(--starlux-header) !important; background-color: rgba(173, 159, 116, 0.15) !important; position: relative; box-shadow: 0 0 10px rgba(62, 75, 92, 0.3); transform: scale(1.05); z-index: 10; }
 
-/* --- 確認彈出視窗 (Modal) --- */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 5000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
 .modal-box { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; border: 1px solid var(--starlux-gold-light); animation: popIn 0.3s ease-out; }
 @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -267,19 +223,8 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .btn-cancel { background-color: #d8dde0; color: #555; }
 .btn-confirm { background-color: var(--starlux-header); color: white; }
 
-/* --- 每日值班：當天日期的高亮與自動展開樣式 --- */
-.day-card.today-highlight {
-  border: 3px solid #CC9B86 !important; /* 強制使用金色邊框 */
-  box-shadow: 0 0 15px rgba(204, 155, 134, 0.5); /* 加一點金色光暈 */
-  animation: pulse-border 2s infinite; /* 呼吸燈效果 */
-}
-
-@keyframes pulse-border {
-  0% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(204, 155, 134, 0.6); }
-  100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); }
-}
-
+.day-card.today-highlight { border: 3px solid #CC9B86 !important; box-shadow: 0 0 15px rgba(204, 155, 134, 0.5); animation: pulse-border 2s infinite; }
+@keyframes pulse-border { 0% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); } 50% { box-shadow: 0 0 20px rgba(204, 155, 134, 0.6); } 100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); } }
 
 </style>
 </head>
@@ -359,10 +304,20 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
           </div>
           <div id="personalCalendarView" class="view active">
             <div class="comparison-calendar-container">
+              
               <div class="calendar-section">
-                <h3 id="myScheduleTitle">我的班表</h3>
+                <div class="calendar-section-header" id="myScheduleHeader">
+                  <h3 id="myScheduleTitle">我的班表</h3>
+                  <div class="stats-panel" id="myStatsPanel">
+                    <div class="stat-mini"><span class="dot day"></span><span id="stat-day">0</span></div>
+                    <div class="stat-mini"><span class="dot night"></span><span id="stat-night">0</span></div>
+                    <div class="stat-mini"><span class="dot off"></span><span id="stat-off">0</span></div>
+                  </div>
+                  <button class="briefcase-btn" onclick="toggleStats()" title="工時統計">💼</button>
+                </div>
                 <div id="myPersonalCalendarContainer"></div>
               </div>
+
               <div class="calendar-section">
                 <div class="controls">
                   <label for="personSelector">對照同仁:</label>
@@ -472,7 +427,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         </div>
       </main>
     </div> </div> 
-     
+      
     <div id="logout-confirm">
     <p>確認登出?</p>
     <button id="confirm-logout-yes">是，確定</button>
@@ -510,6 +465,38 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
   <script>
+    // --- 【新增】紅包雨啟動腳本 ---
+    function startContinuousRedEnvelopeRain() {
+      const container = document.body;
+      const emojis = ['🧧', '💰', '🍊']; // 只留這三種
+      
+      setInterval(() => {
+        const envelope = document.createElement('div');
+        envelope.classList.add('red-envelope');
+        envelope.innerText = emojis[Math.floor(Math.random() * emojis.length)]; 
+        envelope.style.left = Math.random() * 100 + 'vw';
+        
+        // 稍微調快掉落速度，因為現在只要落到 Header 下緣
+        const fallDuration = Math.random() * 2 + 2; 
+        envelope.style.animationDuration = fallDuration + 's';
+        envelope.style.transform = `scale(${Math.random() * 0.7 + 0.6})`;
+
+        container.appendChild(envelope);
+        setTimeout(() => { envelope.remove(); }, fallDuration * 1000);
+      }, 400); 
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      startContinuousRedEnvelopeRain();
+    });
+
+    // --- 【新增】公事包展開切換函式 ---
+    window.toggleStats = function() {
+        const panel = document.getElementById('myStatsPanel');
+        panel.classList.toggle('show');
+    };
+
+    // Firebase 原有設定
     const firebaseConfig = {
       apiKey: "AIzaSyBLSvbvQ5Zjj1mGm1c595qtqoBLxfnRs6c",
       authDomain: "occ-shift.firebaseapp.com",
@@ -522,13 +509,11 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    // 5秒後，為啟動畫面加上 hidden class 讓它淡出
-setTimeout(() => {
-  const splash = document.getElementById('splash-screen');
-  if (splash) {
-    splash.classList.add('hidden');
-  }
-}, 2300);
+
+    setTimeout(() => {
+      const splash = document.getElementById('splash-screen');
+      if (splash) splash.classList.add('hidden');
+    }, 2300);
 
     const loginContainer = document.getElementById('login-container');
     const appWrapper = document.getElementById('app-wrapper');
@@ -536,17 +521,16 @@ setTimeout(() => {
     const loginError = document.getElementById('login-error');
 
     auth.onAuthStateChanged(user => {
-            if (user) {
-loginContainer.style.display = 'none';
-appWrapper.style.display = 'flex';
-if (typeof initializeApp !== 'undefined' && !window.appInitialized) {
-setTimeout(() => {
-initializeApp(user);
-window.appInitialized = true;
-}, 100);
-}
-}
-else {
+      if (user) {
+        loginContainer.style.display = 'none';
+        appWrapper.style.display = 'flex';
+        if (typeof initializeApp !== 'undefined' && !window.appInitialized) {
+          setTimeout(() => {
+            initializeApp(user);
+            window.appInitialized = true;
+          }, 100);
+        }
+      } else {
         loginContainer.style.display = 'flex';
         appWrapper.style.display = 'none';
       }
@@ -557,13 +541,10 @@ else {
       const email = loginForm['email'].value;
       const password = loginForm['password'].value;
       auth.signInWithEmailAndPassword(email, password)
-        .catch(error => {
-          loginError.textContent = '登入失敗：' + error.message;
-        });
+        .catch(error => { loginError.textContent = '登入失敗：' + error.message; });
     });
 
     function initializeApp(user) {
-      // 1. 在 state 中新增 hasScrolledToToday 旗標
       const state = { 
         currentView: 'personalCalendarView', 
         currentPage: 'home', 
@@ -573,14 +554,13 @@ else {
         highlightPerson1: '', 
         highlightPerson2: '', 
         loggedInUserName: '',
-        hasScrolledToToday: false, // 新增：紀錄是否已自動滑動
-        notesData: {}, // 用來存抓下來的備註
-        currentNoteDate: null // 紀錄目前正在編輯哪一天的備註
+        hasScrolledToToday: false,
+        notesData: {}, 
+        currentNoteDate: null 
       };
 
       const DOMElements = {
-        header: document.querySelector('.header'),
-        sidebar: document.getElementById('sidebar'), sidebarToggle: document.getElementById('sidebar-toggle'), overlay: document.getElementById('overlay'),
+        header: document.querySelector('.header'), sidebar: document.getElementById('sidebar'), sidebarToggle: document.getElementById('sidebar-toggle'), overlay: document.getElementById('overlay'),
         contentWrapper: document.getElementById('content-wrapper'), sidebarNav: document.getElementById('sidebar-nav'),
         logoutBtn: document.getElementById('logout-btn'), logoutConfirm: document.getElementById('logout-confirm'),
         confirmLogoutYes: document.getElementById('confirm-logout-yes'), confirmLogoutNo: document.getElementById('confirm-logout-no'),
@@ -591,42 +571,22 @@ else {
         messageContainer: document.getElementById('messageContainer'), dailyCardView: document.getElementById('dailyCardView'), fullTableView: document.getElementById('fullTableView'),
         tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'),
         shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'),
-        
-        changeType: document.getElementById('changeType'), 
-        submitBtn: document.getElementById('submitBtn'), 
-        preSubmitBtn: document.getElementById('preSubmitBtn'),
-        highlighter1: document.getElementById('highlighter1'),
-        highlighter2: document.getElementById('highlighter2'),
-
-        successorView: document.getElementById('successorView'),
-        successorDate: document.getElementById('successorDate'),
-        successorRole: document.getElementById('successorRole'),
-        successorQueryBtn: document.getElementById('successorQueryBtn'),
-        successorList: document.getElementById('successor-list'),
-        changePasswordView: document.getElementById('changePasswordView'),
-        changePasswordForm: document.getElementById('changePasswordForm'),
-        changePasswordBtn: document.getElementById('changePasswordBtn'),
-        passwordMessageContainer: document.getElementById('passwordMessageContainer'),
-        myScheduleTitle: document.getElementById('myScheduleTitle'),
-        myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'),
-        colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'),
-
-        sourceCalendarContainer: document.getElementById('sourceCalendarContainer'),
-        targetCalendarContainer: document.getElementById('targetCalendarContainer'),
-        targetCalendarWrapper: document.getElementById('targetCalendarWrapper'),
-        originalDateInput: document.getElementById('originalDate'),
-        originalShiftInput: document.getElementById('originalShift'),
-        swappedDateInput: document.getElementById('swappedDate'),
-        swappedShiftInput: document.getElementById('swappedShift'),
-        confirmModal: document.getElementById('confirmModal'),
-        modalContent: document.getElementById('modalContent'),
-        modalCancel: document.getElementById('modalCancel'),
-        modalConfirm: document.getElementById('modalConfirm'),
-        noteModal: document.getElementById('noteModal'),
-        noteModalTitle: document.getElementById('noteModalTitle'),
-        noteInput: document.getElementById('noteInput'),
-        btnDeleteNote: document.getElementById('btn-delete-note'),
-        btnCancelNote: document.getElementById('btn-cancel-note'),
+        changeType: document.getElementById('changeType'), submitBtn: document.getElementById('submitBtn'), preSubmitBtn: document.getElementById('preSubmitBtn'),
+        highlighter1: document.getElementById('highlighter1'), highlighter2: document.getElementById('highlighter2'),
+        successorView: document.getElementById('successorView'), successorDate: document.getElementById('successorDate'),
+        successorRole: document.getElementById('successorRole'), successorQueryBtn: document.getElementById('successorQueryBtn'),
+        successorList: document.getElementById('successor-list'), changePasswordView: document.getElementById('changePasswordView'),
+        changePasswordForm: document.getElementById('changePasswordForm'), changePasswordBtn: document.getElementById('changePasswordBtn'),
+        passwordMessageContainer: document.getElementById('passwordMessageContainer'), myScheduleTitle: document.getElementById('myScheduleTitle'),
+        myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'), colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'),
+        sourceCalendarContainer: document.getElementById('sourceCalendarContainer'), targetCalendarContainer: document.getElementById('targetCalendarContainer'),
+        targetCalendarWrapper: document.getElementById('targetCalendarWrapper'), originalDateInput: document.getElementById('originalDate'),
+        originalShiftInput: document.getElementById('originalShift'), swappedDateInput: document.getElementById('swappedDate'),
+        swappedShiftInput: document.getElementById('swappedShift'), confirmModal: document.getElementById('confirmModal'),
+        modalContent: document.getElementById('modalContent'), modalCancel: document.getElementById('modalCancel'),
+        modalConfirm: document.getElementById('modalConfirm'), noteModal: document.getElementById('noteModal'),
+        noteModalTitle: document.getElementById('noteModalTitle'), noteInput: document.getElementById('noteInput'),
+        btnDeleteNote: document.getElementById('btn-delete-note'), btnCancelNote: document.getElementById('btn-cancel-note'),
         btnSaveNote: document.getElementById('btn-save-note'),
       };
 
@@ -634,52 +594,16 @@ else {
 
       const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbyUqr1JydB4Yr3xAY0UFzOktl6wFnsDvoMIkeCZVFy64y0UzGX_q34IHN50ZqwcZ7PWYw/exec';
       const SPREADSHEET_IDS = {
-        '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA',
-        '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg',
-        '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q',
-        '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk',
-        '2026-1': '1evaYVTyuU3BhzjnI7U6kenvqBzBWb2rI9O11GtMIPB8',
-        '2026-2': '1_OmJdSlq8PC-oDX3unvUi2aXzsSpSok0aGQAzBhhXFE',
-        '2026-3': '1PTaskSJvXvxTK7o0at4tGH2hdOmgMYm0njtpYuXB2PU',
-        '2026-4': '1bRNBvoI48d9AJAyG3p5PFc36-VBL0xjpz43T4UnhFZY',
-        '2026-5': '12frPrVMu4afbwSwH2zGqj9mMNA4qctL-V72rGee-R4g',
+        '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA', '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg', '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q', '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk',
+        '2026-1': '1evaYVTyuU3BhzjnI7U6kenvqBzBWb2rI9O11GtMIPB8', '2026-2': '1_OmJdSlq8PC-oDX3unvUi2aXzsSpSok0aGQAzBhhXFE', '2026-3': '1PTaskSJvXvxTK7o0at4tGH2hdOmgMYm0njtpYuXB2PU', '2026-4': '1bRNBvoI48d9AJAyG3p5PFc36-VBL0xjpz43T4UnhFZY', '2026-5': '12frPrVMu4afbwSwH2zGqj9mMNA4qctL-V72rGee-R4g',
       };
       
-      // ===【人員名稱對照表 (資料庫名 -> 顯示全名)】===
-      // 請將下方的 "Ｏ" 替換為真實的姓氏
       const staffNameMap = {
-        // 您本人的資料
-        "宗勳": "謝宗勳",
-        
-        // 長官 (若DB中儲存的是職稱，保留左邊的key；若存的是名字，請更改key)
-        "處長": "陳慶隆 處長",
-        "副座": "黃時彥 副處長",
-        "科長": "簡其正 科長",
-        
-
-        // 其他同仁
-        "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育",
-        "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉",
-        "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆",
-        "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯",
-        "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬",
-        "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍",
-        "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐",
-        "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚",
-        "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜",
-        "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩",
-        "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒"
+        "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長",
+        "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒"
       };
 
-      /**
-       * 取得顯示名稱的 Helper Function
-       * @param {string} firstName - 資料庫裡的名字 (Key)
-       * @returns {string} - 對照表中的全名，若找不到則回傳原名
-       */
-      function getDisplayName(firstName) {
-        if (!firstName) return "";
-        return staffNameMap[firstName] || firstName;
-      }
+      function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
 
       const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '健凱', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
       const shiftList = ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'];
@@ -687,172 +611,87 @@ else {
         { label: '主任\n(日)', type: 'DAY', group: 'DIR' }, { label: '主任\n(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n營運\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n營運\n(夜)', type: 'NIGHT', group: 'T1' }
       ];
 
-
-      // --- 函數定義 ---
-       
-      // 2. 新增「嘗試滑動到今天」的輔助函式
       function attemptScrollToToday() {
-        if (state.hasScrolledToToday) return; // 如果已經滑過，就跳出
-        
-        // 稍微延遲以確保畫面已經渲染/顯示
+        if (state.hasScrolledToToday) return;
         setTimeout(() => {
             const dailyView = document.getElementById('dailyCardView');
-            // 必須確認該頁面是開啟狀態 (有 active class)
             if (!dailyView.classList.contains('active')) return;
-            
             const todayCard = document.getElementById('card-today');
-            if (todayCard) {
-                todayCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                state.hasScrolledToToday = true; // 標記為已完成，之後不再執行
-            }
+            if (todayCard) { todayCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); state.hasScrolledToToday = true; }
         }, 300);
       }
 
-// --- 備註功能核心邏輯 ---
-
-      // 1. 監聽 Firestore 資料變更 (即時更新)
       function subscribeToNotes() {
         const userId = auth.currentUser.uid;
-        // 監聽路徑：users/{userId}/notes
-        db.collection('users').doc(userId).collection('notes')
-          .onSnapshot((snapshot) => {
+        db.collection('users').doc(userId).collection('notes').onSnapshot((snapshot) => {
             const notes = {};
-            snapshot.forEach(doc => {
-              notes[doc.id] = doc.data().content;
-            });
-            state.notesData = notes; // 更新狀態
-            
-            // 如果畫面上有月曆，就重新渲染一次，把小三角形畫上去
+            snapshot.forEach(doc => { notes[doc.id] = doc.data().content; });
+            state.notesData = notes;
             const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-            if (state.cachedData[fileKey]) {
-               // 只更新個人月曆即可
-               renderPersonalCalendar(state.cachedData[fileKey].schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
-            }
+            if (state.cachedData[fileKey]) renderPersonalCalendar(state.cachedData[fileKey].schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
           });
       }
 
-      // 2. 開啟備註視窗
       function openNoteModal(year, month, day) {
-        // 格式化日期 key，例如 "2025-12-20"
         const dateKey = `${year}-${month + 1}-${day}`;
-        state.currentNoteDate = dateKey; // 記住現在正在編輯哪一天
-
-        // 設定標題與內容
+        state.currentNoteDate = dateKey;
         DOMElements.noteModalTitle.textContent = `${month + 1}/${day} 行程備註`;
-        DOMElements.noteInput.value = state.notesData[dateKey] || ''; // 有資料就顯示，沒資料就留白
-
-        // 顯示視窗
+        DOMElements.noteInput.value = state.notesData[dateKey] || '';
         DOMElements.noteModal.style.display = 'flex';
         DOMElements.noteInput.focus();
       }
 
-      // 3. 儲存備註
       async function saveNote() {
-        const userId = auth.currentUser.uid;
-        const dateKey = state.currentNoteDate;
-        const content = DOMElements.noteInput.value.trim();
-        const btn = DOMElements.btnSaveNote;
-
+        const userId = auth.currentUser.uid; const dateKey = state.currentNoteDate; const content = DOMElements.noteInput.value.trim(); const btn = DOMElements.btnSaveNote;
         if (!dateKey) return;
-
-        btn.disabled = true;
-        btn.textContent = '儲存中...';
-
+        btn.disabled = true; btn.textContent = '儲存中...';
         try {
-          if (content) {
-            // 有內容 -> 寫入資料庫
-            await db.collection('users').doc(userId).collection('notes').doc(dateKey).set({
-              content: content,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          } else {
-            // 內容是空的 -> 等同於刪除
-            await deleteNote(false); // false 代表不顯示刪除成功的提示，因為是存成空
-            return; 
-          }
+          if (content) { await db.collection('users').doc(userId).collection('notes').doc(dateKey).set({ content: content, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } 
+          else { await deleteNote(false); return; }
           DOMElements.noteModal.style.display = 'none';
-        } catch (error) {
-          alert('儲存失敗：' + error.message);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = '儲存';
-        }
+        } catch (error) { alert('儲存失敗：' + error.message); } finally { btn.disabled = false; btn.textContent = '儲存'; }
       }
 
-      // 4. 刪除備註
       async function deleteNote(showAlert = true) {
-        const userId = auth.currentUser.uid;
-        const dateKey = state.currentNoteDate;
+        const userId = auth.currentUser.uid; const dateKey = state.currentNoteDate;
         if (!dateKey) return;
-
         try {
           await db.collection('users').doc(userId).collection('notes').doc(dateKey).delete();
           if (showAlert) DOMElements.noteModal.style.display = 'none';
-        } catch (error) {
-          alert('刪除失敗：' + error.message);
-        }
+        } catch (error) { alert('刪除失敗：' + error.message); }
       }
 
-      // 【修正】這裡改成顯示全名
       DOMElements.userInfo.textContent = `${getDisplayName(state.loggedInUserName)}你好! :-)`;
-      // 【修正】這裡改成顯示全名
       DOMElements.myScheduleTitle.textContent = `${getDisplayName(state.loggedInUserName)} 的班表`;
 
-      function showMessage(type, text, container = DOMElements.messageContainer) {
-        container.innerHTML = `<div class="message-box ${type}">${text}</div>`;
-      }
-
+      function showMessage(type, text, container = DOMElements.messageContainer) { container.innerHTML = `<div class="message-box ${type}">${text}</div>`; }
       function clearAllViews() {
-        DOMElements.dailyCardView.innerHTML = '';
-        DOMElements.tableContainer.innerHTML = '';
+        DOMElements.dailyCardView.innerHTML = ''; DOMElements.tableContainer.innerHTML = '';
         if (DOMElements.myPersonalCalendarContainer) DOMElements.myPersonalCalendarContainer.innerHTML = '';
         if (DOMElements.colleagueCalendarContainer) DOMElements.colleagueCalendarContainer.innerHTML = '';
-        DOMElements.messageContainer.innerHTML = '';
-        DOMElements.formMessageContainer.innerHTML = '';
+        DOMElements.messageContainer.innerHTML = ''; DOMElements.formMessageContainer.innerHTML = '';
       }
 
       async function fetchData() {
-        const year = state.currentDate.getFullYear();
-        const month = state.currentDate.getMonth() + 1;
-        const fileKey = `${year}-${month}`;
-        const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth() + 1;
+        const fileKey = `${year}-${month}`; const spreadsheetId = SPREADSHEET_IDS[fileKey];
         const sheetName = `${month}月_<<預填班表>>`;
-
         DOMElements.monthTitle.textContent = `${year}年 ${month}月`;
         clearAllViews();
 
-        if (googleSheetWebAppUrl.includes('在這裡貼上')) {
-          showMessage('error', '錯誤：您尚未在 index.html 中設定您的 Google Apps Script 網址。');
-          return;
-        }
-        if (!spreadsheetId) {
-          showMessage('error', `錯誤：找不到 ${year}年 ${month}月 的班表檔案設定。請在 SPREADSHEET_IDS 中新增對應的檔案 ID。`);
-          return;
-        }
-
-        if (state.cachedData[fileKey]) {
-          renderAllViews(state.cachedData[fileKey]);
-          return;
-        }
+        if (googleSheetWebAppUrl.includes('在這裡貼上')) { showMessage('error', '錯誤：您尚未在 index.html 中設定您的 Google Apps Script 網址。'); return; }
+        if (!spreadsheetId) { showMessage('error', `錯誤：找不到 ${year}年 ${month}月 的班表檔案設定。請在 SPREADSHEET_IDS 中新增對應的檔案 ID。`); return; }
+        if (state.cachedData[fileKey]) { renderAllViews(state.cachedData[fileKey]); return; }
 
         try {
           showMessage('loading', `正在載入 ${month} 月班表...`);
           const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`;
           const response = await fetch(requestUrl);
           const data = await response.json();
-
           if (data.error) { throw new Error(data.message); }
-          if (!data.schedule || !data.names) {
-            throw new Error('從 Google Apps Script 收到的資料格式不正確。請確認您已儲存並「重新部署」了最新版的 Apps Script。');
-          }
-
-          state.cachedData[fileKey] = data;
-          DOMElements.messageContainer.innerHTML = '';
-          renderAllViews(data);
-        } catch (error) {
-          console.error(`抓取 ${sheetName} 資料失敗:`, error);
-          showMessage('error', `無法載入 ${month} 月班表！<br><b>錯誤詳情：</b><br>${error.message}`);
-        }
+          if (!data.schedule || !data.names) { throw new Error('從 Google Apps Script 收到的資料格式不正確。'); }
+          state.cachedData[fileKey] = data; DOMElements.messageContainer.innerHTML = ''; renderAllViews(data);
+        } catch (error) { showMessage('error', `無法載入 ${month} 月班表！<br><b>錯誤詳情：</b><br>${error.message}`); }
       }
 
       function renderAllViews(data) {
@@ -869,11 +708,9 @@ else {
 
       function getSortedNames(apiNames) {
         return [...apiNames].sort((a, b) => {
-          const indexA = customNameSortOrder.indexOf(a);
-          const indexB = customNameSortOrder.indexOf(b);
+          const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b);
           if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-          if (indexA !== -1) return -1;
-          if (indexB !== -1) return 1;
+          if (indexA !== -1) return -1; if (indexB !== -1) return 1;
           return a.localeCompare(b, 'zh-Hant');
         });
       }
@@ -881,165 +718,90 @@ else {
       function populateShiftChangeForm(names, shifts) {
         const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
         personSelectors.forEach(selector => {
-          const currentVal = selector.value;
-          selector.innerHTML = '';
-          const defaultOpt = document.createElement('option');
-          defaultOpt.value = "";
-          defaultOpt.text = "請選擇人員...";
-          selector.appendChild(defaultOpt);
-
+          const currentVal = selector.value; selector.innerHTML = '';
+          const defaultOpt = document.createElement('option'); defaultOpt.value = ""; defaultOpt.text = "請選擇人員..."; selector.appendChild(defaultOpt);
           names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name; // 值維持資料庫的名字
-            option.textContent = getDisplayName(name); // 【修正】顯示時轉成全名
-            selector.appendChild(option);
+            const option = document.createElement('option'); option.value = name; option.textContent = getDisplayName(name); selector.appendChild(option);
           });
           if (names.includes(currentVal)) selector.value = currentVal;
         });
 
-        const dateSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalDate"]');
-        const month = state.currentDate.getMonth() + 1;
-        const year = state.currentDate.getFullYear();
-        const daysInMonth = new Date(year, month, 0).getDate();
-        
+        const month = state.currentDate.getMonth() + 1; const year = state.currentDate.getFullYear(); const daysInMonth = new Date(year, month, 0).getDate();
         if (DOMElements.successorDate) {
           DOMElements.successorDate.innerHTML = '';
           for (let i = 1; i <= daysInMonth; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `${month}/${i}`;
-            DOMElements.successorDate.appendChild(option);
+            const option = document.createElement('option'); option.value = i; option.textContent = `${month}/${i}`; DOMElements.successorDate.appendChild(option);
           }
         }
       }
 
       async function handleFormSubmit(e) {
         if(e.preventDefault) e.preventDefault();
-        
-        const btn = DOMElements.preSubmitBtn; 
-        btn.disabled = true;
-        btn.textContent = '處理中...';
+        const btn = DOMElements.preSubmitBtn; btn.disabled = true; btn.textContent = '處理中...';
         showMessage('loading', '正在送出申請...', DOMElements.formMessageContainer);
-
-        const formData = new FormData(DOMElements.shiftChangeForm); 
-        const data = Object.fromEntries(formData.entries());
-        const year = state.currentDate.getFullYear();
-        const month = state.currentDate.getMonth() + 1;
-        const fileKey = `${year}-${month}`;
-        const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        const formData = new FormData(DOMElements.shiftChangeForm); const data = Object.fromEntries(formData.entries());
+        const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth() + 1;
+        const fileKey = `${year}-${month}`; const spreadsheetId = SPREADSHEET_IDS[fileKey];
         const payload = { ...data, spreadsheetId, month, submitterName: state.loggedInUserName };
 
         try {
-          const response = await fetch(googleSheetWebAppUrl, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          });
+          const response = await fetch(googleSheetWebAppUrl, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
           const result = await response.json();
           if (result.success) {
             showMessage('success', result.message, DOMElements.formMessageContainer);
             DOMElements.shiftChangeForm.reset();
-            DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)";
-            DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)";
-            DOMElements.targetCalendarWrapper.style.display = 'none';
-            DOMElements.originalDateInput.value = "";
-            DOMElements.originalShiftInput.value = "";
-            DOMElements.swappedDateInput.value = "";
-            DOMElements.swappedShiftInput.value = "";
-
-            delete state.cachedData[fileKey];
-            switchPage('home');
-            switchView('dailyCardView', DOMElements.homeViewSelector);
-            await fetchData();
+            DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)"; DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)"; DOMElements.targetCalendarWrapper.style.display = 'none';
+            DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = ""; DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = "";
+            delete state.cachedData[fileKey]; switchPage('home'); switchView('dailyCardView', DOMElements.homeViewSelector); await fetchData();
           } else { throw new Error(result.message); }
-        } catch (error) {
-          showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = '送出申請';
-        }
+        } catch (error) { showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer); } finally { btn.disabled = false; btn.textContent = '送出申請'; }
       }
 
       async function handleChangePassword(e) {
         e.preventDefault();
-        const btn = DOMElements.changePasswordBtn;
-        const msgContainer = DOMElements.passwordMessageContainer;
-
-        btn.disabled = true;
-        btn.textContent = '處理中...';
-        showMessage('loading', '正在處理您的請求...', msgContainer);
-
+        const btn = DOMElements.changePasswordBtn; const msgContainer = DOMElements.passwordMessageContainer;
+        btn.disabled = true; btn.textContent = '處理中...'; showMessage('loading', '正在處理您的請求...', msgContainer);
         const currentPassword = DOMElements.changePasswordForm['currentPassword'].value;
         const newPassword = DOMElements.changePasswordForm['newPassword'].value;
         const confirmNewPassword = DOMElements.changePasswordForm['confirmNewPassword'].value;
-
-        if (newPassword !== confirmNewPassword) {
-          showMessage('error', '錯誤：新密碼與確認密碼不相符。', msgContainer);
-          btn.disabled = false;
-          btn.textContent = '確認更換';
-          return;
-        }
-
+        if (newPassword !== confirmNewPassword) { showMessage('error', '錯誤：新密碼與確認密碼不相符。', msgContainer); btn.disabled = false; btn.textContent = '確認更換'; return; }
         try {
-          const user = auth.currentUser;
-          if (!user) {
-            throw new Error("使用者未登入，無法更換密碼。");
-          }
-
+          const user = auth.currentUser; if (!user) throw new Error("使用者未登入，無法更換密碼。");
           const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
           await user.reauthenticateWithCredential(credential);
-
           await user.updatePassword(newPassword);
-
-          showMessage('success', '密碼已成功更新！', msgContainer);
-          DOMElements.changePasswordForm.reset();
-
+          showMessage('success', '密碼已成功更新！', msgContainer); DOMElements.changePasswordForm.reset();
         } catch (error) {
           let errorMessage = '發生未知錯誤。';
-          if (error.code === 'auth/wrong-password') {
-            errorMessage = '您輸入的「目前密碼」不正確。';
-          } else if (error.code === 'auth/weak-password') {
-            errorMessage = '新密碼強度不足，請確認至少有 6 個字元。';
-          } else {
-            errorMessage = error.message;
-          }
+          if (error.code === 'auth/wrong-password') errorMessage = '您輸入的「目前密碼」不正確。';
+          else if (error.code === 'auth/weak-password') errorMessage = '新密碼強度不足，請確認至少有 6 個字元。';
+          else errorMessage = error.message;
           showMessage('error', `更換密碼失敗：<br>${errorMessage}`, msgContainer);
-          console.error("Change Password Error:", error);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = '確認更換';
-        }
+        } finally { btn.disabled = false; btn.textContent = '確認更換'; }
       }
 
+      // --- 【新增】3. MY CREW 高亮邏輯 ---
       function renderDailyCards(scheduleData) {
-        const today = new Date();
-        const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth(); 
-        const currentDay = today.getDate();
-
-        const viewYear = state.currentDate.getFullYear();
-        const viewMonth = state.currentDate.getMonth();
-
+        const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDay = today.getDate();
+        const viewYear = state.currentDate.getFullYear(); const viewMonth = state.currentDate.getMonth();
         const fragment = document.createDocumentFragment();
         
         scheduleData.forEach(dayData => {
           const card = document.createElement('div');
-          
           let isToday = (viewYear === currentYear && viewMonth === currentMonth && dayData.day === currentDay);
-          
           card.className = isToday ? 'day-card today-highlight open' : 'day-card';
 
           const groups = {
-            group1: { title: '主任 (日) & T2 (日)', html: '' },
-            group2: { title: '主任 (夜) & T2 (夜)', html: '' },
-            group3: { title: 'T1 (日)', html: '' },
-            group4: { title: 'T1 (夜)', html: '' }
+            group1: { title: '主任 (日) & T2 (日)', html: '', hasMe: false },
+            group2: { title: '主任 (夜) & T2 (夜)', html: '', hasMe: false },
+            group3: { title: 'T1 (日)', html: '', hasMe: false },
+            group4: { title: 'T1 (夜)', html: '', hasMe: false }
           };
 
           dayData.assignments.forEach((name, i) => {
-            const pos = positions[i];
-            if (!pos) return;
+            const pos = positions[i]; if (!pos) return;
             const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
+            const isMe = (name === state.loggedInUserName); // 判斷是否為登入者本人
             
             const assignmentHTML = `
               <div class="assignment ${shiftClass}">
@@ -1049,440 +811,223 @@ else {
 
             if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'DAY') {
               groups.group1.html += assignmentHTML;
+              if (isMe) groups.group1.hasMe = true;
             } else if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'NIGHT') {
               groups.group2.html += assignmentHTML;
+              if (isMe) groups.group2.hasMe = true;
             } else if (pos.group === 'T1' && pos.type === 'DAY') {
               groups.group3.html += assignmentHTML;
+              if (isMe) groups.group3.hasMe = true;
             } else if (pos.group === 'T1' && pos.type === 'NIGHT') {
               groups.group4.html += assignmentHTML;
+              if (isMe) groups.group4.hasMe = true;
             }
           });
 
           let detailsHTML = '';
           Object.values(groups).forEach(group => {
             if (group.html) {
-              detailsHTML += `<div class="assignment-row"><div class="assignment-row-title">${group.title}</div><div class="assignment-grid">${group.html}</div></div>`;
+              // 若有自己在裡面，加上 current-duty-group
+              const myCrewClass = group.hasMe ? 'current-duty-group' : '';
+              detailsHTML += `<div class="assignment-row ${myCrewClass}"><div class="assignment-row-title">${group.title}</div><div class="assignment-grid">${group.html}</div></div>`;
             }
           });
 
           if (isToday) card.id = "card-today";
-
           card.innerHTML = `<div class="day-header"><h2>${state.currentDate.getMonth() + 1}/${String(dayData.day).padStart(2, '0')} <span class="weekday">星期${dayData.weekday}</span></h2></div><div class="day-details">${detailsHTML}</div>`;
           fragment.appendChild(card);
         });
 
-        DOMElements.dailyCardView.innerHTML = '';
-        DOMElements.dailyCardView.appendChild(fragment);
+        DOMElements.dailyCardView.innerHTML = ''; DOMElements.dailyCardView.appendChild(fragment);
         DOMElements.dailyCardView.querySelectorAll('.day-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
-        
-        // 3. 在資料渲染完成後，嘗試滑動到今天
         attemptScrollToToday();
       }
 
       function renderFullTable(scheduleData) {
-        let tableHTML = `<div class="table-container"><table class="full-roster-table"><thead><tr>`;
-        tableHTML += `<th>日期</th>`;
-        positions.forEach((pos, i) => {
-          const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
-          tableHTML += `<th class="${shiftClass}">${pos.label}</th>`;
-        });
+        let tableHTML = `<div class="table-container"><table class="full-roster-table"><thead><tr><th>日期</th>`;
+        positions.forEach((pos, i) => { const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift'; tableHTML += `<th class="${shiftClass}">${pos.label}</th>`; });
         tableHTML += `</tr></thead><tbody>`;
         scheduleData.forEach((dayData, rowIndex) => {
-          tableHTML += `<tr>`;
-          tableHTML += `<td>${state.currentDate.getMonth() + 1}/${dayData.day} (${dayData.weekday})</td>`;
+          tableHTML += `<tr><td>${state.currentDate.getMonth() + 1}/${dayData.day} (${dayData.weekday})</td>`;
           dayData.assignments.forEach((name, colIndex) => {
             let highlightClass = '';
-            if (state.highlightPerson1 && name === state.highlightPerson1) highlightClass = 'highlight-a';
-            else if (state.highlightPerson2 && name === state.highlightPerson2) highlightClass = 'highlight-b';
-            // 【修正】顯示全名
+            if (state.highlightPerson1 && name === state.highlightPerson1) highlightClass = 'highlight-a'; else if (state.highlightPerson2 && name === state.highlightPerson2) highlightClass = 'highlight-b';
             tableHTML += `<td class="${highlightClass}">${getDisplayName(name) || ''}</td>`;
           });
           tableHTML += `</tr>`;
         });
-        tableHTML += `</tbody></table></div>`;
-        DOMElements.tableContainer.innerHTML = tableHTML;
+        tableHTML += `</tbody></table></div>`; DOMElements.tableContainer.innerHTML = tableHTML;
       }
 
       function populatePersonSelector(names, selector, defaultOptionText) {
-        const currentSelection = selector.value;
-        selector.innerHTML = `<option value="">${defaultOptionText}</option>`;
+        const currentSelection = selector.value; selector.innerHTML = `<option value="">${defaultOptionText}</option>`;
         names.forEach(name => {
-          const option = document.createElement('option');
-          option.value = name; // 值維持資料庫的名字
-          option.textContent = getDisplayName(name); // 【修正】顯示時轉成全名
-          selector.appendChild(option);
+          const option = document.createElement('option'); option.value = name; option.textContent = getDisplayName(name); selector.appendChild(option);
         });
         if (names.includes(currentSelection)) selector.value = currentSelection;
       }
 
-// 【最終進化版】月曆渲染邏輯 (含備註功能)
       function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
         if (!containerElement) return;
-
-        const today = new Date();
-        const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth();
-        const currentDay = today.getDate();
-
-        const year = state.currentDate.getFullYear();
-        const month = state.currentDate.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDay = today.getDate();
+        const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         const personalShifts = {};
+        // 統計日夜休假天數
+        let stats = { day: 0, night: 0 }; 
+
         if (personName) {
           scheduleData.forEach(dayData => {
             dayData.assignments.forEach((name, i) => {
               if (name === personName) {
-                personalShifts[dayData.day] = { 
-                  position: positions[i].label, 
-                  type: positions[i].type,
-                  fullLabel: positions[i].label.replace(/\n/g, ''),
-                  backendValue: shiftList[i] 
-                };
+                personalShifts[dayData.day] = { position: positions[i].label, type: positions[i].type, fullLabel: positions[i].label.replace(/\n/g, ''), backendValue: shiftList[i] };
+                if (positions[i].type === 'DAY') stats.day++;
+                else stats.night++;
               }
             });
           });
+        }
+
+        // --- 將統計數據寫入上方公事包區塊 ---
+        if (personName === state.loggedInUserName && !isInteractive) {
+            const statDayEl = document.getElementById('stat-day');
+            const statNightEl = document.getElementById('stat-night');
+            const statOffEl = document.getElementById('stat-off');
+            if (statDayEl) statDayEl.innerText = '日 ' + stats.day;
+            if (statNightEl) statNightEl.innerText = '夜 ' + stats.night;
+            if (statOffEl) statOffEl.innerText = '休 ' + (daysInMonth - stats.day - stats.night);
         }
 
         let calendarHTML = `<div class="calendar-grid">`;
         const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
         weekdays.forEach(wd => { calendarHTML += `<div class="calendar-weekday">${wd}</div>`; });
-        
         for (let i = 0; i < firstDay; i++) { calendarHTML += `<div class="calendar-day empty"></div>`; }
 
         for (let day = 1; day <= daysInMonth; day++) {
           const shift = personalShifts[day];
-          let shiftClass = 'day-off';
-          let shiftInfo = '-';
-          let hasShift = "false";
-          let shiftDataStr = "";
-
+          let shiftClass = 'day-off'; let shiftInfo = '-'; let hasShift = "false"; let shiftDataStr = "";
           if (shift) {
-            shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift';
-            shiftInfo = shift.position;
-            hasShift = "true";
+            shiftClass = shift.type === 'DAY' ? 'day-shift' : 'night-shift'; shiftInfo = shift.position; hasShift = "true";
             shiftDataStr = `data-shift-name="${shift.fullLabel}" data-shift-value="${shift.backendValue}" data-shift-type="${shift.type}"`;
           }
-
           let todayClass = '';
-          // 這裡依然保留了您的要求：非互動模式才顯示今天
-          if (!isInteractive && year === currentYear && month === currentMonth && day === currentDay) {
-            todayClass = ' today';
-          }
-
-          // --- 新增：檢查是否有備註 (只在個人班表顯示，調班模式不顯示) ---
+          if (!isInteractive && year === currentYear && month === currentMonth && day === currentDay) { todayClass = ' today'; }
           let noteClass = '';
-          // 只有在「非互動模式(個人班表)」且「目前顯示的是登入者本人」時，才顯示三角形
           if (!isInteractive && personName === state.loggedInUserName) {
-             const dateKey = `${year}-${month + 1}-${day}`;
-             if (state.notesData[dateKey]) {
-               noteClass = ' has-note';
-             }
+             const dateKey = `${year}-${month + 1}-${day}`; if (state.notesData[dateKey]) { noteClass = ' has-note'; }
           }
-
-          calendarHTML += `
-            <div class="calendar-day ${shiftClass}${todayClass}${noteClass}" 
-                data-day="${day}" 
-                data-has-shift="${hasShift}" 
-                ${shiftDataStr}>
-              <div class="day-number">${day}</div>
-              <div class="shift-info">${shiftInfo}</div>
-            </div>`;
+          calendarHTML += `<div class="calendar-day ${shiftClass}${todayClass}${noteClass}" data-day="${day}" data-has-shift="${hasShift}" ${shiftDataStr}><div class="day-number">${day}</div><div class="shift-info">${shiftInfo}</div></div>`;
         }
-        calendarHTML += `</div>`;
-        containerElement.innerHTML = calendarHTML;
+        calendarHTML += `</div>`; containerElement.innerHTML = calendarHTML;
 
-        // --- 事件綁定區 ---
-        
-        // 情況 A: 調班模式 (互動選取)
         if (isInteractive && onDayClick) {
           const days = containerElement.querySelectorAll('.calendar-day[data-has-shift="true"]');
           days.forEach(dayEl => {
             dayEl.addEventListener('click', () => {
-              containerElement.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-shift'));
-              dayEl.classList.add('selected-shift');
-              const day = dayEl.getAttribute('data-day');
-              const shiftValue = dayEl.getAttribute('data-shift-value'); 
-              onDayClick(day, shiftValue); 
+              containerElement.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-shift')); dayEl.classList.add('selected-shift');
+              const day = dayEl.getAttribute('data-day'); const shiftValue = dayEl.getAttribute('data-shift-value'); onDayClick(day, shiftValue); 
             });
           });
         } 
-        
-        // 情況 B: 個人班表模式 (點擊寫備註)
-        // 只有「登入者本人」看「自己的班表」時，才可以點擊寫筆記
         else if (!isInteractive && personName === state.loggedInUserName) {
           const days = containerElement.querySelectorAll('.calendar-day:not(.empty)');
           days.forEach(dayEl => {
-             dayEl.style.cursor = 'pointer'; // 讓滑鼠變成手指形狀
-             dayEl.addEventListener('click', () => {
-               const day = parseInt(dayEl.getAttribute('data-day'));
-               openNoteModal(year, month, day);
-             });
+             dayEl.style.cursor = 'pointer';
+             dayEl.addEventListener('click', () => { const day = parseInt(dayEl.getAttribute('data-day')); openNoteModal(year, month, day); });
           });
         }
       }
 
-
       function switchPage(pageName) {
-    state.currentPage = pageName;
-    DOMElements.pages.forEach(p => p.classList.remove('active'));
-    document.getElementById(pageName).classList.add('active');
-    DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active'));
-    DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active');
-    DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none');
-    if (pageName === 'home') {
-        DOMElements.homeViewSelector.style.display = 'flex';
-        switchView('personalCalendarView', DOMElements.homeViewSelector);
-    } else if (pageName === 'shiftZone') {
-        DOMElements.shiftZoneViewSelector.style.display = 'flex';
-        switchView('shiftChangeView', DOMElements.shiftZoneViewSelector);
-    }
-    closeSidebar();
-}
+        state.currentPage = pageName; DOMElements.pages.forEach(p => p.classList.remove('active')); document.getElementById(pageName).classList.add('active');
+        DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active')); DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+        DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none');
+        if (pageName === 'home') { DOMElements.homeViewSelector.style.display = 'flex'; switchView('personalCalendarView', DOMElements.homeViewSelector); } 
+        else if (pageName === 'shiftZone') { DOMElements.shiftZoneViewSelector.style.display = 'flex'; switchView('shiftChangeView', DOMElements.shiftZoneViewSelector); }
+        closeSidebar();
+      }
 
       function switchView(viewName, viewSelector) {
-    if (!viewSelector) return;
-    const currentPageDiv = document.querySelector('.page.active');
-    if (!currentPageDiv) return;
-    currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    const targetView = document.getElementById(viewName);
-    if (targetView) {
-        targetView.classList.add('active');
-    }
-    viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active');
-
-    // 4. 切換到每日值班頁面時，也嘗試執行滑動
-    if (viewName === 'dailyCardView') {
-        attemptScrollToToday();
-    }
-}
-
-      function openSidebar() {
-        DOMElements.sidebar.classList.add('open');
-        DOMElements.overlay.style.display = 'block';
+        if (!viewSelector) return;
+        const currentPageDiv = document.querySelector('.page.active'); if (!currentPageDiv) return;
+        currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active')); const targetView = document.getElementById(viewName);
+        if (targetView) { targetView.classList.add('active'); }
+        viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active')); viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+        if (viewName === 'dailyCardView') { attemptScrollToToday(); }
       }
-      function closeSidebar() {
-        DOMElements.sidebar.classList.remove('open');
-        DOMElements.overlay.style.display = 'none';
-      }
+
+      function openSidebar() { DOMElements.sidebar.classList.add('open'); DOMElements.overlay.style.display = 'block'; }
+      function closeSidebar() { DOMElements.sidebar.classList.remove('open'); DOMElements.overlay.style.display = 'none'; }
 
       async function handleSuccessorQuery() {
-        const resultsContainer = DOMElements.successorList;
-        resultsContainer.textContent = '查詢中...';
-
-        const year = state.currentDate.getFullYear();
-        const month = state.currentDate.getMonth() + 1;
-        const fileKey = `${year}-${month}`;
-        const spreadsheetId = SPREADSHEET_IDS[fileKey];
-        const date = DOMElements.successorDate.value;
-        const role = DOMElements.successorRole.value;
-
-        if (!spreadsheetId) {
-          resultsContainer.textContent = '錯誤：找不到該月份的檔案設定。';
-          return;
-        }
-
+        const resultsContainer = DOMElements.successorList; resultsContainer.textContent = '查詢中...';
+        const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth() + 1;
+        const fileKey = `${year}-${month}`; const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        const date = DOMElements.successorDate.value; const role = DOMElements.successorRole.value;
+        if (!spreadsheetId) { resultsContainer.textContent = '錯誤：找不到該月份的檔案設定。'; return; }
         try {
           const requestUrl = `${googleSheetWebAppUrl}?action=getSuccessors&spreadsheetId=${spreadsheetId}&year=${year}&month=${month}&date=${date}&role=${encodeURIComponent(role)}`;
-          const response = await fetch(requestUrl);
-          const data = await response.json();
-
+          const response = await fetch(requestUrl); const data = await response.json();
           if (data.error) { throw new Error(data.message); }
-
-          if (data.successors && data.successors.length > 0) {
-            resultsContainer.textContent = data.successors.join('、');
-          } else {
-            resultsContainer.textContent = '(無可用人選)';
-          }
-        } catch (error) {
-          resultsContainer.textContent = '查詢失敗：' + error.message;
-        }
+          if (data.successors && data.successors.length > 0) { resultsContainer.textContent = data.successors.join('、'); } else { resultsContainer.textContent = '(無可用人選)'; }
+        } catch (error) { resultsContainer.textContent = '查詢失敗：' + error.message; }
       }
 
-      // --- 事件監聽器 ---
-      
-DOMElements.sidebarNav.addEventListener('click', e => {
-  e.preventDefault();
-  if (e.target.tagName === 'A') {
-    switchPage(e.target.dataset.page);
-  }
-});
-      DOMElements.header.addEventListener('click', (e) => {
-  if (e.target.closest('#sidebar-toggle')) {
-    DOMElements.sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-  }
-});
+      DOMElements.sidebarNav.addEventListener('click', e => { e.preventDefault(); if (e.target.tagName === 'A') { switchPage(e.target.dataset.page); } });
+      DOMElements.header.addEventListener('click', (e) => { if (e.target.closest('#sidebar-toggle')) { DOMElements.sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); } });
       DOMElements.overlay.addEventListener('click', closeSidebar);
-      
       DOMElements.logoutBtn.addEventListener('click', () => { DOMElements.logoutConfirm.style.display = 'block'; DOMElements.overlay.style.display = 'block'; });
       DOMElements.confirmLogoutNo.addEventListener('click', () => { DOMElements.logoutConfirm.style.display = 'none'; if (!DOMElements.sidebar.classList.contains('open')) DOMElements.overlay.style.display = 'none'; });
       DOMElements.confirmLogoutYes.addEventListener('click', () => { auth.signOut(); DOMElements.logoutConfirm.style.display = 'none'; DOMElements.overlay.style.display = 'none'; });
-
       DOMElements.homeViewSelector.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') switchView(e.target.dataset.view, DOMElements.homeViewSelector); });
       DOMElements.shiftZoneViewSelector.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') switchView(e.target.dataset.view, DOMElements.shiftZoneViewSelector); });
-
       DOMElements.prevMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); fetchData(); });
       DOMElements.nextMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); fetchData(); });
 
-      DOMElements.personSelector.addEventListener('change', e => {
-        state.selectedPerson = e.target.value;
-        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-        if (state.cachedData[fileKey]) {
-          renderPersonalCalendar(state.cachedData[fileKey].schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
-        }
-      });
-      DOMElements.highlighter1.addEventListener('change', e => {
-        state.highlightPerson1 = e.target.value;
-        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-        if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
-      });
-      DOMElements.highlighter2.addEventListener('change', e => {
-        state.highlightPerson2 = e.target.value;
-        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
-        if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule);
-      });
+      DOMElements.personSelector.addEventListener('change', e => { state.selectedPerson = e.target.value; const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`; if (state.cachedData[fileKey]) { renderPersonalCalendar(state.cachedData[fileKey].schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer); } });
+      DOMElements.highlighter1.addEventListener('change', e => { state.highlightPerson1 = e.target.value; const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`; if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule); });
+      DOMElements.highlighter2.addEventListener('change', e => { state.highlightPerson2 = e.target.value; const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`; if (state.cachedData[fileKey]) renderFullTable(state.cachedData[fileKey].schedule); });
       
       DOMElements.shiftChangeForm.querySelector('#originalPerson').addEventListener('change', e => {
-          const person = e.target.value;
-          const year = state.currentDate.getFullYear();
-          const month = state.currentDate.getMonth() + 1;
-          const fileKey = `${year}-${month}`;
-          
-          DOMElements.originalDateInput.value = "";
-          DOMElements.originalShiftInput.value = "";
-
-          if(state.cachedData[fileKey]) {
-              renderPersonalCalendar(
-                  state.cachedData[fileKey].schedule, 
-                  person, 
-                  DOMElements.sourceCalendarContainer, 
-                  true, 
-                  (day, shiftName) => {
-                      DOMElements.originalDateInput.value = day;
-                      DOMElements.originalShiftInput.value = shiftName;
-                  }
-              );
-          }
+          const person = e.target.value; const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth() + 1; const fileKey = `${year}-${month}`;
+          DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = "";
+          if(state.cachedData[fileKey]) { renderPersonalCalendar(state.cachedData[fileKey].schedule, person, DOMElements.sourceCalendarContainer, true, (day, shiftName) => { DOMElements.originalDateInput.value = day; DOMElements.originalShiftInput.value = shiftName; }); }
       });
-
       DOMElements.changeType.addEventListener('change', e => {
-          const isSwap = e.target.value === '調';
-          DOMElements.targetCalendarWrapper.style.display = isSwap ? 'block' : 'none';
-          
-          if (!isSwap) {
-              DOMElements.swappedDateInput.value = "";
-              DOMElements.swappedShiftInput.value = "";
-              DOMElements.targetCalendarContainer.querySelectorAll('.selected-shift').forEach(el => el.classList.remove('selected-shift'));
-          }
+          const isSwap = e.target.value === '調'; DOMElements.targetCalendarWrapper.style.display = isSwap ? 'block' : 'none';
+          if (!isSwap) { DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = ""; DOMElements.targetCalendarContainer.querySelectorAll('.selected-shift').forEach(el => el.classList.remove('selected-shift')); }
       });
-
       DOMElements.shiftChangeForm.querySelector('#newPerson').addEventListener('change', e => {
-          const person = e.target.value;
-          const year = state.currentDate.getFullYear();
-          const month = state.currentDate.getMonth() + 1;
-          const fileKey = `${year}-${month}`;
-
-          DOMElements.swappedDateInput.value = "";
-          DOMElements.swappedShiftInput.value = "";
-
-          if(state.cachedData[fileKey]) {
-              renderPersonalCalendar(
-                  state.cachedData[fileKey].schedule, 
-                  person, 
-                  DOMElements.targetCalendarContainer, 
-                  true, 
-                  (day, shiftName) => {
-                      DOMElements.swappedDateInput.value = day;
-                      DOMElements.swappedShiftInput.value = shiftName;
-                  }
-              );
-          }
+          const person = e.target.value; const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth() + 1; const fileKey = `${year}-${month}`;
+          DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = "";
+          if(state.cachedData[fileKey]) { renderPersonalCalendar(state.cachedData[fileKey].schedule, person, DOMElements.targetCalendarContainer, true, (day, shiftName) => { DOMElements.swappedDateInput.value = day; DOMElements.swappedShiftInput.value = shiftName; }); }
       });
 
       DOMElements.preSubmitBtn.addEventListener('click', () => {
-          const form = DOMElements.shiftChangeForm;
-          const type = form.changeType.value;
-          const p1 = form.originalPerson.value;
-          const d1 = DOMElements.originalDateInput.value;
-          const s1 = DOMElements.originalShiftInput.value;
-          const p2 = form.newPerson.value;
-          
-          if (!p1 || !d1 || !s1) {
-              alert("請選擇申請人，並點選行事曆上的班別！");
-              return;
-          }
-          if (!p2) {
-              alert("請選擇對象人員！");
-              return;
-          }
-          
-          let confirmMsg = "";
-          const month = state.currentDate.getMonth() + 1;
-
-          // 【修正】這裡使用 getDisplayName 顯示全名
-          const p1Name = getDisplayName(p1);
-          const p2Name = getDisplayName(p2);
-
+          const form = DOMElements.shiftChangeForm; const type = form.changeType.value; const p1 = form.originalPerson.value; const d1 = DOMElements.originalDateInput.value; const s1 = DOMElements.originalShiftInput.value; const p2 = form.newPerson.value;
+          if (!p1 || !d1 || !s1) { alert("請選擇申請人，並點選行事曆上的班別！"); return; }
+          if (!p2) { alert("請選擇對象人員！"); return; }
+          let confirmMsg = ""; const month = state.currentDate.getMonth() + 1;
+          const p1Name = getDisplayName(p1); const p2Name = getDisplayName(p2);
           if (type === '調') {
-              const d2 = DOMElements.swappedDateInput.value;
-              const s2 = DOMElements.swappedShiftInput.value;
-              if (!d2 || !s2) {
-                  alert("調班模式下，請點選對象行事曆上欲交換的班別！");
-                  return;
-              }
-              confirmMsg = `
-                <div style="text-align:left; display:inline-block;">
-                  <span style="color:#7D8C91;">${p1Name}</span> ${month}/${d1} ${s1}<br>
-                  <div style="text-align:center; color:#CC9B86; margin: 5px 0;">⇅ 互調</div>
-                  <span style="color:#7D8C91;">${p2Name}</span> ${month}/${d2} ${s2}
-                </div>`;
-          } else {
-              confirmMsg = `
-                <div style="text-align:left; display:inline-block;">
-                  <span style="color:#7D8C91;">${p1Name}</span> ${month}/${d1} ${s1}<br>
-                  <div style="text-align:center; color:#CC9B86; margin: 5px 0;">➔ 給班</div>
-                  <span style="color:#7D8C91;">${p2Name}</span>
-                </div>`;
-          }
-
-          DOMElements.modalContent.innerHTML = confirmMsg;
-          DOMElements.confirmModal.style.display = 'flex';
+              const d2 = DOMElements.swappedDateInput.value; const s2 = DOMElements.swappedShiftInput.value;
+              if (!d2 || !s2) { alert("調班模式下，請點選對象行事曆上欲交換的班別！"); return; }
+              confirmMsg = `<div style="text-align:left; display:inline-block;"><span style="color:#7D8C91;">${p1Name}</span> ${month}/${d1} ${s1}<br><div style="text-align:center; color:#CC9B86; margin: 5px 0;">⇅ 互調</div><span style="color:#7D8C91;">${p2Name}</span> ${month}/${d2} ${s2}</div>`;
+          } else { confirmMsg = `<div style="text-align:left; display:inline-block;"><span style="color:#7D8C91;">${p1Name}</span> ${month}/${d1} ${s1}<br><div style="text-align:center; color:#CC9B86; margin: 5px 0;">➔ 給班</div><span style="color:#7D8C91;">${p2Name}</span></div>`; }
+          DOMElements.modalContent.innerHTML = confirmMsg; DOMElements.confirmModal.style.display = 'flex';
       });
 
-      DOMElements.modalCancel.addEventListener('click', () => {
-          DOMElements.confirmModal.style.display = 'none';
-      });
-
-      DOMElements.modalConfirm.addEventListener('click', () => {
-          DOMElements.confirmModal.style.display = 'none';
-          handleFormSubmit({ target: DOMElements.shiftChangeForm, preventDefault: () => {} });
-      });
-
+      DOMElements.modalCancel.addEventListener('click', () => { DOMElements.confirmModal.style.display = 'none'; });
+      DOMElements.modalConfirm.addEventListener('click', () => { DOMElements.confirmModal.style.display = 'none'; handleFormSubmit({ target: DOMElements.shiftChangeForm, preventDefault: () => {} }); });
       DOMElements.changePasswordForm.addEventListener('submit', handleChangePassword);
-
-      if (DOMElements.successorQueryBtn) {
-        DOMElements.successorQueryBtn.addEventListener('click', handleSuccessorQuery);
-      }
-
-      // 備註 Modal 按鈕事件
-      // 1. 取消按鈕：單純把視窗關掉 (隱藏)
-      DOMElements.btnCancelNote.addEventListener('click', () => { 
-          DOMElements.noteModal.style.display = 'none'; 
-      });
-
-      // 2. 儲存按鈕：執行 saveNote 函式
+      if (DOMElements.successorQueryBtn) { DOMElements.successorQueryBtn.addEventListener('click', handleSuccessorQuery); }
+      
+      DOMElements.btnCancelNote.addEventListener('click', () => { DOMElements.noteModal.style.display = 'none'; });
       DOMElements.btnSaveNote.addEventListener('click', saveNote);
+      DOMElements.btnDeleteNote.addEventListener('click', () => { if(confirm('確定要刪除此備註嗎？')) deleteNote(); });
 
-      // 3. 刪除按鈕：先跳出確認視窗，使用者按確定後才執行 deleteNote
-      DOMElements.btnDeleteNote.addEventListener('click', () => { 
-          if(confirm('確定要刪除此備註嗎？')) deleteNote(); 
-      });
-
-      switchPage('home');
-      subscribeToNotes();
-      fetchData();
+      switchPage('home'); subscribeToNotes(); fetchData();
     }
   </script>
 <script>
@@ -1497,5 +1042,4 @@ DOMElements.sidebarNav.addEventListener('click', e => {
   }
 </script>
 </body>
-
 </html>
