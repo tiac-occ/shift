@@ -26,14 +26,37 @@
   100% { transform: translateY(140px) rotate(180deg) translateX(20px); opacity: 0; }
 }
 
-/* --- 【新增】2. 選項 B (圓環統計) 與動態推擠特效 --- */
+/* --- 【新增】2. 公事包與標題的完美對齊網格 --- */
 .calendar-section-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; height: 40px; position: relative;
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); /* 完美的七等份，與下方月曆同步 */
+  gap: 5px; 
+  margin-bottom: 15px; 
+  height: 40px;
 }
 
-.calendar-section-header h3 { 
+/* 標題層：佔滿七格，完美置中 */
+.title-wrapper {
+  grid-column: 1 / 8; 
+  display: flex; justify-content: center; align-items: center;
+  pointer-events: none; /* 避免擋住按鈕點擊 */
+}
+
+.title-wrapper h3 { 
   margin: 0; color: var(--starlux-header); 
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
+
+/* 展開時被推擠的特效 */
+.title-wrapper h3.pushed {
+  transform: translateX(-75px); 
+}
+
+/* 按鈕層：永遠鎖死在第 7 格 (星期六) 的正中央 */
+.action-wrapper {
+  grid-column: 7; 
+  display: flex; justify-content: center; align-items: center;
+  position: relative; /* 讓數據面板以此為基準向左長 */
 }
 
 /* 隱藏的數據面板 */
@@ -43,9 +66,11 @@
   box-shadow: var(--shadow); opacity: 0; 
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
   white-space: nowrap; border: 1px solid transparent;
+  position: absolute; right: 38px; /* 固定從圖標的左側滑出 */
+  z-index: 10;
 }
 
-/* 展開時的數據面板 (自然會把旁邊的 h3 往左推) */
+/* 展開時的數據面板 */
 .stats-panel.show { 
   width: auto; padding: 0 12px; opacity: 1; border-color: var(--border-color); 
 }
@@ -60,7 +85,7 @@
 .icon-btn {
   display: flex; justify-content: center; align-items: center;
   width: 34px; height: 34px; border: 1.5px solid #AD9F74; border-radius: 50%;
-  background: transparent; cursor: pointer; color: #AD9F74;
+  background: transparent; cursor: pointer; color: #AD9F74; pointer-events: auto;
   transition: all 0.2s; padding: 0; outline: none; -webkit-tap-highlight-color: transparent;
 }
 .icon-btn:hover { background: rgba(173, 159, 116, 0.1); transform: scale(1.05); }
@@ -83,58 +108,22 @@
 
 /* --- 原有樣式開始 --- */
 
-/* 行事曆格子右上角的小三角形 (有備註時顯示) */
-.calendar-day.has-note::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 12px 12px 0;
-  border-color: transparent #e74c3c transparent transparent;
-  z-index: 5;
-}
-
-#noteModal textarea {
-  width: 100%; height: 150px; padding: 10px; font-size: 1.1em;
-  border: 1px solid var(--border-color); border-radius: 8px; resize: none;
-  box-sizing: border-box; margin-bottom: 15px; font-family: inherit;
-}
-
+.calendar-day.has-note::after { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 12px 12px 0; border-color: transparent #e74c3c transparent transparent; z-index: 5;}
+#noteModal textarea { width: 100%; height: 150px; padding: 10px; font-size: 1.1em; border: 1px solid var(--border-color); border-radius: 8px; resize: none; box-sizing: border-box; margin-bottom: 15px; font-family: inherit;}
 #noteModal .modal-actions { display: flex; gap: 10px; }
 #btn-delete-note { background-color: #dc3545; color: white; flex: 0.5; }
 
 .calendar-day.today { position: relative; }
-.calendar-day.today::after {
-  content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px;
-  border: 4px outset #CC9B86; border-radius: 8px; box-sizing: border-box;
-  animation: draw-circle 0.5s ease-in-out forwards;
-}
-
-@keyframes draw-circle {
-  from { transform: scale(1.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
+.calendar-day.today::after { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 4px outset #CC9B86; border-radius: 8px; box-sizing: border-box; animation: draw-circle 0.5s ease-in-out forwards;}
+@keyframes draw-circle { from { transform: scale(1.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 .header-top-row { position: relative; width: 100%; min-height: 45px; }
 
-#splash-screen {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: #4A5052; z-index: 9999;
-  display: flex; justify-content: center; align-items: center;
-  transition: opacity 0.5s ease-out;
-}
+#splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #4A5052; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out;}
 #splash-screen img { width: 300px; height: 300px; }
 #splash-screen.hidden { opacity: 0; pointer-events: none; }
 
-:root {
-  --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda;
-  --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91;
-  --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
+:root { --starlux-header: #3E4B5C; --starlux-teal-light: #e6f0f3; --starlux-gold-light: #f5eeda; --starlux-rose-gold: #f5eeda; --starlux-gray: #f0f2f5; --starlux-highlight-a: #7D8C91; --starlux-highlight-b: #AD9F74; --text-color: #333; --border-color: #d8dde0; --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);}
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: var(--starlux-gray); color: var(--text-color); }
 
 #login-container { display: none; justify-content: center; align-items: center; width: 100%; height: 100vh; }
@@ -331,24 +320,24 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
             
             <div class="calendar-section">
               <div class="calendar-section-header" id="myScheduleHeader">
-  <div style="flex: 1;"></div>
-  
-  <h3 id="myScheduleTitle" style="text-align: center; white-space: nowrap;">我的班表</h3>
-  
-  <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
-    <div class="stats-panel" id="myStatsPanel">
-      <div class="stat-mini"><span class="dot day"></span><span id="stat-day">0</span></div>
-      <div class="stat-mini"><span class="dot night"></span><span id="stat-night">0</span></div>
-      <div class="stat-mini"><span class="dot off"></span><span id="stat-off">0</span></div>
-    </div>
-    <button class="icon-btn" onclick="toggleStats()" title="班務統計">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-        <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-      </svg>
-    </button>
-  </div>
-</div>
+                <div class="title-wrapper">
+                  <h3 id="myScheduleTitle">我的班表</h3>
+                </div>
+                <div class="action-wrapper">
+                  <div class="stats-panel" id="myStatsPanel">
+                    <div class="stat-mini"><span class="dot day"></span><span id="stat-day">0</span></div>
+                    <div class="stat-mini"><span class="dot night"></span><span id="stat-night">0</span></div>
+                    <div class="stat-mini"><span class="dot off"></span><span id="stat-off">0</span></div>
+                  </div>
+                  <button class="icon-btn" onclick="toggleStats()" title="班務統計">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                      <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
               <div id="myPersonalCalendarContainer"></div>
             </div>
 
@@ -451,10 +440,12 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   }
   window.addEventListener('DOMContentLoaded', () => { startContinuousRedEnvelopeRain(); });
 
-  // --- 【新增】2. 公事包展開切換函式 ---
+  // --- 【新增】2. 公事包展開切換與推擠特效 ---
   window.toggleStats = function() {
-      const panel = document.getElementById('myStatsPanel');
-      panel.classList.toggle('show');
+      // 展開面板
+      document.getElementById('myStatsPanel').classList.toggle('show');
+      // 將標題往左推
+      document.getElementById('myScheduleTitle').classList.toggle('pushed');
   };
 
   const firebaseConfig = {
@@ -511,7 +502,9 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
     const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbyUqr1JydB4Yr3xAY0UFzOktl6wFnsDvoMIkeCZVFy64y0UzGX_q34IHN50ZqwcZ7PWYw/exec';
     const SPREADSHEET_IDS = { '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA', '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg', '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q', '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk', '2026-1': '1evaYVTyuU3BhzjnI7U6kenvqBzBWb2rI9O11GtMIPB8', '2026-2': '1_OmJdSlq8PC-oDX3unvUi2aXzsSpSok0aGQAzBhhXFE', '2026-3': '1PTaskSJvXvxTK7o0at4tGH2hdOmgMYm0njtpYuXB2PU', '2026-4': '1bRNBvoI48d9AJAyG3p5PFc36-VBL0xjpz43T4UnhFZY', '2026-5': '12frPrVMu4afbwSwH2zGqj9mMNA4qctL-V72rGee-R4g' };
-    const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒" };
+    const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒", "俊揚": "黃俊揚", "泉延": "林泉延", "曜華": "游曜華", "品蓉": "陳品蓉", "嘉珣": "張嘉珣", "如蘭": "李如蘭", "晴涵": "張晴涵", "瑀芯": "張瑀芯", "微儀": "陳微儀", "心慈": "徐心慈", "李昇": "李昇", "欣伶": "俞欣伶", "沛容": "沛容", "T1公務帳號": "T1公務帳號", "T2公務帳號": "T2公務帳號" };
+    const hiddenStaff = ["俊揚", "泉延", "曜華", "品蓉", "嘉珣", "如蘭", "晴涵", "瑀芯", "微儀", "心慈", "李昇", "欣伶"];
+    
     function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
     const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '健凱', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
     const shiftList = ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'];
@@ -567,7 +560,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       renderDailyCards(data.schedule); const sortedNames = getSortedNames(data.names); populatePersonSelector(sortedNames, DOMElements.personSelector, "請選擇人員..."); populatePersonSelector(sortedNames, DOMElements.highlighter1, "無"); populatePersonSelector(sortedNames, DOMElements.highlighter2, "無"); populateShiftChangeForm(sortedNames, shiftList); renderFullTable(data.schedule); renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer); renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
     }
 
-    function getSortedNames(apiNames) { return [...apiNames].sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
+    function getSortedNames(apiNames) { return [...apiNames].filter(name => !hiddenStaff.includes(name)).sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
 
     function populateShiftChangeForm(names, shifts) {
       const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
