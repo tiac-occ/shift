@@ -43,21 +43,21 @@
 }
 
 /* 展開時被推擠的特效 */
-.title-wrapper h3.pushed { transform: translateX(-75px); }
+.title-wrapper h3.pushed { transform: translateX(-110px); }
 
 /* 按鈕層：幾何置中於第 7 格 (六) */
 .action-wrapper { grid-column: 7; justify-content: center; position: relative; }
 
 /* 隱藏的數據面板 */
 .stats-panel {
-  display: flex; align-items: center; gap: 8px; background-color: #fff;
+  display: flex; align-items: center; gap: 6px; background-color: #fff;
   padding: 0; width: 0; height: 34px; border-radius: 20px; overflow: hidden;
   box-shadow: var(--shadow); opacity: 0; 
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
   white-space: nowrap; border: 1px solid transparent;
-  position: absolute; right: 38px; z-index: 10; pointer-events: auto;
+  position: absolute; right: 36px; z-index: 10; pointer-events: auto;
 }
-.stats-panel.show { width: auto; padding: 0 12px; opacity: 1; border-color: var(--border-color); }
+.stats-panel.show { width: auto; padding: 0 8px; opacity: 1; border-color: var(--border-color); }
 
 .stat-mini { display: flex; align-items: center; font-size: 0.9em; font-weight: bold; color: #555; line-height: 1;}
 .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; display: inline-block; }
@@ -714,4 +714,5 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   }
 </script>
 </body>
+
 </html>
