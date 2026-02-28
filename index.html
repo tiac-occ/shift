@@ -50,12 +50,15 @@
 
 /* 隱藏的數據面板 */
 .stats-panel {
-  display: flex; align-items: center; gap: 6px; background-color: #fff;
+  display: flex; align-items: center; gap: 5px; background-color: #fff;
   padding: 0; width: 0; height: 34px; border-radius: 20px; overflow: hidden;
   box-shadow: var(--shadow); opacity: 0; 
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
   white-space: nowrap; border: 1px solid transparent;
-  position: absolute; right: 36px; z-index: 10; pointer-events: auto;
+  
+  /* 🌟 重點修改 1：用計算的方式，讓面板永遠精準貼在按鈕左側 5px 處 */
+  position: absolute; right: calc(50% + 22px); 
+  z-index: 10; pointer-events: auto;
 }
 .stats-panel.show { width: auto; padding: 0 8px; opacity: 1; border-color: var(--border-color); }
 
@@ -67,8 +70,12 @@
 .icon-btn {
   display: flex; justify-content: center; align-items: center; box-sizing: border-box;
   width: 34px; height: 34px; border: 1.5px solid #AD9F74; border-radius: 50%;
-  background: transparent; cursor: pointer; color: #AD9F74; pointer-events: auto; /* 恢復按鈕點擊 */
+  background: transparent; cursor: pointer; color: #AD9F74; pointer-events: auto; 
   transition: all 0.2s; padding: 0; outline: none; -webkit-tap-highlight-color: transparent;
+  
+  /* 🌟 重點修改 2：加入 relative 與 z-index 20，確保按鈕永遠在最上層，不被面板蓋住 */
+  position: relative;
+  z-index: 20;
 }
 .icon-btn:hover { background: rgba(173, 159, 116, 0.1); transform: scale(1.05); }
 .icon-btn:active { transform: scale(0.95); }
@@ -716,3 +723,4 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 </body>
 
 </html>
+
