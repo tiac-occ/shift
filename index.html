@@ -7,81 +7,77 @@
   <title>OCC Duty Management Platform</title>
    
 <style>
-/* --- 【新增】1. 精準版紅包雨特效 --- */
+/* --- 1. 精準版紅包雨特效 (保留不刪除，未來可重複使用) --- */
 .red-envelope {
   position: fixed; top: -50px; z-index: 9998; 
-  pointer-events: none; /* 讓滑鼠點擊穿透紅包，不影響操作 */
-  user-select: none; font-size: 26px; 
+  pointer-events: none; user-select: none; font-size: 26px; 
   animation: envelope-fall linear forwards;
 }
-
-/* 掉落到藍色 Header 下緣 (大約 140px) 就消失，不干擾班表 */
 @keyframes envelope-fall {
   0% { transform: translateY(-50px) rotate(0deg) translateX(0); opacity: 1; }
   80% { opacity: 1; }
   100% { transform: translateY(140px) rotate(180deg) translateX(20px); opacity: 0; }
 }
 
-/* --- 【新增】2. 公事包與標題的精準置中網格 (水平與垂直完美對齊) --- */
+/* ======================================================= */
+/* --- 【新增】1.5 幸運彩蛋彈跳特效 (點擊觸發) --- */
+.lucky-icon {
+  position: fixed; z-index: 9998; 
+  pointer-events: none; user-select: none; font-size: 24px; 
+}
+/* 模擬真實重力彈跳：掉落 -> 砸地 -> 彈起 -> 落地 -> 消失 */
+@keyframes lucky-bounce {
+  0% { transform: translateY(0px) scale(0.5) rotate(0deg); opacity: 1; }
+  10% { transform: translateY(-20px) scale(1.2) rotate(45deg); } 
+  55% { transform: translateY(120px) scale(1) rotate(180deg); animation-timing-function: ease-out; } 
+  75% { transform: translateY(85px) scale(1) rotate(250deg); animation-timing-function: ease-in; }  
+  90% { transform: translateY(120px) scale(1) rotate(320deg); opacity: 1; animation-timing-function: ease-out; } 
+  100% { transform: translateY(120px) scale(1) rotate(360deg); opacity: 0; } 
+}
+/* ======================================================= */
+
+/* --- 2. 公事包與標題的精準置中網格 (水平與垂直完美對齊) --- */
 .calendar-section-header {
   display: grid; 
-  grid-template-columns: repeat(7, 1fr); /* 星期六垂直對齊依據 */
+  grid-template-columns: repeat(7, 1fr); 
   height: 40px; margin-bottom: 15px; position: relative;
 }
-
-/* 標題與圖標層：強制幾何中心對齊 */
 .title-wrapper, .action-wrapper {
   grid-row: 1; display: flex; align-items: center; pointer-events: none;
 }
-
-/* 標題層：佔滿七格，幾何置中 */
 .title-wrapper { grid-column: 1 / 8; justify-content: center; }
 .title-wrapper h3 { 
   margin: 0; color: var(--starlux-header); 
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-  line-height: 1; /* 消除文字上下空間，達成絕對幾何中心 */
+  line-height: 1; 
 }
-
-/* 展開時被推擠的特效 */
 .title-wrapper h3.pushed { transform: translateX(-110px); }
-
-/* 按鈕層：幾何置中於第 7 格 (六) */
 .action-wrapper { grid-column: 7; justify-content: center; position: relative; }
-
-/* 隱藏的數據面板 */
 .stats-panel {
   display: flex; align-items: center; gap: 5px; background-color: #fff;
   padding: 0; width: 0; height: 34px; border-radius: 20px; overflow: hidden;
   box-shadow: var(--shadow); opacity: 0; 
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
   white-space: nowrap; border: 1px solid transparent;
-  
-  /* 🌟 重點修改 1：用計算的方式，讓面板永遠精準貼在按鈕左側 5px 處 */
-  position: absolute; right: calc(50% + 22px); 
-  z-index: 10; pointer-events: auto;
+  position: absolute; right: calc(50% + 22px); z-index: 10; pointer-events: auto;
 }
 .stats-panel.show { width: auto; padding: 0 8px; opacity: 1; border-color: var(--border-color); }
-
 .stat-mini { display: flex; align-items: center; font-size: 0.9em; font-weight: bold; color: #555; line-height: 1;}
 .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; display: inline-block; }
 .dot.day { background-color: #AD9F74; } .dot.night { background-color: #3E4B5C; } .dot.off { background-color: #28a745; }
 
-/* 選項 B: 圓環統計圖按鈕設計 */
 .icon-btn {
   display: flex; justify-content: center; align-items: center; box-sizing: border-box;
   width: 34px; height: 34px; border: 1.5px solid #AD9F74; border-radius: 50%;
   background: transparent; cursor: pointer; color: #AD9F74; pointer-events: auto; 
   transition: all 0.2s; padding: 0; outline: none; -webkit-tap-highlight-color: transparent;
-  
-  /* 🌟 重點修改 2：加入 relative 與 z-index 20，確保按鈕永遠在最上層，不被面板蓋住 */
-  position: relative;
-  z-index: 20;
+  position: relative; z-index: 20;
 }
 .icon-btn:hover { background: rgba(173, 159, 116, 0.1); transform: scale(1.05); }
 .icon-btn:active { transform: scale(0.95); }
 .icon-btn svg { width: 18px; height: 18px; stroke-width: 2px; }
 
-/* --- 【新增】3. MY CREW 專屬高亮樣式 --- */
+/* --- 3. MY CREW 專屬高亮樣式 --- */
 .assignment-row.current-duty-group { 
   border: 2px solid var(--starlux-highlight-b); background-color: rgba(173, 159, 116, 0.1); 
   border-radius: 8px; padding: 8px 15px; margin: 5px 15px 10px 15px; position: relative; 
@@ -93,6 +89,25 @@
   font-size: 0.75em; padding: 3px 10px; border-radius: 0 6px 0 6px; font-weight: bold; letter-spacing: 1px;
 }
 
+/* --- 4. 實時通知中心樣式 --- */
+.header-top-row { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; min-height: 45px; }
+#sidebar-toggle { position: absolute; left: 15px; background: none; border: none; color: white; font-size: 2em; cursor: pointer; width: 45px; padding: 0; z-index: 10; }
+.bell-wrapper { position: absolute; right: 15px; display: flex; align-items: center; justify-content: center; }
+.bell-btn { background: transparent; border: none; color: white; cursor: pointer; padding: 5px; outline: none; transition: transform 0.2s; }
+.bell-btn:hover { transform: scale(1.1); }
+.bell-btn svg { width: 24px; height: 24px; stroke-width: 2px; }
+.red-dot { position: absolute; top: 4px; right: 6px; width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); animation: pulse-red 2s infinite; }
+@keyframes pulse-red { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+.notification-panel { position: absolute; top: 45px; right: 0; width: 320px; max-width: 90vw; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); border: 1px solid #e1e4e8; overflow: hidden; opacity: 0; transform: translateY(-10px); pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 3000; text-align: left; }
+.notification-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.panel-header { padding: 12px 15px; background-color: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: #3E4B5C; font-size: 0.95em; }
+.noti-list-container { max-height: 350px; overflow-y: auto; }
+.noti-item { padding: 15px; border-bottom: 1px solid #f0f2f5; line-height: 1.5; font-size: 0.9em; color: #333; }
+.noti-item:last-child { border-bottom: none; }
+.noti-time { display: block; color: #888; font-size: 0.85em; margin-top: 5px; }
+.noti-icon { display: inline-block; width: 16px; height: 16px; margin-right: 5px; transform: translateY(3px); }
+
+
 /* --- 原有樣式開始 --- */
 .calendar-day.has-note::after { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 12px 12px 0; border-color: transparent #e74c3c transparent transparent; z-index: 5;}
 #noteModal textarea { width: 100%; height: 150px; padding: 10px; font-size: 1.1em; border: 1px solid var(--border-color); border-radius: 8px; resize: none; box-sizing: border-box; margin-bottom: 15px; font-family: inherit;}
@@ -101,7 +116,6 @@
 .calendar-day.today { position: relative; }
 .calendar-day.today::after { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 4px outset #CC9B86; border-radius: 8px; box-sizing: border-box; animation: draw-circle 0.5s ease-in-out forwards;}
 @keyframes draw-circle { from { transform: scale(1.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.header-top-row { position: relative; width: 100%; min-height: 45px; }
 #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #4A5052; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out;}
 #splash-screen img { width: 300px; height: 300px; }
 #splash-screen.hidden { opacity: 0; pointer-events: none; }
@@ -129,7 +143,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 #logout-btn { background: none; color: white; text-align: center; border: none; padding: 15px 20px; font-size: 1.1em; cursor: pointer; width: 100%; border-top: 1px solid rgba(255,255,255,0.2); margin-bottom: 20px; }
 #logout-btn:hover { background-color: rgba(255,255,255,0.1); }
 #content-wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; }
-#sidebar-toggle { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 2em; cursor: pointer; width: 45px; padding: 0; z-index: 10; }
 #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
 #sidebar.open ~ #overlay { display: block; }
 .header { background-color: var(--starlux-header); color: white; padding: 10px 0px 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
@@ -215,9 +228,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 </style>
 </head>
 <body>
-<div id="splash-screen">
-  <img src="icon-512.png" alt="應用程式 Logo">
-</div>
+<div id="splash-screen"><img src="icon-512.png" alt="應用程式 Logo"></div>
 <div id="login-container">
   <div class="login-box">
     <h1>OCC 班表管理平台</h1>
@@ -251,7 +262,26 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
           <h1 id="monthTitle"></h1>
           <button id="nextMonthBtn">&gt;</button>
         </div>
+        
+        <div class="bell-wrapper" id="notiBell">
+          <button class="bell-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              <path d="M2 8c0-2.2.9-4.2 2.4-5.6"></path>
+              <path d="M22 8c0-2.2-.9-4.2-2.4-5.6"></path>
+            </svg>
+          </button>
+          <div class="red-dot" id="notiRedDot" style="display: none;"></div>
+          <div class="notification-panel" id="notiPanel">
+            <div class="panel-header" id="notiHeader">系統通知 (0)</div>
+            <div class="noti-list-container" id="notiList">
+              <div style="padding: 15px; text-align: center; color: #888; font-size: 0.9em;">目前沒有新通知</div>
+            </div>
+          </div>
+        </div>
       </div>
+      
       <nav id="homeViewSelector" class="view-selector" style="display: flex;">
         <button data-view="personalCalendarView" class="active">個人班表</button>
         <button data-view="dailyCardView">每日值班</button>
@@ -380,7 +410,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // --- 【新增】紅包雨啟動腳本 ---
+  // --- 紅包雨啟動腳本 (完整保留，留作未來使用) ---
   function startContinuousRedEnvelopeRain() {
     const container = document.body;
     const emojis = ['🧧', '💰', '🍊']; 
@@ -389,21 +419,43 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       envelope.classList.add('red-envelope');
       envelope.innerText = emojis[Math.floor(Math.random() * emojis.length)]; 
       envelope.style.left = Math.random() * 100 + 'vw';
-      
       const fallDuration = Math.random() * 2 + 2; 
       envelope.style.animationDuration = fallDuration + 's';
       envelope.style.transform = `scale(${Math.random() * 0.7 + 0.6})`;
-
       container.appendChild(envelope);
       setTimeout(() => { envelope.remove(); }, fallDuration * 1000);
     }, 400); 
   }
-  window.addEventListener('DOMContentLoaded', () => { startContinuousRedEnvelopeRain(); });
+  // 🌟 【註解關閉開關】紅包雨暫時退場
+  // window.addEventListener('DOMContentLoaded', () => { startContinuousRedEnvelopeRain(); });
 
-  // --- 【新增】公事包展開切換與推擠特效 ---
+  // --- 【新增】幸運彩蛋噴發腳本 ---
+  function dropLuckyIcons() {
+    const container = document.body;
+    const emojis = ['🍀', '🍎', '💰']; 
+    const dropCount = 6; // 每次點擊噴發的數量
+
+    for (let i = 0; i < dropCount; i++) {
+      setTimeout(() => {
+        const icon = document.createElement('div');
+        icon.classList.add('lucky-icon');
+        icon.innerText = emojis[Math.floor(Math.random() * emojis.length)]; 
+        icon.style.left = (Math.random() * 80 + 10) + 'vw'; // 隨機散落
+        icon.style.top = '30px'; // 模擬從按鈕附近噴出
+        const duration = Math.random() * 0.5 + 1.2; 
+        icon.style.animation = `lucky-bounce ${duration}s forwards`;
+        container.appendChild(icon);
+        setTimeout(() => { icon.remove(); }, duration * 1000);
+      }, i * 60);
+    }
+  }
+
+  // --- 公事包展開切換與推擠特效 ---
   window.toggleStats = function() {
       document.getElementById('myStatsPanel').classList.toggle('show');
       document.getElementById('myScheduleTitle').classList.toggle('pushed');
+      // 🌟 在展開面板時，呼叫幸運彩蛋！
+      dropLuckyIcons(); 
   };
 
   const firebaseConfig = {
@@ -444,7 +496,8 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     const state = { 
       currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), 
       cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', 
-      loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null 
+      loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null,
+      unreadNotiDocs: [] // 【通知功能】追蹤未讀通知以便模式 A 消除
     };
 
     const DOMElements = {
@@ -454,13 +507,16 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       homeViewSelector: document.getElementById('homeViewSelector'), shiftZoneViewSelector: document.getElementById('shiftZoneViewSelector'), viewSelectors: document.querySelectorAll('.view-selector'), messageContainer: document.getElementById('messageContainer'), dailyCardView: document.getElementById('dailyCardView'), fullTableView: document.getElementById('fullTableView'), tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'), shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'),
       changeType: document.getElementById('changeType'), submitBtn: document.getElementById('submitBtn'), preSubmitBtn: document.getElementById('preSubmitBtn'), highlighter1: document.getElementById('highlighter1'), highlighter2: document.getElementById('highlighter2'), successorView: document.getElementById('successorView'), successorDate: document.getElementById('successorDate'), successorRole: document.getElementById('successorRole'), successorQueryBtn: document.getElementById('successorQueryBtn'), successorList: document.getElementById('successor-list'), changePasswordView: document.getElementById('changePasswordView'), changePasswordForm: document.getElementById('changePasswordForm'), changePasswordBtn: document.getElementById('changePasswordBtn'), passwordMessageContainer: document.getElementById('passwordMessageContainer'), myScheduleTitle: document.getElementById('myScheduleTitle'), myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'), colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'),
       sourceCalendarContainer: document.getElementById('sourceCalendarContainer'), targetCalendarContainer: document.getElementById('targetCalendarContainer'), targetCalendarWrapper: document.getElementById('targetCalendarWrapper'), originalDateInput: document.getElementById('originalDate'), originalShiftInput: document.getElementById('originalShift'), swappedDateInput: document.getElementById('swappedDate'), swappedShiftInput: document.getElementById('swappedShift'), confirmModal: document.getElementById('confirmModal'), modalContent: document.getElementById('modalContent'), modalCancel: document.getElementById('modalCancel'), modalConfirm: document.getElementById('modalConfirm'), noteModal: document.getElementById('noteModal'), noteModalTitle: document.getElementById('noteModalTitle'), noteInput: document.getElementById('noteInput'), btnDeleteNote: document.getElementById('btn-delete-note'), btnCancelNote: document.getElementById('btn-cancel-note'), btnSaveNote: document.getElementById('btn-save-note'),
+      notiBell: document.getElementById('notiBell'), notiPanel: document.getElementById('notiPanel'), notiRedDot: document.getElementById('notiRedDot'), notiList: document.getElementById('notiList'), notiHeader: document.getElementById('notiHeader')
     };
 
     state.loggedInUserName = user.displayName || user.email.split('@')[0];
 
     const googleSheetWebAppUrl = 'https://script.google.com/macros/s/AKfycbyUqr1JydB4Yr3xAY0UFzOktl6wFnsDvoMIkeCZVFy64y0UzGX_q34IHN50ZqwcZ7PWYw/exec';
     const SPREADSHEET_IDS = { '2025-9': '1f8TdH6swpmGvxNddyx-4jES_BwnSO-sk5ZpGcdlECSA', '2025-10': '1NwYOWUbqgQ3u2QNEb2mHUoGbAu35mXKM_C9hNBK2AZg', '2025-11': '1-DqIAPXBNGsvgbRtscD-yTmhy-8Hjplf43BIg8qhb1Q', '2025-12': '1KhUeLq4ru7Szc0iBWWmBlP0dpTEO700O_j1Z3AZHztk', '2026-1': '1evaYVTyuU3BhzjnI7U6kenvqBzBWb2rI9O11GtMIPB8', '2026-2': '1_OmJdSlq8PC-oDX3unvUi2aXzsSpSok0aGQAzBhhXFE', '2026-3': '1PTaskSJvXvxTK7o0at4tGH2hdOmgMYm0njtpYuXB2PU', '2026-4': '1bRNBvoI48d9AJAyG3p5PFc36-VBL0xjpz43T4UnhFZY', '2026-5': '12frPrVMu4afbwSwH2zGqj9mMNA4qctL-V72rGee-R4g' };
-    const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒" };
+    const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "健凱": "馬健凱", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒", "俊揚": "黃俊揚", "泉延": "林泉延", "曜華": "游曜華", "品蓉": "陳品蓉", "嘉珣": "張嘉珣", "如蘭": "李如蘭", "晴涵": "張晴涵", "瑀芯": "張瑀芯", "微儀": "陳微儀", "心慈": "徐心慈", "李昇": "李昇", "欣伶": "俞欣伶", "沛容": "沛容", "T1公務帳號": "T1公務帳號", "T2公務帳號": "T2公務帳號" };
+    const hiddenStaff = ["俊揚", "泉延", "曜華", "品蓉", "嘉珣", "如蘭", "晴涵", "瑀芯", "微儀", "心慈", "李昇", "欣伶"];
+    
     function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
     const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '健凱', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
     const shiftList = ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'];
@@ -481,6 +537,78 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         if (state.cachedData[fileKey]) renderPersonalCalendar(state.cachedData[fileKey].schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
       });
     }
+
+    // --- 【通知功能】訂閱並處理實時通知 (前端智慧排序) ---
+    function subscribeToNotifications() {
+      db.collection('notifications').where('targetName', '==', state.loggedInUserName)
+        .onSnapshot(snapshot => {
+          let docs = [];
+          snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+          
+          docs.sort((a, b) => {
+            let tA = a.timestamp ? a.timestamp.toDate().getTime() : new Date().getTime();
+            let tB = b.timestamp ? b.timestamp.toDate().getTime() : new Date().getTime();
+            return tB - tA;
+          });
+          
+          docs = docs.slice(0, 10); 
+          let unreadCount = 0; let html = '';
+          
+          if (docs.length === 0) {
+            html = '<div style="padding: 15px; text-align: center; color: #888; font-size: 0.9em;">目前沒有新通知</div>';
+          } else {
+            docs.forEach(data => {
+              if (!data.read) unreadCount++;
+              
+              let timeStr = '剛剛';
+              if (data.timestamp) {
+                const diffMins = Math.floor((new Date() - data.timestamp.toDate()) / 60000);
+                if (diffMins > 1440) timeStr = `${Math.floor(diffMins/1440)} 天前`;
+                else if (diffMins > 60) timeStr = `${Math.floor(diffMins/60)} 小時前`;
+                else if (diffMins > 0) timeStr = `${diffMins} 分鐘前`;
+              }
+
+              if (data.type === '調') {
+                html += `<div class="noti-item">
+                  <svg class="noti-icon" viewBox="0 0 24 24" fill="none" stroke="#3E4B5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="M7 22l-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
+                  <b>【調班通知】</b><br>${data.senderName} 已將 <span style="color: #3E4B5C; font-weight: bold;">${data.date1} ${data.shift1}</span> 與您的 <span style="color: #3E4B5C; font-weight: bold;">${data.date2} ${data.shift2}</span> 完成對調。<span class="noti-time">${timeStr}</span>
+                </div>`;
+              } else {
+                html += `<div class="noti-item">
+                  <svg class="noti-icon" viewBox="0 0 24 24" fill="none" stroke="#AD9F74" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  <b>【給班通知】</b><br>${data.senderName} 已將 <span style="color: #AD9F74; font-weight: bold;">${data.date1}</span> 的 <span style="color: #AD9F74; font-weight: bold;">${data.shift1}</span> 交接給您。<span class="noti-time">${timeStr}</span>
+                </div>`;
+              }
+            });
+          }
+          DOMElements.notiList.innerHTML = html;
+          DOMElements.notiHeader.innerText = `系統通知 (${docs.length})`;
+          DOMElements.notiRedDot.style.display = unreadCount > 0 ? 'block' : 'none';
+          state.unreadNotiDocs = docs.filter(d => !d.read);
+      });
+    }
+
+    // --- 【通知功能】點擊鈴鐺與點擊外部關閉邏輯 (模式 A 消除紅點) ---
+    DOMElements.notiBell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      DOMElements.notiPanel.classList.toggle('show');
+      
+      if (DOMElements.notiPanel.classList.contains('show') && state.unreadNotiDocs.length > 0) {
+        DOMElements.notiRedDot.style.display = 'none';
+        const batch = db.batch();
+        state.unreadNotiDocs.forEach(doc => {
+          batch.update(db.collection('notifications').doc(doc.id), { read: true });
+        });
+        batch.commit().catch(e => console.log(e));
+        state.unreadNotiDocs = [];
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#notiBell') && DOMElements.notiPanel.classList.contains('show')) {
+        DOMElements.notiPanel.classList.remove('show');
+      }
+    });
 
     function openNoteModal(year, month, day) {
       const dateKey = `${year}-${month + 1}-${day}`; state.currentNoteDate = dateKey;
@@ -516,7 +644,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       renderDailyCards(data.schedule); const sortedNames = getSortedNames(data.names); populatePersonSelector(sortedNames, DOMElements.personSelector, "請選擇人員..."); populatePersonSelector(sortedNames, DOMElements.highlighter1, "無"); populatePersonSelector(sortedNames, DOMElements.highlighter2, "無"); populateShiftChangeForm(sortedNames, shiftList); renderFullTable(data.schedule); renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer); renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
     }
 
-    function getSortedNames(apiNames) { return [...apiNames].sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
+    function getSortedNames(apiNames) { return [...apiNames].filter(name => !hiddenStaff.includes(name)).sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
 
     function populateShiftChangeForm(names, shifts) {
       const personSelectors = DOMElements.shiftChangeForm.querySelectorAll('select[name="originalPerson"], select[name="newPerson"]');
@@ -528,7 +656,28 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     async function handleFormSubmit(e) {
       if(e.preventDefault) e.preventDefault(); const btn = DOMElements.preSubmitBtn; btn.disabled = true; btn.textContent = '處理中...'; showMessage('loading', '正在送出申請...', DOMElements.formMessageContainer);
       const formData = new FormData(DOMElements.shiftChangeForm); const data = Object.fromEntries(formData.entries()); const year = state.currentDate.getFullYear(); const month = state.currentDate.getMonth() + 1; const fileKey = `${year}-${month}`; const spreadsheetId = SPREADSHEET_IDS[fileKey]; const payload = { ...data, spreadsheetId, month, submitterName: state.loggedInUserName };
-      try { const response = await fetch(googleSheetWebAppUrl, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }); const result = await response.json(); if (result.success) { showMessage('success', result.message, DOMElements.formMessageContainer); DOMElements.shiftChangeForm.reset(); DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)"; DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)"; DOMElements.targetCalendarWrapper.style.display = 'none'; DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = ""; DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = ""; delete state.cachedData[fileKey]; switchPage('home'); switchView('dailyCardView', DOMElements.homeViewSelector); await fetchData(); } else { throw new Error(result.message); } } catch (error) { showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer); } finally { btn.disabled = false; btn.textContent = '送出申請'; }
+      try { 
+        const response = await fetch(googleSheetWebAppUrl, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }); 
+        const result = await response.json(); 
+        if (result.success) { 
+          // --- 【通知功能】寫入通知到 Firebase ---
+          try {
+            db.collection('notifications').add({
+              targetName: getDisplayName(data.newPerson),
+              senderName: getDisplayName(data.originalPerson),
+              type: data.changeType,
+              date1: `${month}/${data.originalDate}`,
+              shift1: data.originalShift,
+              date2: data.changeType === '調' ? `${month}/${data.swappedDate}` : '',
+              shift2: data.changeType === '調' ? data.swappedShift : '',
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              read: false
+            });
+          } catch(err) { console.log('通知寫入失敗', err); }
+
+          showMessage('success', result.message, DOMElements.formMessageContainer); DOMElements.shiftChangeForm.reset(); DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)"; DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)"; DOMElements.targetCalendarWrapper.style.display = 'none'; DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = ""; DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = ""; delete state.cachedData[fileKey]; switchPage('home'); switchView('dailyCardView', DOMElements.homeViewSelector); await fetchData(); 
+        } else { throw new Error(result.message); } 
+      } catch (error) { showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer); } finally { btn.disabled = false; btn.textContent = '送出申請'; }
     }
 
     async function handleChangePassword(e) {
@@ -538,7 +687,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       try { const user = auth.currentUser; if (!user) throw new Error("使用者未登入。"); const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword); await user.reauthenticateWithCredential(credential); await user.updatePassword(newPassword); showMessage('success', '密碼已成功更新！', msgContainer); DOMElements.changePasswordForm.reset(); } catch (error) { showMessage('error', `更換密碼失敗：<br>${error.message}`, msgContainer); } finally { btn.disabled = false; btn.textContent = '確認更換'; }
     }
 
-    // --- 【新增】3. 每日值班 MY CREW 自動判斷與分流邏輯 ---
     function renderDailyCards(scheduleData) {
       const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDay = today.getDate();
       const viewYear = state.currentDate.getFullYear(); const viewMonth = state.currentDate.getMonth();
@@ -559,7 +707,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         dayData.assignments.forEach((name, i) => {
           const pos = positions[i]; if (!pos) return;
           const shiftClass = pos.type === 'DAY' ? 'day-shift' : 'night-shift';
-          const isMe = (name === state.loggedInUserName); // 判斷是否為登入者本人
+          const isMe = (name === state.loggedInUserName); 
           
           const assignmentHTML = `
             <div class="assignment ${shiftClass}">
@@ -581,7 +729,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         let detailsHTML = '';
         Object.values(groups).forEach(group => {
           if (group.html) {
-            // 若有自己，則加上 current-duty-group 樣式
             const myCrewClass = group.hasMe ? 'current-duty-group' : '';
             detailsHTML += `<div class="assignment-row ${myCrewClass}"><div class="assignment-row-title">${group.title}</div><div class="assignment-grid">${group.html}</div></div>`;
           }
@@ -614,7 +761,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       names.forEach(name => { const option = document.createElement('option'); option.value = name; option.textContent = getDisplayName(name); selector.appendChild(option); }); if (names.includes(currentSelection)) selector.value = currentSelection;
     }
 
-    // --- 【新增】2. 月曆渲染與統計資料更新 ---
     function renderPersonalCalendar(scheduleData, personName, containerElement, isInteractive = false, onDayClick = null) {
       if (!containerElement) return;
       const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDay = today.getDate();
@@ -635,7 +781,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         });
       }
 
-      // 將統計數據寫入上方圖標展開區塊
       if (personName === state.loggedInUserName && !isInteractive) {
           const statDayEl = document.getElementById('stat-day'); const statNightEl = document.getElementById('stat-night'); const statOffEl = document.getElementById('stat-off');
           if (statDayEl) statDayEl.innerText = '日 ' + stats.day;
@@ -706,21 +851,20 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     DOMElements.btnSaveNote.addEventListener('click', saveNote);
     DOMElements.btnDeleteNote.addEventListener('click', () => { if(confirm('確定要刪除此備註嗎？')) deleteNote(); });
 
-    switchPage('home'); subscribeToNotes(); fetchData();
+    switchPage('home'); 
+    subscribeToNotes(); 
+    subscribeToNotifications(); // 啟動通知中心監聽
+    fetchData();
   }
 </script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(registration => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      }).catch(err => {
-        console.log('ServiceWorker registration failed: ', err);
-      });
+        console.log('ServiceWorker registration successful');
+      }).catch(err => console.log('ServiceWorker failed: ', err));
     });
   }
 </script>
 </body>
-
 </html>
-
