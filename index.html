@@ -25,31 +25,26 @@
   position: fixed; z-index: 9998; 
   pointer-events: none; user-select: none; font-size: 24px; 
 }
-/* 模擬真實重力物理彈跳：重力落下 -> 彈跳能量遞減 -> 貼地滾動 -> 消失 */
+/* 模擬真實重力物理彈跳：重力落下 -> 彈跳能量遞減 -> 貼地滾動 -> 緩慢消失 */
 @keyframes lucky-bounce {
   0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; animation-timing-function: ease-out; }
-  10% { transform: translate(0, -10px) scale(1.2) rotate(20deg); animation-timing-function: ease-in; } /* 噴出最高點，準備加速下落 */
+  10% { transform: translate(0, -10px) scale(1.2) rotate(20deg); animation-timing-function: ease-in; } 
   
-  /* 第一次重擊落地 */
-  40% { transform: translate(0, 120px) scale(1) rotate(120deg); animation-timing-function: ease-out; } 
-  /* 彈起 1 (高度 30px) */
-  55% { transform: translate(5px, 90px) scale(1) rotate(160deg); animation-timing-function: ease-in; }  
+  /* 把所有的彈跳動作提早完成 */
+  35% { transform: translate(0, 120px) scale(1) rotate(120deg); animation-timing-function: ease-out; } 
+  45% { transform: translate(5px, 90px) scale(1) rotate(160deg); animation-timing-function: ease-in; }  
   
-  /* 第二次落地 */
-  65% { transform: translate(10px, 120px) scale(1) rotate(200deg); animation-timing-function: ease-out; } 
-  /* 彈起 2 (高度 12px，滯空變短) */
-  75% { transform: translate(15px, 108px) scale(1) rotate(230deg); animation-timing-function: ease-in; }  
+  55% { transform: translate(10px, 120px) scale(1) rotate(200deg); animation-timing-function: ease-out; } 
+  62% { transform: translate(15px, 108px) scale(1) rotate(230deg); animation-timing-function: ease-in; }  
   
-  /* 第三次落地 */
-  82% { transform: translate(18px, 120px) scale(1) rotate(250deg); animation-timing-function: ease-out; } 
-  /* 彈起 3 (高度微幅 4px) */
-  87% { transform: translate(21px, 116px) scale(1) rotate(265deg); animation-timing-function: ease-in; }  
+  68% { transform: translate(18px, 120px) scale(1) rotate(250deg); animation-timing-function: ease-out; } 
+  72% { transform: translate(21px, 116px) scale(1) rotate(265deg); animation-timing-function: ease-in; }  
   
-  /* 徹底貼地準備滾動 */
-  92% { transform: translate(24px, 120px) scale(1) rotate(280deg); opacity: 1; } 
+  /* 🌟 關鍵調整：提早在 75% 的時候徹底貼地，準備滾動 */
+  75% { transform: translate(24px, 120px) scale(1) rotate(280deg); opacity: 1; } 
   
-  /* 緩慢滾動並溶入背景消失 */
-  100% { transform: translate(45px, 120px) scale(1) rotate(360deg); opacity: 0; } 
+  /* 🌟 關鍵調整：留下足足 25% 的時間，讓它往前慢慢滾動到 60px 處，同時緩慢溶出消失 */
+  100% { transform: translate(60px, 120px) scale(1) rotate(380deg); opacity: 0; } 
 }
 /* ======================================================= */
 
