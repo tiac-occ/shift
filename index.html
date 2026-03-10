@@ -725,8 +725,14 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
               read: false
             });
             
-            batch.commit().catch(err => console.log('通知寫入失敗', err));
-          } catch(err) { console.log('通知區塊錯誤', err); }
+            // 🌟 關鍵修改：加上 await 確保資料庫寫入成功！
+            await batch.commit();
+            console.log('Firebase 通知寫入成功！');
+            
+          } catch(err) { 
+            console.error('通知區塊錯誤', err); 
+            alert('⚠️ 班表已送出，但「通知發送失敗」！請截圖告知管理員：' + err.message);
+          }
 
           showMessage('success', result.message, DOMElements.formMessageContainer);
           DOMElements.shiftChangeForm.reset(); DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)"; DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)"; DOMElements.targetCalendarWrapper.style.display = 'none'; DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = ""; DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = ""; delete state.cachedData[fileKey]; switchPage('home'); switchView('dailyCardView', DOMElements.homeViewSelector); await fetchData(); 
