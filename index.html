@@ -25,14 +25,31 @@
   position: fixed; z-index: 9998; 
   pointer-events: none; user-select: none; font-size: 24px; 
 }
-/* 模擬真實重力彈跳：掉落 -> 砸地 -> 彈起 -> 落地 -> 消失 */
+/* 模擬真實重力物理彈跳：重力落下 -> 彈跳能量遞減 -> 貼地滾動 -> 消失 */
 @keyframes lucky-bounce {
-  0% { transform: translateY(0px) scale(0.5) rotate(0deg); opacity: 1; }
-  10% { transform: translateY(-20px) scale(1.2) rotate(45deg); } 
-  55% { transform: translateY(120px) scale(1) rotate(180deg); animation-timing-function: ease-out; } 
-  75% { transform: translateY(85px) scale(1) rotate(250deg); animation-timing-function: ease-in; }  
-  90% { transform: translateY(120px) scale(1) rotate(320deg); opacity: 1; animation-timing-function: ease-out; } 
-  100% { transform: translateY(120px) scale(1) rotate(360deg); opacity: 0; } 
+  0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; animation-timing-function: ease-out; }
+  10% { transform: translate(0, -10px) scale(1.2) rotate(20deg); animation-timing-function: ease-in; } /* 噴出最高點，準備加速下落 */
+  
+  /* 第一次重擊落地 */
+  40% { transform: translate(0, 120px) scale(1) rotate(120deg); animation-timing-function: ease-out; } 
+  /* 彈起 1 (高度 30px) */
+  55% { transform: translate(5px, 90px) scale(1) rotate(160deg); animation-timing-function: ease-in; }  
+  
+  /* 第二次落地 */
+  65% { transform: translate(10px, 120px) scale(1) rotate(200deg); animation-timing-function: ease-out; } 
+  /* 彈起 2 (高度 12px，滯空變短) */
+  75% { transform: translate(15px, 108px) scale(1) rotate(230deg); animation-timing-function: ease-in; }  
+  
+  /* 第三次落地 */
+  82% { transform: translate(18px, 120px) scale(1) rotate(250deg); animation-timing-function: ease-out; } 
+  /* 彈起 3 (高度微幅 4px) */
+  87% { transform: translate(21px, 116px) scale(1) rotate(265deg); animation-timing-function: ease-in; }  
+  
+  /* 徹底貼地準備滾動 */
+  92% { transform: translate(24px, 120px) scale(1) rotate(280deg); opacity: 1; } 
+  
+  /* 緩慢滾動並溶入背景消失 */
+  100% { transform: translate(45px, 120px) scale(1) rotate(360deg); opacity: 0; } 
 }
 /* ======================================================= */
 
@@ -429,24 +446,30 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   // 🌟 【註解關閉開關】紅包雨暫時退場
   // window.addEventListener('DOMContentLoaded', () => { startContinuousRedEnvelopeRain(); });
 
-  // --- 【新增】幸運彩蛋噴發腳本 ---
+  // --- 【修改】幸運彩蛋噴發腳本 (數量10，真實物理放慢版) ---
   function dropLuckyIcons() {
     const container = document.body;
     const emojis = ['🍀', '🍎', '💰']; 
-    const dropCount = 6; // 每次點擊噴發的數量
+    const dropCount = 10; // 🌟 數量從 6 增加為 10 個
 
     for (let i = 0; i < dropCount; i++) {
       setTimeout(() => {
         const icon = document.createElement('div');
         icon.classList.add('lucky-icon');
         icon.innerText = emojis[Math.floor(Math.random() * emojis.length)]; 
-        icon.style.left = (Math.random() * 80 + 10) + 'vw'; // 隨機散落
-        icon.style.top = '30px'; // 模擬從按鈕附近噴出
-        const duration = Math.random() * 0.5 + 1.2; 
+        
+        // 隨機散落位置 (15vw ~ 85vw)，避免貼在螢幕最邊緣
+        icon.style.left = (Math.random() * 70 + 15) + 'vw'; 
+        icon.style.top = '30px'; 
+        
+        // 🌟 時間大幅拉長：讓每顆彩蛋的掉落、彈跳與滾動時間介於 2.2 秒到 3 秒之間
+        const duration = Math.random() * 0.8 + 2.2; 
+        
         icon.style.animation = `lucky-bounce ${duration}s forwards`;
+        
         container.appendChild(icon);
         setTimeout(() => { icon.remove(); }, duration * 1000);
-      }, i * 60);
+      }, i * 80); // 🌟 稍微拉長每顆噴發的間隔時間(80ms)，讓 10 顆圖標落下時更有前後層次感
     }
   }
 
