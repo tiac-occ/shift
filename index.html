@@ -556,9 +556,9 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       });
     }
 
-    // --- 【通知功能】訂閱並處理實時通知 (前端智慧排序) ---
+   // --- 【通知功能】訂閱並處理實時通知 (當事人雙向視角版) ---
     function subscribeToNotifications() {
-      db.collection('notifications').where('targetName', '==', state.loggedInUserName)
+      db.collection('notifications').where('targetName', '==', getDisplayName(state.loggedInUserName))
         .onSnapshot(snapshot => {
           let docs = [];
           snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
@@ -586,15 +586,27 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
                 else if (diffMins > 0) timeStr = `${diffMins} 分鐘前`;
               }
 
+              let textHtml = '';
               if (data.type === '調') {
+                // 🌟 依照當事人的角色(A或B)呈現絕對視角的文案
+                if (data.role === 'personA') {
+                  textHtml = `${data.otherPersonName} 已將 <span style="color: #3E4B5C; font-weight: bold;">${data.date2} ${data.shift2}</span> 與 你的 <span style="color: #3E4B5C; font-weight: bold;">${data.date1} ${data.shift1}</span> 對調。`;
+                } else {
+                  textHtml = `${data.otherPersonName} 已將 <span style="color: #3E4B5C; font-weight: bold;">${data.date1} ${data.shift1}</span> 與 你的 <span style="color: #3E4B5C; font-weight: bold;">${data.date2} ${data.shift2}</span> 對調。`;
+                }
                 html += `<div class="noti-item">
                   <svg class="noti-icon" viewBox="0 0 24 24" fill="none" stroke="#3E4B5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="M7 22l-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
-                  <b>【調班通知】</b><br>${data.senderName} 已將 <span style="color: #3E4B5C; font-weight: bold;">${data.date1} ${data.shift1}</span> 與您的 <span style="color: #3E4B5C; font-weight: bold;">${data.date2} ${data.shift2}</span> 完成對調。<span class="noti-time">${timeStr}</span>
+                  <b>【調班通知】</b><br>${textHtml}<span class="noti-time">${timeStr}</span>
                 </div>`;
               } else {
+                if (data.role === 'personA') {
+                  textHtml = `您已將 <span style="color: #AD9F74; font-weight: bold;">${data.date1} ${data.shift1}</span> 交給 ${data.otherPersonName}。`;
+                } else {
+                  textHtml = `${data.otherPersonName} 已將 <span style="color: #AD9F74; font-weight: bold;">${data.date1} ${data.shift1}</span> 交給您。`;
+                }
                 html += `<div class="noti-item">
                   <svg class="noti-icon" viewBox="0 0 24 24" fill="none" stroke="#AD9F74" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                  <b>【給班通知】</b><br>${data.senderName} 已將 <span style="color: #AD9F74; font-weight: bold;">${data.date1}</span> 的 <span style="color: #AD9F74; font-weight: bold;">${data.shift1}</span> 交接給您。<span class="noti-time">${timeStr}</span>
+                  <b>【給班通知】</b><br>${textHtml}<span class="noti-time">${timeStr}</span>
                 </div>`;
               }
             });
@@ -678,22 +690,46 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         const response = await fetch(googleSheetWebAppUrl, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }); 
         const result = await response.json(); 
         if (result.success) { 
-          // --- 【通知功能】寫入通知到 Firebase ---
+          // --- 【通知功能】固定寫入兩份當事人通知到 Firebase ---
           try {
-            db.collection('notifications').add({
-              targetName: getDisplayName(data.newPerson),
-              senderName: getDisplayName(data.originalPerson),
+            const p1Name = getDisplayName(data.originalPerson); // 當事人 A
+            const p2Name = getDisplayName(data.newPerson);      // 當事人 B
+            const date1 = `${month}/${data.originalDate}`;
+            const shift1 = data.originalShift;
+            const date2 = data.changeType === '調' ? `${month}/${data.swappedDate}` : '';
+            const shift2 = data.changeType === '調' ? data.swappedShift : '';
+
+            const batch = db.batch();
+            
+            // 🌟 1. 寫入專屬通知給：當事人 A (申請人員)
+            const docRefA = db.collection('notifications').doc();
+            batch.set(docRefA, {
+              targetName: p1Name,
               type: data.changeType,
-              date1: `${month}/${data.originalDate}`,
-              shift1: data.originalShift,
-              date2: data.changeType === '調' ? `${month}/${data.swappedDate}` : '',
-              shift2: data.changeType === '調' ? data.swappedShift : '',
+              role: 'personA', // 標記身分為 A
+              otherPersonName: p2Name,
+              date1: date1, shift1: shift1, date2: date2, shift2: shift2,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               read: false
             });
-          } catch(err) { console.log('通知寫入失敗', err); }
 
-          showMessage('success', result.message, DOMElements.formMessageContainer); DOMElements.shiftChangeForm.reset(); DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)"; DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)"; DOMElements.targetCalendarWrapper.style.display = 'none'; DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = ""; DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = ""; delete state.cachedData[fileKey]; switchPage('home'); switchView('dailyCardView', DOMElements.homeViewSelector); await fetchData(); 
+            // 🌟 2. 寫入專屬通知給：當事人 B (對象人員)
+            const docRefB = db.collection('notifications').doc();
+            batch.set(docRefB, {
+              targetName: p2Name,
+              type: data.changeType,
+              role: 'personB', // 標記身分為 B
+              otherPersonName: p1Name,
+              date1: date1, shift1: shift1, date2: date2, shift2: shift2,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              read: false
+            });
+            
+            batch.commit().catch(err => console.log('通知寫入失敗', err));
+          } catch(err) { console.log('通知區塊錯誤', err); }
+
+          showMessage('success', result.message, DOMElements.formMessageContainer);
+          DOMElements.shiftChangeForm.reset(); DOMElements.sourceCalendarContainer.innerHTML = "(請先選擇人員)"; DOMElements.targetCalendarContainer.innerHTML = "(請先選擇對象人員)"; DOMElements.targetCalendarWrapper.style.display = 'none'; DOMElements.originalDateInput.value = ""; DOMElements.originalShiftInput.value = ""; DOMElements.swappedDateInput.value = ""; DOMElements.swappedShiftInput.value = ""; delete state.cachedData[fileKey]; switchPage('home'); switchView('dailyCardView', DOMElements.homeViewSelector); await fetchData(); 
         } else { throw new Error(result.message); } 
       } catch (error) { showMessage('error', `申請失敗：<br>${error.message}`, DOMElements.formMessageContainer); } finally { btn.disabled = false; btn.textContent = '送出申請'; }
     }
