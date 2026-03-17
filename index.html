@@ -20,33 +20,15 @@
 }
 
 /* ======================================================= */
-/* --- 【新增】1.5 幸運彩蛋彈跳特效 (點擊觸發) --- */
-.lucky-icon {
-  position: fixed; z-index: 9998; 
-  pointer-events: none; user-select: none; font-size: 24px; 
-}
-/* 模擬真實重力物理彈跳：重力落下 -> 彈跳能量遞減 -> 貼地滾動 -> 緩慢消失 */
-@keyframes lucky-bounce {
-  0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; animation-timing-function: ease-out; }
-  10% { transform: translate(0, -10px) scale(1.2) rotate(20deg); animation-timing-function: ease-in; } 
-  
-  /* 把所有的彈跳動作提早完成 */
-  35% { transform: translate(0, 120px) scale(1) rotate(120deg); animation-timing-function: ease-out; } 
-  45% { transform: translate(5px, 90px) scale(1) rotate(160deg); animation-timing-function: ease-in; }  
-  
-  55% { transform: translate(10px, 120px) scale(1) rotate(200deg); animation-timing-function: ease-out; } 
-  62% { transform: translate(15px, 108px) scale(1) rotate(230deg); animation-timing-function: ease-in; }  
-  
-  68% { transform: translate(18px, 120px) scale(1) rotate(250deg); animation-timing-function: ease-out; } 
-  72% { transform: translate(21px, 116px) scale(1) rotate(265deg); animation-timing-function: ease-in; }  
-  
-  /* 🌟 關鍵調整：提早在 75% 的時候徹底貼地，準備滾動 */
-  75% { transform: translate(24px, 120px) scale(1) rotate(280deg); opacity: 1; } 
-  
-  /* 🌟 關鍵調整：留下足足 25% 的時間，讓它往前慢慢滾動到 60px 處，同時緩慢溶出消失 */
-  100% { transform: translate(60px, 120px) scale(1) rotate(380deg); opacity: 0; } 
-}
+/* 🌸 櫻吹雪特效 CSS */
 /* ======================================================= */
+#sakura-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9998; overflow: hidden; }
+.petal { position: absolute; top: -10%; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.petal-dark { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 190' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='dark' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ff9eaf'/%3E%3Cstop offset='100%25' stop-color='%23ff8da0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M 50 190 C 15 140 0 100 0 45 C 0 15 15 0 30 0 L 50 28 L 70 0 C 85 0 100 15 100 45 C 100 100 85 140 50 190 Z' fill='url(%23dark)' /%3E%3C/svg%3E"); }
+.petal-light { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 190' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='light' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffb7c5'/%3E%3Cstop offset='100%25' stop-color='%23ffc9d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M 50 190 C 15 140 0 100 0 45 C 0 15 15 0 30 0 L 50 28 L 70 0 C 85 0 100 15 100 45 C 100 100 85 140 50 190 Z' fill='url(%23light)' /%3E%3C/svg%3E"); }
+.petal-blur { filter: blur(1.5px); }
+@keyframes fallAndSway { 0% { transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: translate3d(var(--end-x), 120vh, 0) rotateX(var(--rot-x)) rotateY(var(--rot-y)) rotateZ(var(--rot-z)); } }
+
 
 /* --- 2. 公事包與標題的精準置中網格 (水平與垂直完美對齊) --- */
 .calendar-section-header {
@@ -240,6 +222,9 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 </style>
 </head>
 <body>
+
+<div id="sakura-container"></div>
+
 <div id="splash-screen"><img src="icon-512.png" alt="應用程式 Logo"></div>
 <div id="login-container">
   <div class="login-box">
@@ -422,6 +407,45 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
 <script>
+  // 🌸 櫻吹雪初始化函數
+  function initSakura() {
+    const container = document.getElementById('sakura-container');
+    if (!container) return;
+    const petalCount = 25; 
+    for (let i = 0; i < petalCount; i++) {
+      const petal = document.createElement('div');
+      petal.classList.add('petal');
+      petal.classList.add(Math.random() < 0.5 ? 'petal-dark' : 'petal-light');
+      
+      const baseSize = (Math.random() * 4 + 5) * 1.3; 
+      petal.style.width = `${baseSize}px`;
+      petal.style.height = `${baseSize * 1.9}px`; 
+      const startLeft = Math.random() * 100;
+      const duration = (Math.random() * 8 + 7) * 1.5; 
+      const delay = Math.random() * 10;
+      const endX = (Math.random() * 300 - 150) + 'px'; 
+      
+      const rotX = Math.random() * 720 + 'deg';
+      const rotY = Math.random() * 720 + 'deg';
+      const rotZ = Math.random() * 720 + 'deg';
+      
+      petal.style.opacity = Math.random() * 0.6 + 0.4;
+      if (Math.random() < 0.3) petal.classList.add('petal-blur');
+
+      petal.style.left = `${startLeft}vw`;
+      petal.style.setProperty('--end-x', endX);
+      petal.style.setProperty('--rot-x', rotX);
+      petal.style.setProperty('--rot-y', rotY);
+      petal.style.setProperty('--rot-z', rotZ);
+      petal.style.animation = `fallAndSway ${duration}s linear ${delay}s infinite`;
+
+      container.appendChild(petal);
+    }
+  }
+  
+  // 網頁載入時啟動櫻吹雪
+  window.addEventListener('DOMContentLoaded', initSakura);
+
   // --- 紅包雨啟動腳本 (完整保留，留作未來使用) ---
   function startContinuousRedEnvelopeRain() {
     const container = document.body;
@@ -441,39 +465,10 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
   // 🌟 【註解關閉開關】紅包雨暫時退場
   // window.addEventListener('DOMContentLoaded', () => { startContinuousRedEnvelopeRain(); });
 
-  // --- 【修改】幸運彩蛋噴發腳本 (數量10，真實物理放慢版) ---
-  function dropLuckyIcons() {
-    const container = document.body;
-    const emojis = ['🍀', '🍎', '💰']; 
-    const dropCount = 10; // 🌟 數量從 6 增加為 10 個
-
-    for (let i = 0; i < dropCount; i++) {
-      setTimeout(() => {
-        const icon = document.createElement('div');
-        icon.classList.add('lucky-icon');
-        icon.innerText = emojis[Math.floor(Math.random() * emojis.length)]; 
-        
-        // 隨機散落位置 (15vw ~ 85vw)，避免貼在螢幕最邊緣
-        icon.style.left = (Math.random() * 70 + 15) + 'vw'; 
-        icon.style.top = '30px'; 
-        
-        // 🌟 時間大幅拉長：讓每顆彩蛋的掉落、彈跳與滾動時間介於 2.2 秒到 3 秒之間
-        const duration = Math.random() * 0.8 + 2.2; 
-        
-        icon.style.animation = `lucky-bounce ${duration}s forwards`;
-        
-        container.appendChild(icon);
-        setTimeout(() => { icon.remove(); }, duration * 1000);
-      }, i * 80); // 🌟 稍微拉長每顆噴發的間隔時間(80ms)，讓 10 顆圖標落下時更有前後層次感
-    }
-  }
-
   // --- 公事包展開切換與推擠特效 ---
   window.toggleStats = function() {
       document.getElementById('myStatsPanel').classList.toggle('show');
       document.getElementById('myScheduleTitle').classList.toggle('pushed');
-      // 🌟 在展開面板時，呼叫幸運彩蛋！
-      dropLuckyIcons(); 
   };
 
   const firebaseConfig = {
@@ -515,7 +510,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), 
       cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', 
       loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null,
-      unreadNotiDocs: [] // 【通知功能】追蹤未讀通知以便模式 A 消除
+      unreadNotiDocs: []
     };
 
     const DOMElements = {
@@ -556,7 +551,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       });
     }
 
-   // --- 【通知功能】訂閱並處理實時通知 (當事人雙向視角版) ---
     function subscribeToNotifications() {
       db.collection('notifications').where('targetName', '==', getDisplayName(state.loggedInUserName))
         .onSnapshot(snapshot => {
@@ -588,7 +582,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
               let textHtml = '';
               if (data.type === '調') {
-                // 🌟 依照當事人的角色(A或B)呈現絕對視角的文案
                 if (data.role === 'personA') {
                   textHtml = `${data.otherPersonName} 已將 <span style="color: #3E4B5C; font-weight: bold;">${data.date2} ${data.shift2}</span> 與 你的 <span style="color: #3E4B5C; font-weight: bold;">${data.date1} ${data.shift1}</span> 對調。`;
                 } else {
@@ -618,7 +611,6 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       });
     }
 
-    // --- 【通知功能】點擊鈴鐺與點擊外部關閉邏輯 (模式 A 消除紅點) ---
     DOMElements.notiBell.addEventListener('click', (e) => {
       e.stopPropagation();
       DOMElements.notiPanel.classList.toggle('show');
@@ -690,10 +682,9 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         const response = await fetch(googleSheetWebAppUrl, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }); 
         const result = await response.json(); 
         if (result.success) { 
-          // --- 【通知功能】固定寫入兩份當事人通知到 Firebase ---
           try {
-            const p1Name = getDisplayName(data.originalPerson); // 當事人 A
-            const p2Name = getDisplayName(data.newPerson);      // 當事人 B
+            const p1Name = getDisplayName(data.originalPerson); 
+            const p2Name = getDisplayName(data.newPerson);      
             const date1 = `${month}/${data.originalDate}`;
             const shift1 = data.originalShift;
             const date2 = data.changeType === '調' ? `${month}/${data.swappedDate}` : '';
@@ -701,31 +692,28 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
             const batch = db.batch();
             
-            // 🌟 1. 寫入專屬通知給：當事人 A (申請人員)
             const docRefA = db.collection('notifications').doc();
             batch.set(docRefA, {
               targetName: p1Name,
               type: data.changeType,
-              role: 'personA', // 標記身分為 A
+              role: 'personA',
               otherPersonName: p2Name,
               date1: date1, shift1: shift1, date2: date2, shift2: shift2,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               read: false
             });
 
-            // 🌟 2. 寫入專屬通知給：當事人 B (對象人員)
             const docRefB = db.collection('notifications').doc();
             batch.set(docRefB, {
               targetName: p2Name,
               type: data.changeType,
-              role: 'personB', // 標記身分為 B
+              role: 'personB',
               otherPersonName: p1Name,
               date1: date1, shift1: shift1, date2: date2, shift2: shift2,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               read: false
             });
             
-            // 🌟 關鍵修改：加上 await 確保資料庫寫入成功！
             await batch.commit();
             console.log('Firebase 通知寫入成功！');
             
@@ -913,7 +901,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
     switchPage('home'); 
     subscribeToNotes(); 
-    subscribeToNotifications(); // 啟動通知中心監聽
+    subscribeToNotifications(); 
     fetchData();
   }
 </script>
