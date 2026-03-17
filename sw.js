@@ -1,6 +1,6 @@
 // sw.js
-// 步驟 1: 版本號升級！ (從 v1.15 改為 v2.11 以強制更新)
-const CACHE_NAME = 'shift-platform-cache-v2.11'; 
+// 步驟 1: 版本號升級！ (從 v2.11 改為 v2.12 以強制更新)
+const CACHE_NAME = 'shift-platform-cache-v2.12'; 
 const urlsToCache = [
   './',
   './index.html',
