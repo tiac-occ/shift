@@ -131,7 +131,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .day-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; }
 .day-header h2 { margin: 0; font-size: 1.2em; color: var(--starlux-header); }
 .day-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
-.day-card.open .day-details { max-height: 1500px; }
+.day-card.open .day-details { max-height: 3000px; }
 .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
 .assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
 .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
@@ -141,12 +141,19 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; text-align: left; }
 .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; margin-top: auto; }
 
-/* ★★★ 新增：見習專屬分隔線與顏色 ★★★ */
-.trainee-divider { border-top: 1px dashed #d8dde0; margin: 12px 0; width: 100%; }
-.assignment.trainee-shift { border: 1px dashed #c0c8cc; opacity: 0.85; }
-.assignment.trainee-shift .name { color: #555; }
-.assignment.trainee-shift.day-shift { background-color: #fbf8f1; } /* 更淡的日班黃 */
-.assignment.trainee-shift.night-shift { background-color: #f4f8fa; } /* 更淡的夜班藍 */
+/* ★★★ 見習專屬分隔線與跳色配色 ★★★ */
+.trainee-divider { border-top: 1px dashed #b0b8bc; margin: 12px 0; width: 100%; }
+.assignment.trainee-shift { border: 1px dashed #a0aab0; } /* 拿掉 opacity，維持飽和度 */
+
+/* 夜班見習：淺紫底 + 深藍字 (依您指定) */
+.assignment.trainee-shift.night-shift { background-color: #EAE6F5 !important; }
+.assignment.trainee-shift.night-shift .position,
+.assignment.trainee-shift.night-shift .name { color: #1A237E !important; }
+
+/* 如果您偏好暖色系，可以把上面日班的兩行換成「蜜桃橘」：
+.assignment.trainee-shift.day-shift { background-color: #FDEBD0 !important; }
+.assignment.trainee-shift.day-shift .position,
+.assignment.trainee-shift.day-shift .name { color: #935116 !important; }
 
 .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
 .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
