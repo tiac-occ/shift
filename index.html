@@ -141,17 +141,16 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; text-align: left; }
 .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; margin-top: auto; }
 
-/* ★★★ 見習專屬分隔線與跳色配色 ★★★ */
-.trainee-divider { border-top: 1px dashed #b0b8bc; margin: 12px 0; width: 100%; }
-.assignment.trainee-shift { border: 1px dashed #a0aab0; } /* 拿掉 opacity，維持飽和度 */
+/* ★★★ 見習專屬跳色配色 (支援每日小卡與個人班表) ★★★ */
+.assignment.trainee-shift, .calendar-day.trainee-shift { border: 1px dashed #a0aab0 !important; } 
 
-/* 夜班見習：淺紫底 + 深藍字 (依您指定) */
-.assignment.trainee-shift.night-shift { background-color: #EAE6F5 !important; }
-.assignment.trainee-shift.night-shift .position,
-.assignment.trainee-shift.night-shift .name { color: #1A237E !important; }
-.assignment.trainee-shift.day-shift { background-color: #FDEBD0 !important; }
-.assignment.trainee-shift.day-shift .position,
-.assignment.trainee-shift.day-shift .name { color: #935116 !important; }
+/* 夜班見習：淺紫底 + 深藍字 */
+.assignment.trainee-shift.night-shift, .calendar-day.trainee-shift.night-shift { background-color: #EAE6F5 !important; }
+.assignment.trainee-shift.night-shift .position, .assignment.trainee-shift.night-shift .name, .calendar-day.trainee-shift.night-shift .shift-info { color: #003366 !important; } /* 改為更深的深藍色 */
+
+/* 日班見習：加深蜜桃橘 + 深咖啡字 */
+.assignment.trainee-shift.day-shift, .calendar-day.trainee-shift.day-shift { background-color: #FFE0B2 !important; }
+.assignment.trainee-shift.day-shift .position, .assignment.trainee-shift.day-shift .name, .calendar-day.trainee-shift.day-shift .shift-info, .calendar-day.trainee-shift.day-shift .day-number { color: #4E342E !important; } /* 改為深咖啡色 */
 
 .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
 .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
@@ -595,36 +594,25 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
           // 依照分組裝填 HTML
           if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'DAY') {
-            if (isTrainee) groups.group1.traineeHtml += assignmentHTML; else groups.group1.html += assignmentHTML;
+            groups.group1.html += assignmentHTML;
             if (isMe) groups.group1.hasMe = true;
           } else if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'NIGHT') {
-            if (isTrainee) groups.group2.traineeHtml += assignmentHTML; else groups.group2.html += assignmentHTML;
+            groups.group2.html += assignmentHTML;
             if (isMe) groups.group2.hasMe = true;
           } else if (pos.group === 'T1' && pos.type === 'DAY') {
-            if (isTrainee) groups.group3.traineeHtml += assignmentHTML; else groups.group3.html += assignmentHTML;
+            groups.group3.html += assignmentHTML;
             if (isMe) groups.group3.hasMe = true;
           } else if (pos.group === 'T1' && pos.type === 'NIGHT') {
-            if (isTrainee) groups.group4.traineeHtml += assignmentHTML; else groups.group4.html += assignmentHTML;
+            groups.group4.html += assignmentHTML;
             if (isMe) groups.group4.hasMe = true;
           }
         });
 
         let detailsHTML = '';
         Object.values(groups).forEach(group => {
-          if (group.html || group.traineeHtml) {
+          if (group.html) {
             const myCrewClass = group.hasMe ? 'current-duty-group' : '';
-            let content = '';
-            
-            // 正式席位區塊
-            if (group.html) {
-              content += `<div class="assignment-grid">${group.html}</div>`;
-            }
-            // 見習席位區塊 (自動換行並加上虛線)
-            if (group.traineeHtml) {
-              if (group.html) content += `<div class="trainee-divider"></div>`;
-              content += `<div class="assignment-grid">${group.traineeHtml}</div>`;
-            }
-
+            const content = `<div class="assignment-grid">${group.html}</div>`;
             detailsHTML += `<div class="assignment-row ${myCrewClass}"><div class="assignment-row-title">${group.title}</div>${content}</div>`;
           }
         });
