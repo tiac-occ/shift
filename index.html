@@ -133,7 +133,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .day-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
 .day-card.open .day-details { max-height: 3000px; }
 .assignment-row { padding: 10px 20px; border-top: 1px solid var(--starlux-gray); }
-.assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 1em; }
+.assignment-row-title { font-weight: bold; color: #795548; margin-bottom: 8px; font-size: 0.9em; }
 .assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .assignment { padding: 8px 10px; border-radius: 6px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
 .assignment.day-shift { background-color: var(--starlux-gold-light); }
@@ -141,16 +141,17 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .assignment .position { font-size: 0.85em; color: #555; white-space: pre-line; line-height: 1.2; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; text-align: left; }
 .assignment .name { font-weight: bold; font-size: 0.95em; color: #000; margin-top: auto; }
 
-/* ★★★ 見習專屬跳色配色 (支援每日小卡與個人班表) ★★★ */
-.assignment.trainee-shift, .calendar-day.trainee-shift { border: 1px dashed #a0aab0 !important; } 
+/* ★★★ 見習專屬分隔線與跳色配色 ★★★ */
+.trainee-divider { border-top: 1px dashed #b0b8bc; margin: 12px 0; width: 100%; }
+.assignment.trainee-shift { border: 1px dashed #a0aab0; } /* 拿掉 opacity，維持飽和度 */
 
-/* 夜班見習：淺紫底 + 深藍字 */
-.assignment.trainee-shift.night-shift, .calendar-day.trainee-shift.night-shift { background-color: #EAE6F5 !important; }
-.assignment.trainee-shift.night-shift .position, .assignment.trainee-shift.night-shift .name, .calendar-day.trainee-shift.night-shift .shift-info { color: #003366 !important; } /* 改為更深的深藍色 */
-
-/* 日班見習：加深蜜桃橘 + 深咖啡字 */
-.assignment.trainee-shift.day-shift, .calendar-day.trainee-shift.day-shift { background-color: #FFE9BE !important; }
-.assignment.trainee-shift.day-shift .position, .assignment.trainee-shift.day-shift .name, .calendar-day.trainee-shift.day-shift .shift-info, .calendar-day.trainee-shift.day-shift .day-number { color: #4E342E !important; } /* 改為深咖啡色 */
+/* 夜班見習：淺紫底 + 深藍字 (依您指定) */
+.assignment.trainee-shift.night-shift { background-color: #EAE6F5 !important; }
+.assignment.trainee-shift.night-shift .position,
+.assignment.trainee-shift.night-shift .name { color: #1A237E !important; }
+.assignment.trainee-shift.day-shift { background-color: #FDEBD0 !important; }
+.assignment.trainee-shift.day-shift .position,
+.assignment.trainee-shift.day-shift .name { color: #935116 !important; }
 
 .table-container { overflow: auto; max-height: 70vh; border-radius: 8px; box-shadow: var(--shadow); }
 .full-roster-table { border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
@@ -458,7 +459,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君" ,"貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒", "俊揚": "黃俊揚", "泉延": "林泉延", "曜華": "游曜華", "品蓉": "陳品蓉", "嘉珣": "張嘉珣", "如蘭": "李如蘭", "晴涵": "張晴涵", "瑀芯": "張瑀芯", "微儀": "陳微儀", "心慈": "徐心慈", "李昇": "李昇", "欣伶": "俞欣伶", "沛容": "李沛容", "T1公務帳號": "T1公務帳號", "T2公務帳號": "T2公務帳號" };
     
     // ★ 已全面開放：清空隱藏人員名單
-    const hiddenStaff = []; 
+    const hiddenStaff = ["健凱"]; 
     
     function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
     const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
@@ -468,13 +469,13 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       if (isNewFormat) {
         return {
           shiftList: ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2見習1', '日_T2見習2', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '夜_T2見習1', '夜_T2見習2', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '日_T1見習3', '夜_T1作業', '夜_T1航廈', '夜_T1營運', '夜_T1見習3'],
-          positions: [{ label: '主任(日)', type: 'DAY', group: 'DIR' }, { label: '主任(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n見習1(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n見習2(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n見習1(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n見習2(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n見習3(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n營運(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n見習3(夜)', type: 'NIGHT', group: 'T1' }],
+          positions: [{ label: '主任\n(日)', type: 'DAY', group: 'DIR' }, { label: '主任\n(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n見習1\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n見習2\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n見習1\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n見習2\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n見習3\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n營運\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n見習3\n(夜)', type: 'NIGHT', group: 'T1' }],
           splitIndexT2: 13 
         };
       } else {
         return {
           shiftList: ['日_主任', '夜_主任', '日_T2副主任', '夜_T2副主任', '日_T2作業', '日_T2航廈', '日_T2通聯', '日_T2營運', '夜_T2作業', '夜_T2航廈', '夜_T2通聯', '日_T1副主任', '夜_T1副主任', '日_T1作業', '日_T1航廈', '日_T1營運', '夜_T1作業', '夜_T1航廈', '夜_T1營運'],
-          positions: [{ label: '主任(日)', type: 'DAY', group: 'DIR' }, { label: '主任(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n營運(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n營運(夜)', type: 'NIGHT', group: 'T1' }],
+          positions: [{ label: '主任\n(日)', type: 'DAY', group: 'DIR' }, { label: '主任\n(夜)', type: 'NIGHT', group: 'DIR' }, { label: 'T2\n副主任\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n副主任\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n作業\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n航廈\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n通聯\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n營運\n(日)', type: 'DAY', group: 'T2' }, { label: 'T2\n作業\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n航廈\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T2\n通聯\n(夜)', type: 'NIGHT', group: 'T2' }, { label: 'T1\n副主任\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n副主任\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n作業\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n航廈\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n營運\n(日)', type: 'DAY', group: 'T1' }, { label: 'T1\n作業\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n航廈\n(夜)', type: 'NIGHT', group: 'T1' }, { label: 'T1\n營運\n(夜)', type: 'NIGHT', group: 'T1' }],
           splitIndexT2: 10
         };
       }
@@ -594,25 +595,36 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 
           // 依照分組裝填 HTML
           if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'DAY') {
-            groups.group1.html += assignmentHTML;
+            if (isTrainee) groups.group1.traineeHtml += assignmentHTML; else groups.group1.html += assignmentHTML;
             if (isMe) groups.group1.hasMe = true;
           } else if ((pos.group === 'DIR' || pos.group === 'T2') && pos.type === 'NIGHT') {
-            groups.group2.html += assignmentHTML;
+            if (isTrainee) groups.group2.traineeHtml += assignmentHTML; else groups.group2.html += assignmentHTML;
             if (isMe) groups.group2.hasMe = true;
           } else if (pos.group === 'T1' && pos.type === 'DAY') {
-            groups.group3.html += assignmentHTML;
+            if (isTrainee) groups.group3.traineeHtml += assignmentHTML; else groups.group3.html += assignmentHTML;
             if (isMe) groups.group3.hasMe = true;
           } else if (pos.group === 'T1' && pos.type === 'NIGHT') {
-            groups.group4.html += assignmentHTML;
+            if (isTrainee) groups.group4.traineeHtml += assignmentHTML; else groups.group4.html += assignmentHTML;
             if (isMe) groups.group4.hasMe = true;
           }
         });
 
         let detailsHTML = '';
         Object.values(groups).forEach(group => {
-          if (group.html) {
+          if (group.html || group.traineeHtml) {
             const myCrewClass = group.hasMe ? 'current-duty-group' : '';
-            const content = `<div class="assignment-grid">${group.html}</div>`;
+            let content = '';
+            
+            // 正式席位區塊
+            if (group.html) {
+              content += `<div class="assignment-grid">${group.html}</div>`;
+            }
+            // 見習席位區塊 (自動換行並加上虛線)
+            if (group.traineeHtml) {
+              if (group.html) content += `<div class="trainee-divider"></div>`;
+              content += `<div class="assignment-grid">${group.traineeHtml}</div>`;
+            }
+
             detailsHTML += `<div class="assignment-row ${myCrewClass}"><div class="assignment-row-title">${group.title}</div>${content}</div>`;
           }
         });
