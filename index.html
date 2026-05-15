@@ -197,7 +197,82 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
 .day-card.today-highlight { border: 3px solid #CC9B86 !important; box-shadow: 0 0 15px rgba(204, 155, 134, 0.5); animation: pulse-border 2s infinite; }
 @keyframes pulse-border { 0% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); } 50% { box-shadow: 0 0 20px rgba(204, 155, 134, 0.6); } 100% { box-shadow: 0 0 10px rgba(204, 155, 134, 0.3); } }
 
-</style>
+
+    /* OJT 專區樣式 */
+    .ojt-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    .ojt-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--starlux-gold);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ojt-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .ojt-datetime {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--starlux-header);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+    .ojt-trainees-title {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .ojt-trainees-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ojt-tag {
+      background-color: var(--starlux-teal-light);
+      color: var(--starlux-teal);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      border: 1px solid rgba(89, 114, 122, 0.2);
+    }
+    .ojt-tag:hover {
+      background-color: var(--starlux-teal);
+      color: white;
+    }
+    .ojt-tag-mine {
+      position: relative;
+      overflow: hidden;
+      background-color: var(--starlux-gold-light) !important;
+      color: var(--starlux-header) !important;
+      border-color: var(--starlux-gold) !important;
+    }
+    .ojt-tag-mine::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--starlux-gold), #fff, var(--starlux-gold));
+      background-size: 200% 100%;
+      animation: movingLine 1.5s linear infinite;
+    }
+    @keyframes movingLine {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+  </style>
 </head>
 <body>
 
@@ -221,7 +296,8 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     <div id="sidebar-header"><span id="user-info"></span></div>
     <nav id="sidebar-nav">
       <a href="#" data-page="home" class="active">首頁</a>
-      <a href="#" data-page="shiftZone">調代專區</a>
+        <a href="#" data-page="ojtZone">OJT專區</a>
+        <a href="#" data-page="shiftZone">調代專區</a>
       <a href="#" data-page="account">帳號管理</a>
     </nav>
     <button id="logout-btn">登出</button>
@@ -317,6 +393,17 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
         </div>
       </div>
 
+      
+      <div id="ojtZone" class="page">
+        <div class="controls" style="margin-bottom: 20px;">
+          <label for="ojtMonthSelector">選擇 OJT 月份:</label>
+          <select id="ojtMonthSelector">
+            <!-- Options dynamically added -->
+          </select>
+        </div>
+        <div id="ojtContent" class="ojt-container"></div>
+      </div>
+      
       <div id="shiftZone" class="page">
           <div id="shiftChangeView" class="view active">
             <div class="form-container">
@@ -445,6 +532,36 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     auth.signInWithEmailAndPassword(email, password).catch(error => { loginError.textContent = '登入失敗：' + error.message; });
   });
 
+  
+  const ojtData = [
+    {
+      monthLabel: '115/05',
+      sessions: [
+        {
+          datetime: '5/21(四) 0900-1700',
+          trainees: ['謝佳玲', '趙家鋐', '陳映蓉', '林詳崴', '湯品妍', '沈宥柔', '陳祈雯', '虞仲喬']
+        },
+        {
+          datetime: '5/27(三) 0900-1700',
+          trainees: ['李志祥', '洪懋荃', '陳子翔', '黃敬舜', '游昕珆', '詹凱程', '黃映笛', '湯伊筠', '許天豪', '簡佑丞', '陳家琪', '謝宗勳']
+        }
+      ]
+    },
+    {
+      monthLabel: '115/06',
+      sessions: [
+        {
+          datetime: '6/11(四) 0900-1700',
+          trainees: ['戴彥平', '趙家鋐', '虞仲喬', '洪懋荃', '李志祥', '陳映蓉', '林詳崴', '簡佑丞', '游昕珆', '陳祈雯', '張瑀芯', '張晴涵', '林泉延']
+        },
+        {
+          datetime: '6/22(一) 0900-1700',
+          trainees: ['許政偉', '徐偉揚', '賴保吉', '許政昆', '許天豪', '謝宗勳', '沈宥柔', '湯品妍', '黃敬舜', '陳微儀', '李昇', '黃俊揚', '徐心慈', '游曜華', '俞欣伶']
+        }
+      ]
+    }
+  ];
+
   function initializeApp(user) {
     const state = { currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null, unreadNotiDocs: [] };
 
@@ -463,6 +580,54 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
     
     function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
     const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '映蓉', '敬舜', '天豪','祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
+  function renderOJT() {
+    const ojtMonthSelector = document.getElementById('ojtMonthSelector');
+    const ojtContent = document.getElementById('ojtContent');
+    
+    // Initialize selector if empty
+    if (ojtMonthSelector.options.length === 0) {
+      ojtData.forEach((data, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = data.monthLabel;
+        ojtMonthSelector.appendChild(option);
+      });
+      ojtMonthSelector.addEventListener('change', (e) => renderOJTSessions(e.target.value));
+      // Render first month by default
+      if (ojtData.length > 0) renderOJTSessions(0);
+    }
+  }
+
+  function renderOJTSessions(dataIndex) {
+    const ojtContent = document.getElementById('ojtContent');
+    const data = ojtData[dataIndex];
+    if (!data) return;
+
+    let html = '';
+    data.sessions.forEach(session => {
+      let tagsHtml = '';
+      session.trainees.forEach(trainee => {
+        const myName = state.loggedInUserName ? getDisplayName(state.loggedInUserName) : '';
+        const isMe = (trainee === myName || trainee === state.loggedInUserName);
+        const tagClass = isMe ? 'ojt-tag ojt-tag-mine' : 'ojt-tag';
+        tagsHtml += `<span class="${tagClass}">${trainee}</span>`;
+      });
+      html += `
+        <div class="ojt-card">
+          <div class="ojt-datetime">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>${session.datetime}</span>
+          </div>
+          <div class="ojt-trainees">
+            <div class="ojt-trainees-title">受訓名單：</div>
+            <div class="ojt-trainees-list">${tagsHtml}</div>
+          </div>
+        </div>
+      `;
+    });
+    ojtContent.innerHTML = html;
+  }
+
 
     function getShiftConfig(year, month) {
       if ((year > 2026) || (year === 2026 && month >= 6)) {
@@ -793,7 +958,7 @@ main { padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing
       try { const user = auth.currentUser; if (!user) throw new Error("使用者未登入。"); const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword); await user.reauthenticateWithCredential(credential); await user.updatePassword(newPassword); showMessage('success', '密碼已成功更新！', msgContainer); DOMElements.changePasswordForm.reset(); } catch (error) { showMessage('error', `更換密碼失敗：<br>${error.message}`, msgContainer); } finally { btn.disabled = false; btn.textContent = '確認更換'; }
     }
 
-    function switchPage(pageName) { state.currentPage = pageName; DOMElements.pages.forEach(p => p.classList.remove('active')); document.getElementById(pageName).classList.add('active'); DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active')); DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active'); DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none'); if (pageName === 'home') { DOMElements.homeViewSelector.style.display = 'flex'; switchView('personalCalendarView', DOMElements.homeViewSelector); } else if (pageName === 'shiftZone') { DOMElements.shiftZoneViewSelector.style.display = 'flex'; switchView('shiftChangeView', DOMElements.shiftZoneViewSelector); } closeSidebar(); }
+    function switchPage(pageName) { state.currentPage = pageName; DOMElements.pages.forEach(p => p.classList.remove('active')); document.getElementById(pageName).classList.add('active'); DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active')); DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active'); DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none'); if (pageName === 'home') { DOMElements.homeViewSelector.style.display = 'flex'; switchView('personalCalendarView', DOMElements.homeViewSelector); } else if (pageName === 'ojtZone') { renderOJT(); } else if (pageName === 'shiftZone') { DOMElements.shiftZoneViewSelector.style.display = 'flex'; switchView('shiftChangeView', DOMElements.shiftZoneViewSelector); } closeSidebar(); }
     function switchView(viewName, viewSelector) { if (!viewSelector) return; const currentPageDiv = document.querySelector('.page.active'); if (!currentPageDiv) return; currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active')); const targetView = document.getElementById(viewName); if (targetView) { targetView.classList.add('active'); } viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active')); viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active'); if (viewName === 'dailyCardView') { attemptScrollToToday(); } }
     function openSidebar() { DOMElements.sidebar.classList.add('open'); DOMElements.overlay.style.display = 'block'; }
     function closeSidebar() { DOMElements.sidebar.classList.remove('open'); DOMElements.overlay.style.display = 'none'; }
