@@ -1083,7 +1083,7 @@
 
     .calendar-day.ojt-shift {
       position: relative;
-      background-color: #FFFFFF;
+      background: linear-gradient(135deg, rgba(247, 214, 161, 0.08), rgba(238, 111, 255, 0.08));
       overflow: hidden;
     }
 
@@ -1099,10 +1099,11 @@
 
     .calendar-day.ojt-shift .shift-info {
       font-weight: 900;
-      color: #333;
+      color: #000;
       font-size: 1.2em;
       letter-spacing: 3px;
       white-space: nowrap;
+      opacity: 0.6;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -1658,7 +1659,8 @@
         container.appendChild(petal);
       }
     }
-    window.addEventListener('DOMContentLoaded', initSakura);
+    // 🌸 櫻吹雪特效暫時關閉，保留至明年櫻花季再開啟（取消下面這行的註解即可）
+    // window.addEventListener('DOMContentLoaded', initSakura);
 
     window.toggleStats = function () {
       document.getElementById('myStatsPanel').classList.toggle('show');
