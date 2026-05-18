@@ -1100,14 +1100,7 @@
     .calendar-day.ojt-shift .shift-info {
       font-weight: 900;
       color: #000;
-      font-size: 1.2em;
-      letter-spacing: 3px;
-      white-space: nowrap;
       opacity: 0.6;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(90deg);
     }
 
     .calendar-day.day-shift {
@@ -2029,12 +2022,16 @@
           if (targetOjtData) {
             targetOjtData.sessions.forEach(session => {
               const match = session.datetime.match(/\d+\/(\d+)\(/);
+              const timeMatch = session.datetime.match(/(\d{4})-(\d{4})/);
               if (match) {
                 const d = parseInt(match[1], 10);
                 const pName = getDisplayName(personName);
                 if (session.trainees.includes(personName) || session.trainees.includes(pName)) {
+                  const startTime = timeMatch ? timeMatch[1] : '';
+                  const endTime = timeMatch ? timeMatch[2] : '';
+                  const ojtLabel = startTime + '\n-' + endTime + '\nOJT';
                   personalShifts[d] = {
-                    position: 'OJT',
+                    position: ojtLabel,
                     type: 'OJT',
                     fullLabel: 'OJT',
                     backendValue: 'OJT'
