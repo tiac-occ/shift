@@ -1069,6 +1069,8 @@
       font-weight: bold;
       font-size: 0.9em;
       color: #888;
+      display: inline-block;
+      min-width: 1.6em;
     }
 
     .calendar-day .shift-info {
@@ -1087,14 +1089,18 @@
       overflow: hidden;
     }
 
-    .calendar-day.ojt-shift::before {
+    .calendar-day.ojt-shift .day-number {
+      position: relative;
+      display: inline-block;
+    }
+
+    .calendar-day.ojt-shift .day-number::after {
       content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: linear-gradient(to bottom, #f7d6a1, #ee6fff);
+      display: block;
+      width: 100%;
+      height: 4px;
+      margin-top: 2px;
+      background: linear-gradient(to right, #f7d6a1, #ee6fff);
     }
 
     .calendar-day.ojt-shift .shift-info {
@@ -1107,8 +1113,36 @@
       background-color: var(--starlux-gold-light);
     }
 
+    .calendar-day.day-shift .day-number {
+      position: relative;
+      display: inline-block;
+    }
+
+    .calendar-day.day-shift .day-number::after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 4px;
+      margin-top: 2px;
+      background: linear-gradient(to right, #F9CE46, #F28C38);
+    }
+
     .calendar-day.night-shift {
       background-color: var(--starlux-teal-light);
+    }
+
+    .calendar-day.night-shift .day-number {
+      position: relative;
+      display: inline-block;
+    }
+
+    .calendar-day.night-shift .day-number::after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 4px;
+      margin-top: 2px;
+      background: linear-gradient(to right, #7AB8F0, #18263E);
     }
 
     .calendar-day.day-off {
@@ -1698,19 +1732,6 @@
             trainees: ['李志祥', '洪懋荃', '陳子翔', '黃敬舜', '游昕珆', '詹凱程', '黃映笛', '湯伊筠', '許天豪', '簡佑丞', '陳家琪', '謝宗勳']
           }
         ]
-      },
-      {
-        monthLabel: '115/06',
-        sessions: [
-          {
-            datetime: '6/11(四) 0830-1700',
-            trainees: ['戴彥平', '趙家鋐', '虞仲喬', '洪懋荃', '李志祥', '陳映蓉', '林詳崴', '簡佑丞', '游昕珆', '陳祈雯', '張瑀芯', '張晴涵', '林泉延']
-          },
-          {
-            datetime: '6/22(一) 0830-1700',
-            trainees: ['許政偉', '徐偉揚', '賴保吉', '許政昆', '許天豪', '謝宗勳', '沈宥柔', '湯品妍', '黃敬舜', '陳微儀', '李昇', '黃俊揚', '徐心慈', '游曜華', '俞欣伶']
-          }
-        ]
       }
     ];
 
@@ -1732,29 +1753,108 @@
 
       function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
       const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '映蓉', '敬舜', '天豪', '祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
+      // OJT 快取（用於個人行事曆判斷）
+      const ojtCache = {};
+
+      async function fetchOjtFromSheet(year, month) {
+        const fileKey = `${year}-${month}`;
+        if (ojtCache[fileKey]) return ojtCache[fileKey];
+        const spreadsheetId = SPREADSHEET_IDS[fileKey];
+        if (!spreadsheetId) return null;
+        try {
+          const url = `${googleSheetWebAppUrl}?action=getOjtData&spreadsheetId=${spreadsheetId}&month=${month}`;
+          const resp = await fetch(url);
+          const data = await resp.json();
+          if (data.error) return null;
+          
+          // 轉換為 ojtData 格式
+          const rocYear = year - 1911;
+          const monthLabel = `${rocYear}/${String(month).padStart(2, '0')}`;
+          
+          const sessions = data.sessions.map(s => {
+            // 🌟 核心修正：攔截 Google Sheet 傳來的超長 Date 字串，並轉回 "月/日"
+            let formattedDate = s.date;
+            const dateObj = new Date(s.date);
+            // 如果解析為有效日期，就格式化成 "6/11" 或 "6/22"
+            if (!isNaN(dateObj.getTime())) {
+              formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+            }
+
+            return {
+              // 組合成我們需要的完美格式： 6/22(一) 0830-1700
+              datetime: `${formattedDate}(${s.weekday}) 0830-1700`,
+              trainees: s.trainees
+            };
+          });
+          
+          const result = { monthLabel, sessions };
+          ojtCache[fileKey] = result;
+          
+          // 同時寫入 ojtData 供個人行事曆使用
+          if (!ojtData.find(d => d.monthLabel === monthLabel)) {
+            ojtData.push(result);
+          }
+          return result;
+        } catch (err) {
+          console.error('fetchOjtFromSheet error:', err);
+          return null;
+        }
+      }
+
       function renderOJT() {
         const ojtMonthSelector = document.getElementById('ojtMonthSelector');
         const ojtContent = document.getElementById('ojtContent');
 
-        // Initialize selector if empty
         if (ojtMonthSelector.options.length === 0) {
-          ojtData.forEach((data, index) => {
+          // 建立所有可用月份的清單（從 115/05 開始，根據 SPREADSHEET_IDS 延伸）
+          const monthList = [{ label: '115/05', year: 2026, month: 5, isStatic: true }];
+          Object.keys(SPREADSHEET_IDS).forEach(key => {
+            const [y, m] = key.split('-').map(Number);
+            if (y >= 2026 && m >= 6) {
+              monthList.push({ label: `${y - 1911}/${String(m).padStart(2, '0')}`, year: y, month: m, isStatic: false });
+            }
+          });
+          monthList.sort((a, b) => (a.year * 100 + a.month) - (b.year * 100 + b.month));
+
+          monthList.forEach((item, index) => {
             const option = document.createElement('option');
-            option.value = index;
-            option.textContent = data.monthLabel;
+            option.value = JSON.stringify(item);
+            option.textContent = item.label;
             ojtMonthSelector.appendChild(option);
           });
-          ojtMonthSelector.addEventListener('change', (e) => renderOJTSessions(e.target.value));
-          // Render first month by default
-          if (ojtData.length > 0) renderOJTSessions(0);
+
+          ojtMonthSelector.addEventListener('change', (e) => {
+            const selected = JSON.parse(e.target.value);
+            loadAndRenderOJT(selected, ojtContent);
+          });
+
+          // 預設載入第一個月份
+          if (monthList.length > 0) {
+            loadAndRenderOJT(monthList[0], ojtContent);
+          }
         }
       }
 
-      function renderOJTSessions(dataIndex) {
-        const ojtContent = document.getElementById('ojtContent');
-        const data = ojtData[dataIndex];
-        if (!data) return;
+      async function loadAndRenderOJT(monthInfo, ojtContent) {
+        if (monthInfo.isStatic) {
+          // 靜態資料（五月）
+          const data = ojtData.find(d => d.monthLabel === monthInfo.label);
+          if (data) renderOJTSessions(data, ojtContent);
+          else ojtContent.innerHTML = '<p>找不到該月份的 OJT 資料。</p>';
+        } else {
+          // 動態 fetch（六月起）
+          ojtContent.innerHTML = '<p style="text-align:center; color:#888;">載入中...</p>';
+          const data = await fetchOjtFromSheet(monthInfo.year, monthInfo.month);
+          if (data && data.sessions.length > 0) {
+            renderOJTSessions(data, ojtContent);
+          } else {
+            ojtContent.innerHTML = '<p style="text-align:center; color:#888;">該月份尚無 OJT 資料。</p>';
+          }
+        }
+      }
 
+      function renderOJTSessions(data, ojtContent) {
+        if (!data) return;
         let html = '';
         data.sessions.forEach(session => {
           let tagsHtml = '';
@@ -1847,7 +1947,7 @@
         DOMElements.monthTitle.textContent = `${year}年 ${month}月`; clearAllViews();
         if (!spreadsheetId) { showMessage('error', `錯誤：找不到 ${year}年 ${month}月 的班表檔案設定。`); return; }
         if (state.cachedData[fileKey]) { renderAllViews(state.cachedData[fileKey]); return; }
-        try { showMessage('loading', `正在載入 ${month} 月班表...`); const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`; const response = await fetch(requestUrl); const data = await response.json(); if (data.error) { throw new Error(data.message); } if (!data.schedule || !data.names) { throw new Error('資料格式不正確。'); } state.cachedData[fileKey] = data; DOMElements.messageContainer.innerHTML = ''; renderAllViews(data); } catch (error) { showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`); }
+        try { showMessage('loading', `正在載入 ${month} 月班表...`); const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`; const response = await fetch(requestUrl); const data = await response.json(); if (data.error) { throw new Error(data.message); } if (!data.schedule || !data.names) { throw new Error('資料格式不正確。'); } state.cachedData[fileKey] = data; DOMElements.messageContainer.innerHTML = ''; if (month >= 6) { await fetchOjtFromSheet(year, month); } renderAllViews(data); } catch (error) { showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`); }
       }
 
       function renderAllViews(data) {
@@ -2029,7 +2129,7 @@
                 if (session.trainees.includes(personName) || session.trainees.includes(pName)) {
                   const startTime = timeMatch ? timeMatch[1] : '';
                   const endTime = timeMatch ? timeMatch[2] : '';
-                  const ojtLabel = startTime + '\n-' + endTime + '\nOJT';
+                  const ojtLabel = 'OJT\n' + startTime + '\n-' + endTime;
                   personalShifts[d] = {
                     position: ojtLabel,
                     type: 'OJT',
