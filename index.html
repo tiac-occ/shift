@@ -7,6 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OCC Duty Management Platform</title>
 
+  <!-- 預先建立連線，加速 Firebase 和 GAS API 的存取 -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+
   <style>
     /* --- 1. 精準版紅包雨特效 (保留不刪除，未來可重複使用) --- */
     .red-envelope {
@@ -1056,6 +1061,10 @@
       position: relative;
       cursor: pointer;
       transition: transform 0.1s ease, border-color 0.2s;
+    }
+
+    /* 僅在佈告欄月曆裁切雙色底色，不影響首頁班表月曆 */
+    #boardCalendarContainer .calendar-day {
       overflow: hidden;
     }
 
@@ -1155,16 +1164,17 @@
     .calendar-day.with-ojt::before {
       content: 'OJT';
       position: absolute;
-      bottom: 0; /* 貼齊底部，不再凸出 */
-      right: 0;  /* 貼齊右側，不再凸出 */
-      background: linear-gradient(to right, #E2C9DC, #F6EFFF); /* 左到右，由深至淺的粉色漸層 */
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: right;
+      background: linear-gradient(to right, #E2C9DC, #F6EFFF);
       color: #444;
       font-weight: bold;
       font-size: 0.65em;
       padding: 2px 6px;
-      /* 已移除 border-radius，呈現有稜有角的長方形 */
-      /* 已移除 border 白色邊框 */
-      box-shadow: -1px -1px 4px rgba(0, 0, 0, 0.1); /* 調整陰影方向朝內上，讓貼齊的標籤保有層次感 */
+      box-shadow: 0px -1px 4px rgba(0, 0, 0, 0.1);
       z-index: 10;
     }
 
@@ -2128,7 +2138,7 @@
     ];
 
     function initializeApp(user) {
-      const state = { currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null, unreadNotiDocs: [] };
+      const state = { currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null, unreadNotiDocs: [], renderedViews: new Set() };
 
       const DOMElements = {
         header: document.querySelector('.header'), sidebar: document.getElementById('sidebar'), sidebarToggle: document.getElementById('sidebar-toggle'), overlay: document.getElementById('overlay'), contentWrapper: document.getElementById('content-wrapper'), sidebarNav: document.getElementById('sidebar-nav'), logoutBtn: document.getElementById('logout-btn'), logoutConfirm: document.getElementById('logout-confirm'), confirmLogoutYes: document.getElementById('confirm-logout-yes'), confirmLogoutNo: document.getElementById('confirm-logout-no'), pages: document.querySelectorAll('.page'), userInfo: document.getElementById('user-info'), monthTitle: document.getElementById('monthTitle'), prevMonthBtn: document.getElementById('prevMonthBtn'), nextMonthBtn: document.getElementById('nextMonthBtn'), homeViewSelector: document.getElementById('homeViewSelector'), shiftZoneViewSelector: document.getElementById('shiftZoneViewSelector'), viewSelectors: document.querySelectorAll('.view-selector'), messageContainer: document.getElementById('messageContainer'), dailyCardView: document.getElementById('dailyCardView'), fullTableView: document.getElementById('fullTableView'), tableContainer: document.getElementById('tableContainer'), personalCalendarView: document.getElementById('personalCalendarView'), personSelector: document.getElementById('personSelector'), shiftChangeView: document.getElementById('shiftChangeView'), shiftChangeForm: document.getElementById('shiftChangeForm'), formMessageContainer: document.getElementById('formMessageContainer'), changeType: document.getElementById('changeType'), submitBtn: document.getElementById('submitBtn'), preSubmitBtn: document.getElementById('preSubmitBtn'), highlighter1: document.getElementById('highlighter1'), highlighter2: document.getElementById('highlighter2'), successorView: document.getElementById('successorView'), successorDate: document.getElementById('successorDate'), successorRole: document.getElementById('successorRole'), successorQueryBtn: document.getElementById('successorQueryBtn'), successorList: document.getElementById('successor-list'), changePasswordView: document.getElementById('changePasswordView'), changePasswordForm: document.getElementById('changePasswordForm'), changePasswordBtn: document.getElementById('changePasswordBtn'), passwordMessageContainer: document.getElementById('passwordMessageContainer'), myScheduleTitle: document.getElementById('myScheduleTitle'), myPersonalCalendarContainer: document.getElementById('myPersonalCalendarContainer'), colleagueCalendarContainer: document.getElementById('colleagueCalendarContainer'), sourceCalendarContainer: document.getElementById('sourceCalendarContainer'), targetCalendarContainer: document.getElementById('targetCalendarContainer'), targetCalendarWrapper: document.getElementById('targetCalendarWrapper'), originalDateInput: document.getElementById('originalDate'), originalShiftInput: document.getElementById('originalShift'), swappedDateInput: document.getElementById('swappedDate'), swappedShiftInput: document.getElementById('swappedShift'), confirmModal: document.getElementById('confirmModal'), modalContent: document.getElementById('modalContent'), modalCancel: document.getElementById('modalCancel'), modalConfirm: document.getElementById('modalConfirm'), noteModal: document.getElementById('noteModal'), noteModalTitle: document.getElementById('noteModalTitle'), noteInput: document.getElementById('noteInput'), btnDeleteNote: document.getElementById('btn-delete-note'), btnCancelNote: document.getElementById('btn-cancel-note'), btnSaveNote: document.getElementById('btn-save-note'), notiBell: document.getElementById('notiBell'), notiPanel: document.getElementById('notiPanel'), notiRedDot: document.getElementById('notiRedDot'), notiList: document.getElementById('notiList'), notiHeader: document.getElementById('notiHeader'),
@@ -2351,18 +2361,31 @@
         }
         try { 
           showMessage('loading', `正在載入 ${month} 月班表...`); 
-          const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`; 
-          const response = await fetch(requestUrl); 
-          const data = await response.json(); 
+          const requestUrl = `${googleSheetWebAppUrl}?spreadsheetId=${spreadsheetId}&sheetName=${encodeURIComponent(sheetName)}`;
+
+          // ⚡ 效能優化：班表與 OJT 同時發送請求（並行），不再串行等待
+          const schedulePromise = fetch(requestUrl).then(r => r.json());
+          const ojtPromise = (month >= 6) ? fetchOjtFromSheet(year, month) : Promise.resolve(null);
+
+          // 班表資料一到就立刻渲染畫面，不等 OJT
+          const data = await schedulePromise;
           if (data.error) { throw new Error(data.message); } 
           if (!data.schedule || !data.names) { throw new Error('資料格式不正確。'); } 
           state.cachedData[fileKey] = data; 
           DOMElements.messageContainer.innerHTML = ''; 
-          if (month >= 6) { await fetchOjtFromSheet(year, month); } 
           renderAllViews(data); 
           if (state.currentPage === 'matchZone') {
             renderMatchZone();
           }
+
+          // OJT 資料在背景到達後，補充刷新個人行事曆（加上 OJT 標記）
+          ojtPromise.then(() => {
+            renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
+            if (state.selectedPerson) {
+              renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
+            }
+          }).catch(err => console.warn('OJT 資料補充載入失敗（不影響主班表）:', err));
+
         } catch (error) { 
           showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`); 
         }
@@ -2373,15 +2396,32 @@
         const month = state.currentDate.getMonth() + 1;
         const conf = getShiftConfig(year, month);
 
-        renderDailyCards(data.schedule);
+        state.renderedViews.clear(); // 清空渲染紀錄
+
         const sortedNames = getSortedNames(data.names);
         populatePersonSelector(sortedNames, DOMElements.personSelector, "請選擇人員...");
         populatePersonSelector(sortedNames, DOMElements.highlighter1, "無");
         populatePersonSelector(sortedNames, DOMElements.highlighter2, "無");
         populateShiftChangeForm(sortedNames, conf.shiftList);
-        renderFullTable(data.schedule);
-        renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
-        renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
+        
+        renderVisibleViews(data);
+      }
+
+      function renderVisibleViews(data) {
+        if (state.currentPage === 'home') {
+          const activeViewId = document.querySelector('#home .view.active')?.id || 'personalCalendarView';
+          if (activeViewId === 'dailyCardView' && !state.renderedViews.has('dailyCardView')) {
+            renderDailyCards(data.schedule);
+            state.renderedViews.add('dailyCardView');
+          } else if (activeViewId === 'fullTableView' && !state.renderedViews.has('fullTableView')) {
+            renderFullTable(data.schedule);
+            state.renderedViews.add('fullTableView');
+          } else if (activeViewId === 'personalCalendarView' && !state.renderedViews.has('personalCalendarView')) {
+            renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
+            renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
+            state.renderedViews.add('personalCalendarView');
+          }
+        }
       }
 
       function getSortedNames(apiNames) { return [...apiNames].filter(name => !hiddenStaff.includes(name)).sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
@@ -2668,7 +2708,23 @@
       }
 
       function switchPage(pageName) { state.currentPage = pageName; DOMElements.pages.forEach(p => p.classList.remove('active')); document.getElementById(pageName).classList.add('active'); DOMElements.sidebarNav.querySelectorAll('a').forEach(a => a.classList.remove('active')); DOMElements.sidebarNav.querySelector(`[data-page="${pageName}"]`).classList.add('active'); DOMElements.viewSelectors.forEach(nav => nav.style.display = 'none'); if (pageName === 'home') { DOMElements.homeViewSelector.style.display = 'flex'; switchView('personalCalendarView', DOMElements.homeViewSelector); } else if (pageName === 'ojtZone') { renderOJT(); } else if (pageName === 'shiftZone') { DOMElements.shiftZoneViewSelector.style.display = 'flex'; switchView('shiftChangeView', DOMElements.shiftZoneViewSelector); } else if (pageName === 'matchZone') { DOMElements.matchZoneViewSelector.style.display = 'flex'; switchView('boardView', DOMElements.matchZoneViewSelector); renderMatchZone(); } closeSidebar(); }
-      function switchView(viewName, viewSelector) { if (!viewSelector) return; const currentPageDiv = document.querySelector('.page.active'); if (!currentPageDiv) return; currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active')); const targetView = document.getElementById(viewName); if (targetView) { targetView.classList.add('active'); } viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active')); viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active'); if (viewName === 'dailyCardView') { attemptScrollToToday(); } }
+      function switchView(viewName, viewSelector) { 
+        if (!viewSelector) return; 
+        const currentPageDiv = document.querySelector('.page.active'); 
+        if (!currentPageDiv) return; 
+        currentPageDiv.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+        const targetView = document.getElementById(viewName); 
+        if (targetView) { targetView.classList.add('active'); } 
+        viewSelector.querySelectorAll('button').forEach(b => b.classList.remove('active')); 
+        viewSelector.querySelector(`[data-view="${viewName}"]`).classList.add('active'); 
+        
+        const fileKey = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+        if (state.cachedData[fileKey]) {
+          renderVisibleViews(state.cachedData[fileKey]);
+        }
+        
+        if (viewName === 'dailyCardView') { attemptScrollToToday(); } 
+      }
       function openSidebar() { DOMElements.sidebar.classList.add('open'); DOMElements.overlay.style.display = 'block'; }
       function closeSidebar() { DOMElements.sidebar.classList.remove('open'); DOMElements.overlay.style.display = 'none'; }
       async function handleSuccessorQuery() {
@@ -2898,8 +2954,6 @@
           
           if (state.selectedBoardDay === d) {
             dayCell.classList.add('today-highlight');
-          } else if (isCurrentMonth && today.getDate() === d) {
-            dayCell.classList.add('today');
           }
           calendarGrid.appendChild(dayCell);
         }
