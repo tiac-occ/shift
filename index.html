@@ -2157,7 +2157,7 @@
       const hiddenStaff = ["健凱"];
 
       function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
-      const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '映蓉', '敬舜', '天豪', '祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '貞瑜', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '定國', '人鋒', '處長', '副座', '科長'];
+      const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '映蓉', '敬舜', '天豪', '祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '如蘭', '定國', '俊揚', '泉延', '曜華', '品蓉', '嘉珣', '晴涵', '瑀芯', '心慈', '李昇', '欣伶', '沛容', '處長', '副座', '科長', '貞瑜', '微儀', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '人鋒'];
       // OJT 快取（用於個人行事曆判斷）
       const ojtCache = {};
 
@@ -2426,7 +2426,12 @@
         }
       }
 
-      function getSortedNames(apiNames) { return [...apiNames].filter(name => !hiddenStaff.includes(name)).sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); }); }
+      function getSortedNames(apiNames) {
+        // ★ 合併 API 回傳名單 + 所有已知同仁（customNameSortOrder），確保未排班同仁也出現在下拉選單中
+        const mergedSet = new Set(apiNames);
+        customNameSortOrder.forEach(name => mergedSet.add(name));
+        return [...mergedSet].filter(name => !hiddenStaff.includes(name)).sort((a, b) => { const indexA = customNameSortOrder.indexOf(a); const indexB = customNameSortOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b, 'zh-Hant'); });
+      }
 
       function populatePersonSelector(names, selector, defaultOptionText) {
         const currentSelection = selector.value; selector.innerHTML = `<option value="">${defaultOptionText}</option>`;
