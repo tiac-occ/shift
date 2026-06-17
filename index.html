@@ -1553,34 +1553,10 @@
       text-align: left;
     }
 
-    /* 完美匹配：動態流光邊框 */
+    /* 完美匹配：亮綠色外框 */
     .listing-card.perfect-match {
-      border: 1px solid transparent;
-      box-shadow: 0 4px 20px rgba(76, 175, 80, 0.2);
-    }
-    
-    .listing-card.perfect-match::after {
-      content: '';
-      position: absolute;
-      top: -2px; left: -2px; right: -2px; bottom: -2px;
-      background: linear-gradient(90deg, 
-        transparent 0%, #4CAF50 35%, #81C784 50%, #4CAF50 65%, transparent 100%
-      );
-      background-size: 200% 100%;
-      animation: greenBorderFlow 2.5s linear infinite;
-      border-radius: 14px;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .listing-card.perfect-match > * {
-      position: relative;
-      z-index: 2; /* 確保內容高於邊框 */
-    }
-
-    @keyframes greenBorderFlow {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      border: 2px solid #00E676;
+      box-shadow: 0 4px 20px rgba(0, 230, 118, 0.2);
     }
 
     /* 不符資格：半透明且灰色 */
