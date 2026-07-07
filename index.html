@@ -521,122 +521,7 @@
       color: var(--starlux-header);
     }
 
-    /* === 2026 World Cup Login Animation === */
-    .wc-animation-wrapper {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      padding: 15px 0 5px 0;
-      position: relative;
-      min-height: 100px;
-      overflow: hidden;
-    }
 
-    .wc-trophy-wrapper {
-      animation: trophyAppear 1s ease-out 0.8s both;
-      position: relative;
-    }
-
-    @keyframes trophyAppear {
-      0% { opacity: 0; transform: scale(0.3) translateY(30px); }
-      60% { opacity: 1; transform: scale(1.15) translateY(-5px); }
-      80% { transform: scale(0.95) translateY(2px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .wc-trophy-wrapper svg {
-      filter: drop-shadow(0 2px 8px rgba(173, 159, 116, 0.4));
-    }
-
-    /* Trophy gold shimmer */
-    .wc-trophy-wrapper::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -50%; right: -50%; bottom: 0;
-      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 45%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.5) 55%, transparent 60%);
-      animation: trophyShimmer 3s ease-in-out 2s infinite;
-      pointer-events: none;
-    }
-
-    @keyframes trophyShimmer {
-      0% { transform: translateX(-120%); }
-      100% { transform: translateX(120%); }
-    }
-
-    .wc-ball-wrapper {
-      animation: ballBounceIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
-      position: relative;
-      margin-bottom: 2px;
-    }
-
-    @keyframes ballBounceIn {
-      0% { opacity: 0; transform: translateX(-120px) translateY(0) rotate(0deg); }
-      30% { opacity: 1; transform: translateX(-40px) translateY(-35px) rotate(180deg); }
-      50% { transform: translateX(-10px) translateY(0px) rotate(300deg); }
-      70% { transform: translateX(5px) translateY(-15px) rotate(400deg); }
-      85% { transform: translateX(0px) translateY(0px) rotate(450deg); }
-      95% { transform: translateX(-2px) translateY(-5px) rotate(470deg); }
-      100% { opacity: 1; transform: translateX(0) translateY(0) rotate(480deg); }
-    }
-
-    .wc-ball-wrapper svg {
-      animation: ballIdleBob 2.5s ease-in-out 2s infinite;
-    }
-
-    @keyframes ballIdleBob {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-4px) rotate(8deg); }
-    }
-
-    .wc-subtitle {
-      font-size: 0.75em;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, #8B1538, #C41E3A, #AD9F74, #C4B48A);
-      background-size: 200% 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: wcGradient 4s ease infinite, wcFadeIn 0.8s ease-out 1.5s both;
-      margin: 0 0 5px 0;
-      padding: 0;
-    }
-
-    @keyframes wcGradient {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    @keyframes wcFadeIn {
-      0% { opacity: 0; transform: translateY(8px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Confetti particles */
-    .wc-confetti {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 1px;
-      opacity: 0;
-      animation: confettiFall 2s ease-out forwards;
-    }
-    .wc-confetti:nth-child(1) { left: 15%; background: #C41E3A; animation-delay: 1.2s; }
-    .wc-confetti:nth-child(2) { left: 30%; background: #AD9F74; animation-delay: 1.35s; }
-    .wc-confetti:nth-child(3) { left: 50%; background: #1A472A; animation-delay: 1.1s; }
-    .wc-confetti:nth-child(4) { left: 65%; background: #C41E3A; animation-delay: 1.4s; width: 4px; height: 8px; }
-    .wc-confetti:nth-child(5) { left: 80%; background: #AD9F74; animation-delay: 1.25s; }
-    .wc-confetti:nth-child(6) { left: 25%; background: #2E5090; animation-delay: 1.5s; width: 5px; height: 7px; }
-    .wc-confetti:nth-child(7) { left: 70%; background: #1A472A; animation-delay: 1.15s; }
-    .wc-confetti:nth-child(8) { left: 42%; background: #C41E3A; animation-delay: 1.45s; width: 7px; height: 4px; }
-
-    @keyframes confettiFall {
-      0% { opacity: 1; top: 10%; transform: rotate(0deg) scale(1); }
-      100% { opacity: 0; top: 95%; transform: rotate(720deg) scale(0.3); }
-    }
 
     #login-form {
       display: flex;
@@ -1980,71 +1865,6 @@
   <div id="splash-screen"><img src="icon-512.png" alt="應用程式 Logo"></div>
   <div id="login-container">
     <div class="login-box">
-      <!-- World Cup 2026 Animation -->
-      <div class="wc-animation-wrapper">
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-confetti"></div>
-        <div class="wc-ball-wrapper">
-          <svg width="38" height="38" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="48" fill="#fff" stroke="#222" stroke-width="2.5"/>
-            <polygon points="50,12 62,28 50,38 38,28" fill="#222"/>
-            <polygon points="82,38 78,56 64,52 62,36 74,28" fill="#222"/>
-            <polygon points="72,72 58,78 48,66 56,54 70,56" fill="#222"/>
-            <polygon points="28,72 22,56 34,48 44,58 38,74" fill="#222"/>
-            <polygon points="18,38 30,28 38,36 34,52 20,54" fill="#222"/>
-          </svg>
-        </div>
-        <div class="wc-trophy-wrapper">
-          <svg width="60" height="80" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
-            <!-- Trophy handles -->
-            <path d="M20,30 C-5,30 -5,75 25,80" fill="none" stroke="url(#trophyGold)" stroke-width="6" stroke-linecap="round"/>
-            <path d="M100,30 C125,30 125,75 95,80" fill="none" stroke="url(#trophyGold)" stroke-width="6" stroke-linecap="round"/>
-            <!-- Trophy cup body -->
-            <path d="M25,15 Q25,95 60,105 Q95,95 95,15 Z" fill="url(#trophyGold)" stroke="#8B6914" stroke-width="1.5"/>
-            <!-- Cup rim -->
-            <ellipse cx="60" cy="15" rx="37" ry="8" fill="url(#trophyRim)" stroke="#8B6914" stroke-width="1"/>
-            <!-- Inner shadow -->
-            <ellipse cx="60" cy="16" rx="30" ry="5" fill="rgba(139,105,20,0.3)"/>
-            <!-- Trophy stem -->
-            <rect x="52" y="105" width="16" height="18" rx="3" fill="url(#trophyGold)" stroke="#8B6914" stroke-width="1"/>
-            <!-- Trophy base -->
-            <rect x="35" y="123" width="50" height="8" rx="3" fill="url(#trophyGold)" stroke="#8B6914" stroke-width="1"/>
-            <rect x="30" y="131" width="60" height="10" rx="4" fill="url(#trophyDarkGold)" stroke="#8B6914" stroke-width="1"/>
-            <!-- Globe on trophy -->
-            <circle cx="60" cy="58" r="18" fill="none" stroke="rgba(139,105,20,0.25)" stroke-width="1"/>
-            <ellipse cx="60" cy="58" rx="18" ry="6" fill="none" stroke="rgba(139,105,20,0.2)" stroke-width="0.8"/>
-            <ellipse cx="60" cy="58" rx="6" ry="18" fill="none" stroke="rgba(139,105,20,0.2)" stroke-width="0.8"/>
-            <!-- Sparkle dots -->
-            <circle cx="42" cy="40" r="2" fill="rgba(255,255,255,0.8)"/>
-            <circle cx="75" cy="50" r="1.5" fill="rgba(255,255,255,0.6)"/>
-            <!-- Gradients -->
-            <defs>
-              <linearGradient id="trophyGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#F0D060"/>
-                <stop offset="30%" stop-color="#DAA520"/>
-                <stop offset="60%" stop-color="#F5C842"/>
-                <stop offset="100%" stop-color="#B8860B"/>
-              </linearGradient>
-              <linearGradient id="trophyRim" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#F5D76E"/>
-                <stop offset="50%" stop-color="#FFF3B0"/>
-                <stop offset="100%" stop-color="#DAA520"/>
-              </linearGradient>
-              <linearGradient id="trophyDarkGold" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#C4A035"/>
-                <stop offset="100%" stop-color="#8B6914"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-      </div>
-      <p class="wc-subtitle">⚽ 2026 FIFA World Cup ⚽</p>
       <h1>OCC 班表管理平台</h1>
       <form id="login-form">
         <div class="form-field"><label for="email">電子郵件</label><input type="email" id="email" required></div>
@@ -2233,21 +2053,6 @@
         <div id="matchZone" class="page">
           <div id="boardView" class="view active">
             <div class="calendar-section">
-              <div class="calendar-section-header">
-                <div class="title-wrapper">
-                  <h3 class="match-board-title">
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--starlux-highlight-b)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-                      <!-- Top-left box and bottom arrow -->
-                      <path d="M 15 7.5 V 5.5 A 2.5 2.5 0 0 0 12.5 3 H 5.5 A 2.5 2.5 0 0 0 3 5.5 V 12.5 A 2.5 2.5 0 0 0 5.5 15 H 17" />
-                      <path d="M 13.5 11.5 L 17 15 L 13.5 18.5" />
-                      <!-- Bottom-right box and top arrow -->
-                      <path d="M 9 16.5 V 18.5 A 2.5 2.5 0 0 0 11.5 21 H 18.5 A 2.5 2.5 0 0 0 21 18.5 V 11.5 A 2.5 2.5 0 0 0 18.5 9 H 7" />
-                      <path d="M 10.5 5.5 L 7 9 L 10.5 12.5" />
-                    </svg>
-                    佈告欄
-                  </h3>
-                </div>
-              </div>
               <div class="board-filter-bar" id="boardFilterBar">
                 <button class="board-filter-btn active" data-filter="all">全部</button>
                 <button class="board-filter-btn" data-filter="give">讓班</button>
@@ -2448,6 +2253,8 @@
     }
     // 🌸 櫻吹雪特效暫時關閉，保留至明年櫻花季再開啟（取消下面這行的註解即可）
     // window.addEventListener('DOMContentLoaded', initSakura);
+
+
 
     window.toggleStats = function () {
       document.getElementById('myStatsPanel').classList.toggle('show');
