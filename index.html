@@ -1479,21 +1479,7 @@
         box-shadow: 0 0 8px rgba(255, 153, 51, 0.8);
       }
     }
-      animation: pulseBetaColor 2.5s infinite alternate;
-    }
-    
-    @keyframes pulseBetaColor {
-      0% {
-        background: rgba(220, 53, 69, 0.15);
-        border-color: rgba(220, 53, 69, 0.3);
-        color: #ff6b6b;
-      }
-      100% {
-        background: rgba(173, 159, 116, 0.2); /* 星宇金微透明 */
-        border-color: rgba(173, 159, 116, 0.5);
-        color: var(--starlux-gold-light);
-      }
-    }
+
 
     .board-cell-badges-wrapper {
       position: absolute;
@@ -2090,6 +2076,13 @@
             <div class="form-container">
               <div id="publishMessageContainer"></div>
 
+              <!-- C1: 我的刊登管理區 -->
+              <div id="myListingsSection" style="margin-bottom: 20px; display: none;">
+                <h4 style="margin-bottom: 10px; color: var(--starlux-gold); font-size: 1.1em; font-weight: bold;">目前我已刊登-</h4>
+                <div id="myListingsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                <hr style="border: 0; border-top: 1px solid #ddd; margin-top: 20px;">
+              </div>
+
               <!-- 模式切換器 -->
               <div class="publish-mode-switcher">
                 <button type="button" class="publish-mode-btn active" data-publish-mode="give_swap">
@@ -2101,7 +2094,6 @@
                   我想接班
                 </button>
               </div>
-
               <!-- 讓班/調班表單 (原有) -->
               <form id="publishForm" class="form-grid">
                 <div class="form-field">
@@ -2867,6 +2859,52 @@
                 read: false
               });
 
+              // === 自動下架相關班務媒合刊登 ===
+              try {
+                // 1. A 的刊登 (在 originalDate)
+                const listingsA = await db.collection('shift_listings')
+                  .where('fileKey', '==', fileKey)
+                  .where('publisherName', '==', data.originalPerson)
+                  .where('offerDate', '==', Number(data.originalDate))
+                  .where('status', '==', 'active')
+                  .get();
+                listingsA.forEach(doc => { batch.update(doc.ref, { status: 'completed_auto' }); });
+
+                // 2. B 在 originalDate 的「接班」刊登
+                const takeListingsB = await db.collection('shift_listings')
+                  .where('fileKey', '==', fileKey)
+                  .where('publisherName', '==', data.newPerson)
+                  .where('offerDate', '==', Number(data.originalDate))
+                  .where('listingType', '==', 'take')
+                  .where('status', '==', 'active')
+                  .get();
+                takeListingsB.forEach(doc => { batch.update(doc.ref, { status: 'completed_auto' }); });
+
+                if (data.changeType === '調' && data.swappedDate) {
+                  // 3. B 的刊登 (在 swappedDate)
+                  const listingsB = await db.collection('shift_listings')
+                    .where('fileKey', '==', fileKey)
+                    .where('publisherName', '==', data.newPerson)
+                    .where('offerDate', '==', Number(data.swappedDate))
+                    .where('status', '==', 'active')
+                    .get();
+                  listingsB.forEach(doc => { batch.update(doc.ref, { status: 'completed_auto' }); });
+
+                  // 4. A 在 swappedDate 的「接班」刊登
+                  const takeListingsA = await db.collection('shift_listings')
+                    .where('fileKey', '==', fileKey)
+                    .where('publisherName', '==', data.originalPerson)
+                    .where('offerDate', '==', Number(data.swappedDate))
+                    .where('listingType', '==', 'take')
+                    .where('status', '==', 'active')
+                    .get();
+                  takeListingsA.forEach(doc => { batch.update(doc.ref, { status: 'completed_auto' }); });
+                }
+              } catch (takeDownErr) {
+                console.error('自動下架刊登時發生錯誤:', takeDownErr);
+              }
+              // ================================
+
               await batch.commit();
               console.log('Firebase 通知寫入成功！');
 
@@ -2969,6 +3007,11 @@
       DOMElements.modalCancel.addEventListener('click', () => { DOMElements.confirmModal.style.display = 'none'; });
       DOMElements.modalConfirm.addEventListener('click', () => {
         DOMElements.confirmModal.style.display = 'none';
+        if (state.confirmCallback) {
+          state.confirmCallback();
+          state.confirmCallback = null;
+          return;
+        }
         if (state.confirmModalMode === 'publish_match') {
           handlePublishSubmit();
         } else if (state.confirmModalMode === 'publish_take') {
@@ -3080,7 +3123,7 @@
         const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
         weekdays.forEach(wd => {
           const header = document.createElement('div');
-          header.className = 'calendar-header-day';
+          header.className = 'calendar-weekday';
           header.textContent = wd;
           calendarGrid.appendChild(header);
         });
@@ -3166,6 +3209,18 @@
         
         const allDayListings = (state.listings || []).filter(l => Number(l.offerDate) === Number(day));
         const dayListings = getFilteredListings(allDayListings);
+        
+        if (!state.listings || state.listings.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.style.textAlign = 'center';
+            emptyMsg.style.padding = '30px 15px';
+            emptyMsg.style.color = 'var(--starlux-gray)';
+            emptyMsg.style.fontSize = '1em';
+            emptyMsg.style.fontWeight = 'bold';
+            emptyMsg.textContent = '本月尚無任何班務媒合需求';
+            container.appendChild(emptyMsg);
+        }
+
         if (dayListings.length === 0) {
           section.style.display = 'none';
           return;
@@ -3205,6 +3260,8 @@
           
           const roleLabelMap = { director: '主任', deputy: '副主任', supervisor: '督導', sysops: '設備航資' };
           
+          const timeAgo = listing.timestamp ? getTimeAgo(listing.timestamp.toDate()) : '';
+
           if (isTake) {
             // === 接班類型卡片 ===
             const takeTypesText = (listing.takeShiftTypes || []).map(t => t === 'DAY' ? '日班' : '夜班').join(' / ');
@@ -3227,7 +3284,7 @@
                 完美命中 (您有符合的班可以讓)
               </div>
               <div class="card-header">
-                <span class="card-title">${getDisplayName(listing.publisherName)}</span>
+                <span class="card-title">${getDisplayName(listing.publisherName)} <span style="font-size:0.7em;color:#999;font-weight:normal;margin-left:8px;">${timeAgo}</span></span>
                 <span class="card-badge take">接班</span>
               </div>
               <div class="card-body">
@@ -3322,28 +3379,67 @@
         }
       };
 
+      // getTimeAgo function
+      function getTimeAgo(date) {
+        if (!date) return '';
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return '剛剛';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}分鐘前`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}小時前`;
+        const days = Math.floor(hours / 24);
+        return `${days}天前`;
+      }
+
+      // 讓班/調班刊登的通知：「有意接班」
       window.handleInterestClick = async function(id, publisherName, date, shiftLabel) {
         const publisherFullName = getDisplayName(publisherName);
         const month = state.currentDate.getMonth() + 1;
+        const myFullName = getDisplayName(state.loggedInUserName);
         
-        if (confirm(`確認發送「有意接班」通知給 ${publisherFullName} 嗎？`)) {
+        state.confirmModalMode = 'interest_give';
+        DOMElements.modalContent.innerHTML = `
+          <p style="margin-bottom:15px;font-size:1.1em;font-weight:bold;color:var(--starlux-primary);">確認發送接班意願？</p>
+          <div style="background:#f5f5f5;padding:15px;border-radius:8px;font-size:0.95em;color:#333;text-align:left;">
+            系統將發送通知給 <b>${publisherFullName}</b>。<br>
+            您的意願：<b>${month}/${date} ${shiftLabel}</b>
+          </div>
+        `;
+        
+        state.confirmCallback = async () => {
           try {
+            // 防止重複送出
+            const existing = await db.collection('notifications')
+              .where('targetName', '==', publisherFullName)
+              .where('otherPersonName', '==', myFullName)
+              .where('date1', '==', `${month}/${date}`)
+              .where('type', '==', 'match_interest')
+              .get();
+            if (!existing.empty) {
+              showMessage('error', '您已經對此刊登表達過接班意願了！', DOMElements.formMessageContainer);
+              return;
+            }
+
             await db.collection('notifications').add({
               targetName: publisherFullName,
               type: 'match_interest',
               role: 'match_receiver',
-              otherPersonName: state.loggedInUserName,
+              otherPersonName: myFullName,
               date1: `${month}/${date}`,
               shift1: shiftLabel,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               read: false
             });
-            alert("已成功通知刊登者！對方會在系統右上角的鈴鐺收到您的接班意願通知。");
+            showMessage('success', '已成功通知刊登者！對方會在右上角鈴鐺收到您的接班意願。', DOMElements.formMessageContainer);
+            setTimeout(() => { DOMElements.formMessageContainer.innerHTML = ''; DOMElements.listingsSection.style.display = 'none'; }, 2500);
           } catch (err) {
             console.error("送出通知失敗:", err);
-            alert("送出通知失敗，請連線重試：" + err.message);
+            showMessage('error', '送出通知失敗，請重試：' + err.message, DOMElements.formMessageContainer);
           }
-        }
+        };
+        
+        DOMElements.confirmModal.style.display = 'flex';
       };
 
       // 接班刊登的通知：「我有班可讓」
@@ -3355,25 +3451,50 @@
         const userShifts = currentMonthData ? currentMonthData.schedule : [];
         const myShift = getUserShiftOnDay(userShifts, Number(date));
         const myShiftLabel = myShift || '未知班別';
+        const myFullName = getDisplayName(state.loggedInUserName);
         
-        if (confirm(`確認通知 ${publisherFullName}：您在 ${month}/${date} 有 ${myShiftLabel} 可以讓給對方？`)) {
+        state.confirmModalMode = 'interest_take';
+        DOMElements.modalContent.innerHTML = `
+          <p style="margin-bottom:15px;font-size:1.1em;font-weight:bold;color:var(--starlux-primary);">確認發送有班可讓？</p>
+          <div style="background:#f5f5f5;padding:15px;border-radius:8px;font-size:0.95em;color:#333;text-align:left;">
+            系統將通知 <b>${publisherFullName}</b> 您有班可以讓給他。<br>
+            您的班務：<b>${month}/${date} ${myShiftLabel}</b>
+          </div>
+        `;
+
+        state.confirmCallback = async () => {
           try {
+            // 防止重複送出
+            const existing = await db.collection('notifications')
+              .where('targetName', '==', publisherFullName)
+              .where('otherPersonName', '==', myFullName)
+              .where('date1', '==', `${month}/${date}`)
+              .where('type', '==', 'match_take_interest')
+              .get();
+            if (!existing.empty) {
+              showMessage('error', '您已經對此刊登表達過有班可讓了！', DOMElements.formMessageContainer);
+              return;
+            }
+
             await db.collection('notifications').add({
               targetName: publisherFullName,
               type: 'match_take_interest',
               role: 'match_take_receiver',
-              otherPersonName: state.loggedInUserName,
+              otherPersonName: myFullName,
               date1: `${month}/${date}`,
               shift1: myShiftLabel,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               read: false
             });
-            alert("已成功通知接班刊登者！對方會在鈴鐺收到您「有班可讓」的通知。");
+            showMessage('success', '已成功通知接班刊登者！對方會在鈴鐺收到您的通知。', DOMElements.formMessageContainer);
+            setTimeout(() => { DOMElements.formMessageContainer.innerHTML = ''; DOMElements.listingsSection.style.display = 'none'; }, 2500);
           } catch (err) {
             console.error("送出通知失敗:", err);
-            alert("送出通知失敗，請連線重試：" + err.message);
+            showMessage('error', '送出通知失敗，請重試：' + err.message, DOMElements.formMessageContainer);
           }
-        }
+        };
+
+        DOMElements.confirmModal.style.display = 'flex';
       };
 
       function getShiftRoleCategory(shiftName) {
@@ -3509,6 +3630,78 @@
         return myAssignment;
       }
 
+      async function renderMyListings() {
+        const container = document.getElementById('myListingsContainer');
+        const section = document.getElementById('myListingsSection');
+        if (!container || !section) return;
+        
+        container.innerHTML = '<div style="color:#888; font-size:0.9em; padding:10px;">載入中...</div>';
+        section.style.display = 'block';
+        
+        try {
+          const year = state.currentDate.getFullYear();
+          const month = state.currentDate.getMonth() + 1;
+          const fileKey = `${year}-${month}`;
+          
+          const snapshot = await db.collection('shift_listings')
+            .where('fileKey', '==', fileKey)
+            .where('publisherName', '==', state.loggedInUserName)
+            .where('status', '==', 'active')
+            .get();
+            
+          if (snapshot.empty) {
+            container.innerHTML = '<div style="color:var(--starlux-gray); font-size:0.9em; padding:5px 0;">(尚無活躍刊登)</div>';
+            return;
+          }
+          
+          container.innerHTML = '';
+          const docs = [];
+          snapshot.forEach(doc => { docs.push({ id: doc.id, ...doc.data() }); });
+          docs.sort((a, b) => Number(a.offerDate) - Number(b.offerDate));
+          
+          docs.forEach(listing => {
+            const isTake = listing.listingType === 'take';
+            const badgeClass = isTake ? 'take' : (listing.canSwap ? 'swap' : 'give');
+            const badgeText = isTake ? '接班' : (listing.canSwap ? (listing.canGive ? '調/讓' : '調班') : '讓班');
+            const timeAgo = listing.timestamp ? getTimeAgo(listing.timestamp.toDate()) : '';
+            
+            let infoHtml = '';
+            if (isTake) {
+              const takeTypesText = (listing.takeShiftTypes || []).map(t => t === 'DAY' ? '日班' : '夜班').join(' / ');
+              infoHtml = `<b>${month}/${listing.offerDate}</b> 徵求 <b>${takeTypesText}</b>`;
+            } else {
+              infoHtml = `<b>${month}/${listing.offerDate}</b> 釋出 <b>${listing.offerShift}</b>`;
+            }
+            
+            const div = document.createElement('div');
+            div.style.background = '#fff';
+            div.style.border = '1px solid #eee';
+            div.style.borderRadius = '8px';
+            div.style.padding = '10px 15px';
+            div.style.display = 'flex';
+            div.style.justifyContent = 'space-between';
+            div.style.alignItems = 'center';
+            div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            
+            div.innerHTML = `
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="card-badge ${badgeClass}" style="position:static; transform:none; padding:2px 6px; font-size:0.7em;">${badgeText}</span>
+                  <span style="font-size:0.95em; color:var(--starlux-header);">${infoHtml}</span>
+                </div>
+                <div style="font-size:0.75em; color:#999;">${timeAgo}</div>
+              </div>
+              <button class="card-action-btn cancel-listing" style="margin:0; width:auto; padding:6px 12px; font-size:0.8em;" onclick="handleCancelListing('${listing.id}')">手動下架</button>
+            `;
+            container.appendChild(div);
+          });
+          
+        } catch (err) {
+          console.error('載入我的刊登失敗', err);
+          container.innerHTML = '<div style="color:var(--starlux-red); font-size:0.9em; padding:10px;">載入失敗</div>';
+        }
+      }
+
       function renderMatchZone() {
         const activeView = DOMElements.publishView.classList.contains('active') ? 'publishView' : 'boardView';
         const year = state.currentDate.getFullYear();
@@ -3518,6 +3711,7 @@
         if (activeView === 'boardView') {
           subscribeToListings();
         } else {
+          renderMyListings();
           state.publishSelectedDay = null;
           state.publishSelectedShift = null;
           DOMElements.selectedPublishShiftWrapper.style.display = 'none';
@@ -3811,6 +4005,21 @@
         showMessage('loading', '正在送出刊登...', msgContainer);
         
         try {
+          // B1: 防止重複刊登
+          const existingListings = await db.collection('shift_listings')
+            .where('fileKey', '==', fileKey)
+            .where('publisherName', '==', state.loggedInUserName)
+            .where('offerDate', '==', Number(state.publishSelectedDay))
+            .where('listingType', '==', 'give_swap')
+            .where('status', '==', 'active')
+            .get();
+          
+          if (!existingListings.empty) {
+            btn.disabled = false;
+            btn.textContent = '送出刊登';
+            showMessage('error', '⚠️ 您在此日期已經有一筆「讓班/調班」的活躍刊登了，請勿重複發布！', msgContainer);
+            return;
+          }
           
           const listingData = {
             fileKey: fileKey,
@@ -3842,7 +4051,7 @@
           setTimeout(() => {
             switchView('boardView', DOMElements.matchZoneViewSelector);
             renderMatchZone();
-          }, 1500);
+          }, 2500);
           
         } catch (err) {
           console.error("刊登失敗:", err);
@@ -3877,6 +4086,21 @@
         showMessage('loading', '正在送出刊登...', msgContainer);
         
         try {
+          // B1: 防止重複刊登
+          const existingListings = await db.collection('shift_listings')
+            .where('fileKey', '==', fileKey)
+            .where('publisherName', '==', state.loggedInUserName)
+            .where('offerDate', '==', Number(state.publishSelectedDay))
+            .where('listingType', '==', 'take')
+            .where('status', '==', 'active')
+            .get();
+          
+          if (!existingListings.empty) {
+            btn.disabled = false;
+            btn.textContent = '送出刊登';
+            showMessage('error', '⚠️ 您在此日期已經有一筆「接班」的活躍刊登了，請勿重複發布！', msgContainer);
+            return;
+          }
           
           const listingData = {
             fileKey: fileKey,
@@ -3907,7 +4131,7 @@
           setTimeout(() => {
             switchView('boardView', DOMElements.matchZoneViewSelector);
             renderMatchZone();
-          }, 1500);
+          }, 2500);
           
         } catch (err) {
           console.error("刊登失敗:", err);
