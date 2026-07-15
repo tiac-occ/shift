@@ -541,7 +541,7 @@
       color: var(--starlux-header);
     }
 
-    .form-field input,
+    .form-field input:not([type="checkbox"]):not([type="radio"]),
     .form-field select {
       font-size: 1em;
       padding: 10px;
@@ -1498,18 +1498,34 @@
     }
     
     .board-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       flex: 1;
-      font-size: 0.85em;
-      font-weight: 900;
+      gap: 2px;
+      padding-top: 14px;
+    }
+
+    .board-badge .badge-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      width: 100%;
-      box-sizing: border-box;
-      border: none;
-      line-height: 1.2;
-      padding-top: 18px;
+      font-size: 1.1em;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .board-badge .badge-label {
+      font-size: 0.55em;
+      font-weight: 600;
+      opacity: 0.7;
+      letter-spacing: 1px;
     }
 
     /* 佈告欄日曆日期數字浮在色塊之上 */
@@ -1519,25 +1535,36 @@
       z-index: 2;
     }
     
-    /* 篩選顏色搭配篩選按鈕 */
     .board-badge.give-badge {
-      background-color: rgba(181, 71, 132, 0.15) !important;
-      color: #b54784 !important;
+      color: #b54784;
+    }
+    .board-badge.give-badge .badge-circle {
+      background: linear-gradient(135deg, rgba(181,71,132,0.2), rgba(181,71,132,0.35));
+      color: #b54784;
     }
 
     .board-badge.swap-badge {
-      background-color: rgba(173, 159, 116, 0.2) !important;
-      color: #8B7D55 !important;
+      color: #8B7D55;
+    }
+    .board-badge.swap-badge .badge-circle {
+      background: linear-gradient(135deg, rgba(173,159,116,0.25), rgba(173,159,116,0.4));
+      color: #8B7D55;
     }
 
     .board-badge.take-badge {
-      background-color: rgba(46, 125, 50, 0.15) !important;
-      color: #2E7D32 !important;
+      color: #2E7D32;
+    }
+    .board-badge.take-badge .badge-circle {
+      background: linear-gradient(135deg, rgba(46,125,50,0.2), rgba(46,125,50,0.35));
+      color: #2E7D32;
     }
 
     .board-badge.neutral-badge {
-      background-color: rgba(20, 35, 60, 0.08) !important;
-      color: #555 !important;
+      color: #555;
+    }
+    .board-badge.neutral-badge .badge-circle {
+      background: linear-gradient(135deg, rgba(20,35,60,0.1), rgba(20,35,60,0.2));
+      color: #555;
     }
 
     /* === 佈告欄篩選列 === */
@@ -1742,9 +1769,9 @@
     }
 
     .card-badge {
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 0.75em;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 1.15em;
       font-weight: bold;
     }
 
@@ -3180,7 +3207,7 @@
             else if (state.boardFilter === 'swap') badge.classList.add('swap-badge');
             else if (state.boardFilter === 'take') badge.classList.add('take-badge');
             else badge.classList.add('neutral-badge');
-            badge.textContent = `${filteredForDay.length}筆`;
+            badge.innerHTML = `<span class="badge-circle">${filteredForDay.length}</span><span class="badge-label">需求</span>`;
             badgesWrapper.appendChild(badge);
             
             dayCell.appendChild(badgesWrapper);
@@ -3297,9 +3324,9 @@
                 <span class="card-badge take">接班</span>
               </div>
               <div class="card-body">
-                <div class="card-row">
-                  <span class="card-label">想接班日</span>
-                  <span class="card-value" style="font-weight:bold; color:#2E7D32;">${month}/${listing.offerDate}</span>
+                <div class="card-row" style="font-size: 1.25em; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;">
+                  <span class="card-label" style="font-weight:bold; color:var(--starlux-gold);">想接班日</span>
+                  <span class="card-value" style="font-weight:900; color:#2E7D32;">${month}/${listing.offerDate}</span>
                 </div>
                 <div class="card-row">
                   <span class="card-label">班別偏好</span>
@@ -3352,9 +3379,9 @@
                 <span class="card-badge ${badgeClass}">${typeBadge}</span>
               </div>
               <div class="card-body">
-                <div class="card-row">
-                  <span class="card-label">刊登班務</span>
-                  <span class="card-value" style="font-weight:bold; color:var(--starlux-header);">${month}/${listing.offerDate} ${listing.offerShiftLabel}</span>
+                <div class="card-row" style="font-size: 1.25em; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;">
+                  <span class="card-label" style="font-weight:bold; color:var(--starlux-gold);">刊登班務</span>
+                  <span class="card-value" style="font-weight:900; color:var(--starlux-header);">${month}/${listing.offerDate} ${listing.offerShiftLabel}</span>
                 </div>
                 ${listing.canSwap ? `
                 <div class="card-row" style="flex-direction:column; gap:4px;">
