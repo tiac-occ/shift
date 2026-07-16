@@ -551,6 +551,20 @@
       box-sizing: border-box;
     }
 
+    /* iOS Safari 相容性：確保 checkbox/radio 不被拉寬 */
+    .form-field input[type="checkbox"],
+    .form-field input[type="radio"] {
+      width: auto !important;
+      padding: 0 !important;
+      border: revert !important;
+      border-radius: revert !important;
+      flex-shrink: 0;
+    }
+
+    .checkbox-group label {
+      white-space: nowrap;
+    }
+
     #login-btn {
       padding: 12px;
       font-size: 1.2em;
