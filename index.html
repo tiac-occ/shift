@@ -2583,7 +2583,6 @@
 
       // 📦 LocalStorage 快取管理（秒開體驗）
       const LS_PREFIX = 'occ-cache-';
-      const LS_CACHE_TTL = 30 * 60 * 1000; // 30 分鐘有效期
 
       function saveToLocalStorage(key, data) {
         try { localStorage.setItem(LS_PREFIX + key, JSON.stringify({ ts: Date.now(), data: data })); }
@@ -2595,8 +2594,7 @@
           const raw = localStorage.getItem(LS_PREFIX + key);
           if (!raw) return null;
           const parsed = JSON.parse(raw);
-          if (Date.now() - parsed.ts > LS_CACHE_TTL) { localStorage.removeItem(LS_PREFIX + key); return null; }
-          return parsed.data;
+          return parsed.data;  // ★ 永遠回傳快取資料，由 silentRefresh 在背景更新最新班表
         } catch (e) { return null; }
       }
 
