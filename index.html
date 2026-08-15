@@ -2552,6 +2552,9 @@
       DOMElements.notiBell.addEventListener('click', (e) => { e.stopPropagation(); DOMElements.notiPanel.classList.toggle('show'); if (DOMElements.notiPanel.classList.contains('show') && state.unreadNotiDocs.length > 0) { DOMElements.notiRedDot.style.display = 'none'; const batch = db.batch(); state.unreadNotiDocs.forEach(doc => { batch.update(db.collection('notifications').doc(doc.id), { read: true }); }); batch.commit().catch(e => console.log(e)); state.unreadNotiDocs = []; } });
       document.addEventListener('click', (e) => { if (!e.target.closest('#notiBell') && DOMElements.notiPanel.classList.contains('show')) { DOMElements.notiPanel.classList.remove('show'); } });
 
+      function showMessage(type, text, container = DOMElements.messageContainer) { container.innerHTML = `<div class="message-box ${type}">${text}</div>`; }
+      function clearAllViews() { DOMElements.dailyCardView.innerHTML = ''; DOMElements.tableContainer.innerHTML = ''; if (DOMElements.myPersonalCalendarContainer) DOMElements.myPersonalCalendarContainer.innerHTML = ''; if (DOMElements.colleagueCalendarContainer) DOMElements.colleagueCalendarContainer.innerHTML = ''; DOMElements.messageContainer.innerHTML = ''; DOMElements.formMessageContainer.innerHTML = ''; }
+
       function openNoteModal(year, month, day) { const dateKey = `${year}-${month + 1}-${day}`; state.currentNoteDate = dateKey; DOMElements.noteModalTitle.textContent = `${month + 1}/${day} 行程備註`; DOMElements.noteInput.value = state.notesData[dateKey] || ''; DOMElements.noteModal.style.display = 'flex'; DOMElements.noteInput.focus(); }
 
       // 🛡️ Safe Fetch：自動重試 + HTML 錯誤頁面偵測（解決 Unexpected token '<' 問題）
