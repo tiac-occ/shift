@@ -2554,6 +2554,26 @@
 
       function openNoteModal(year, month, day) { const dateKey = `${year}-${month + 1}-${day}`; state.currentNoteDate = dateKey; DOMElements.noteModalTitle.textContent = `${month + 1}/${day} 行程備註`; DOMElements.noteInput.value = state.notesData[dateKey] || ''; DOMElements.noteModal.style.display = 'flex'; DOMElements.noteInput.focus(); }
 
+      // 🛡️ Safe Fetch：自動重試 + HTML 錯誤頁面偵測（解決 Unexpected token '<' 問題）
+      async function safeFetch(url, retries = 2, delay = 1500) {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const resp = await fetch(url);
+            const text = await resp.text();
+            if (text.trim().startsWith('<')) {
+              throw new Error('伺服器暫時忙碌，正在自動重試...');
+            }
+            return JSON.parse(text);
+          } catch (err) {
+            if (attempt < retries) {
+              await new Promise(r => setTimeout(r, delay * (attempt + 1)));
+              continue;
+            }
+            throw err;
+          }
+        }
+      }
+
       // 📦 LocalStorage 快取管理（秒開體驗）
       const LS_PREFIX = 'occ-cache-';
 
