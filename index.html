@@ -5171,6 +5171,11 @@
           if (!data.schedule || !data.names) { throw new Error('資料格式不正確。'); } 
           state.cachedData[fileKey] = data; 
           saveToLocalStorage(fileKey, data);
+
+          // ★★★ 防競態檢查 1：主班表渲染前，確認使用者沒有切換到其他月份 ★★★
+          const currentKey1 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+          if (currentKey1 !== fileKey) return; 
+
           DOMElements.messageContainer.innerHTML = ''; 
           renderAllViews(data); 
           if (state.currentPage === 'matchZone') {
@@ -5181,6 +5186,10 @@
 
           // OJT 資料在背景到達後，補充刷新個人行事曆（加上 OJT 標記）
           ojtPromise.then(() => {
+            // ★★★ 防競態檢查 2：OJT 渲染前 ★★★
+            const currentKey2 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+            if (currentKey2 !== fileKey) return;
+
             renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
             if (state.selectedPerson) {
               renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
@@ -5188,7 +5197,11 @@
           }).catch(err => console.warn('OJT 資料補充載入失敗（不影響主班表）:', err));
 
         } catch (error) { 
-          showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`);
+          // ★★★ 防競態檢查 3：錯誤訊息顯示前 ★★★
+          const currentKeyErr = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+          if (currentKeyErr === fileKey) {
+            showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`);
+          }
         }
       }
 
@@ -5201,12 +5214,21 @@
           if (!data.error && data.schedule && data.names) {
             state.cachedData[fileKey] = data;
             saveToLocalStorage(fileKey, data);
-            renderAllViews(data);
-            if (state.currentPage === 'matchZone') { renderMatchZone(); }
-            else if (state.currentPage === 'ojtZone') { renderOJT(); }
+
+            // ★★★ 防競態檢查 4：背景更新主班表前 ★★★
+            const currentKey4 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+            if (currentKey4 === fileKey) {
+              renderAllViews(data);
+              if (state.currentPage === 'matchZone') { renderMatchZone(); }
+              else if (state.currentPage === 'ojtZone') { renderOJT(); }
+            }
           }
           if (month >= 6) {
             fetchOjtFromSheet(year, month).then(() => {
+              // ★★★ 防競態檢查 5：背景更新 OJT 渲染前 ★★★
+              const currentKey5 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+              if (currentKey5 !== fileKey) return;
+
               if (state.cachedData[fileKey]) {
                 renderPersonalCalendar(state.cachedData[fileKey].schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
                 if (state.selectedPerson) {
