@@ -2610,7 +2610,7 @@
 
         // 📦 嘗試從 LocalStorage 瞬間渲染（秒開體驗）
         const lsData = loadFromLocalStorage(fileKey);
-        if (lsData) {
+        if (lsData && lsData.schedule && Array.isArray(lsData.schedule)) {
           state.cachedData[fileKey] = lsData;
           renderAllViews(lsData);
           if (state.currentPage === 'matchZone') { renderMatchZone(); }
@@ -2889,6 +2889,8 @@
           });
 
           // 檢查 OJT 名單並覆蓋或標記對應日期的班表
+          const fileKey = `${year}-${month + 1}`;
+          const ojtData = state.cachedData[fileKey] ? (state.cachedData[fileKey].ojtData || []) : [];
           const ojtMonthLabel = `${year - 1911}/${String(month + 1).padStart(2, '0')}`;
           const targetOjtData = ojtData.find(d => d.monthLabel === ojtMonthLabel);
           if (targetOjtData) {
