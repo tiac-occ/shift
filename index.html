@@ -2382,7 +2382,7 @@
       const hiddenStaff = ["健凱"];
 
       function getDisplayName(firstName) { return staffNameMap[firstName] || firstName; }
-      const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '仲喬', '懋荃', '子翔', '家鋐', '佳玲', '映蓉', '敬舜', '天豪', '祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '宗勳', '凱程', '如蘭', '定國', '俊揚', '泉延', '曜華', '品蓉', '嘉珣', '晴涵', '瑀芯', '心慈', '李昇', '欣伶', '沛容', '處長', '副座', '科長', '貞瑜', '微儀', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '人鋒'];
+      const customNameSortOrder = ['明榮', '玉林', '玉茹', '章育', '琦祥', '義東', '文華', '政偉', '政昆', '偉揚', '彥平', '建昌', '保吉', '聲明', '志祥', '懋荃', '家鋐', '佳玲', '仲喬', '子翔', '映蓉', '敬舜', '天豪', '祈雯', '佑丞', '宥柔', '品妍', '伊筠', '映笛', '家琪', '昕珆', '詳崴', '凱程', '如蘭', '定國', '俊揚', '泉延', '曜華', '品蓉', '嘉珣', '晴涵', '瑀芯', '心慈', '李昇', '欣伶', '沛容', '處長', '副座', '科長', '人鋒', '怡君', '芃安', '璽元', '翌安', '暐喬', '莉詩', '宜霖', '貞瑜', '微儀', '宗勳'];
       // OJT 快取（用於個人行事曆判斷）
       const ojtCache = {};
 
@@ -2553,34 +2553,6 @@
       document.addEventListener('click', (e) => { if (!e.target.closest('#notiBell') && DOMElements.notiPanel.classList.contains('show')) { DOMElements.notiPanel.classList.remove('show'); } });
 
       function openNoteModal(year, month, day) { const dateKey = `${year}-${month + 1}-${day}`; state.currentNoteDate = dateKey; DOMElements.noteModalTitle.textContent = `${month + 1}/${day} 行程備註`; DOMElements.noteInput.value = state.notesData[dateKey] || ''; DOMElements.noteModal.style.display = 'flex'; DOMElements.noteInput.focus(); }
-      async function saveNote() { const userId = auth.currentUser.uid; const dateKey = state.currentNoteDate; const content = DOMElements.noteInput.value.trim(); const btn = DOMElements.btnSaveNote; if (!dateKey) return; btn.disabled = true; btn.textContent = '儲存中...'; try { if (content) { await db.collection('users').doc(userId).collection('notes').doc(dateKey).set({ content: content, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } else { await deleteNote(false); return; } DOMElements.noteModal.style.display = 'none'; } catch (error) { alert('儲存失敗：' + error.message); } finally { btn.disabled = false; btn.textContent = '儲存'; } }
-      async function deleteNote(showAlert = true) { const userId = auth.currentUser.uid; const dateKey = state.currentNoteDate; if (!dateKey) return; try { await db.collection('users').doc(userId).collection('notes').doc(dateKey).delete(); if (showAlert) DOMElements.noteModal.style.display = 'none'; } catch (error) { alert('刪除失敗：' + error.message); } }
-
-      DOMElements.userInfo.textContent = `${getDisplayName(state.loggedInUserName)}你好! :-)`;
-      DOMElements.myScheduleTitle.textContent = `${getDisplayName(state.loggedInUserName)} 的班表`;
-
-      function showMessage(type, text, container = DOMElements.messageContainer) { container.innerHTML = `<div class="message-box ${type}">${text}</div>`; }
-      function clearAllViews() { DOMElements.dailyCardView.innerHTML = ''; DOMElements.tableContainer.innerHTML = ''; if (DOMElements.myPersonalCalendarContainer) DOMElements.myPersonalCalendarContainer.innerHTML = ''; if (DOMElements.colleagueCalendarContainer) DOMElements.colleagueCalendarContainer.innerHTML = ''; DOMElements.messageContainer.innerHTML = ''; DOMElements.formMessageContainer.innerHTML = ''; }
-
-      // 🛡️ Safe Fetch：自動重試 + HTML 錯誤頁面偵測（解決 Unexpected token '<' 問題）
-      async function safeFetch(url, retries = 2, delay = 1500) {
-        for (let attempt = 0; attempt <= retries; attempt++) {
-          try {
-            const resp = await fetch(url);
-            const text = await resp.text();
-            if (text.trim().startsWith('<')) {
-              throw new Error('伺服器暫時忙碌，正在自動重試...');
-            }
-            return JSON.parse(text);
-          } catch (err) {
-            if (attempt < retries) {
-              await new Promise(r => setTimeout(r, delay * (attempt + 1)));
-              continue;
-            }
-            throw err;
-          }
-        }
-      }
 
       // 📦 LocalStorage 快取管理（秒開體驗）
       const LS_PREFIX = 'occ-cache-';
@@ -2639,6 +2611,11 @@
           if (!data.schedule || !data.names) { throw new Error('資料格式不正確。'); } 
           state.cachedData[fileKey] = data; 
           saveToLocalStorage(fileKey, data);
+
+          // ★ 防競態：若使用者已切換月份，僅快取不渲染
+          const currentKey1 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+          if (currentKey1 !== fileKey) return;
+
           DOMElements.messageContainer.innerHTML = ''; 
           renderAllViews(data); 
           if (state.currentPage === 'matchZone') {
@@ -2649,6 +2626,9 @@
 
           // OJT 資料在背景到達後，補充刷新個人行事曆（加上 OJT 標記）
           ojtPromise.then(() => {
+            // ★ 防競態：若使用者已切換月份，不渲染
+            const currentKey2 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+            if (currentKey2 !== fileKey) return;
             renderPersonalCalendar(data.schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
             if (state.selectedPerson) {
               renderPersonalCalendar(data.schedule, state.selectedPerson, DOMElements.colleagueCalendarContainer);
@@ -2656,7 +2636,11 @@
           }).catch(err => console.warn('OJT 資料補充載入失敗（不影響主班表）:', err));
 
         } catch (error) { 
-          showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`); 
+          // ★ 防競態：錯誤訊息也需檢查，避免舊月份的錯誤顯示在新月份畫面
+          const currentKeyErr = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+          if (currentKeyErr === fileKey) {
+            showMessage('error', `無法載入 ${month} 月班表！<br>${error.message}`);
+          }
         }
       }
 
@@ -2668,12 +2652,20 @@
           if (!data.error && data.schedule && data.names) {
             state.cachedData[fileKey] = data;
             saveToLocalStorage(fileKey, data);
-            renderAllViews(data);
-            if (state.currentPage === 'matchZone') { renderMatchZone(); }
-            else if (state.currentPage === 'ojtZone') { renderOJT(); }
+
+            // ★ 防競態：若使用者已切換月份，僅快取不渲染
+            const currentKey3 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+            if (currentKey3 === fileKey) {
+              renderAllViews(data);
+              if (state.currentPage === 'matchZone') { renderMatchZone(); }
+              else if (state.currentPage === 'ojtZone') { renderOJT(); }
+            }
           }
           if (month >= 6) {
             fetchOjtFromSheet(year, month).then(() => {
+              // ★ 防競態：OJT 回來時再次檢查
+              const currentKey4 = `${state.currentDate.getFullYear()}-${state.currentDate.getMonth() + 1}`;
+              if (currentKey4 !== fileKey) return;
               if (state.cachedData[fileKey]) {
                 renderPersonalCalendar(state.cachedData[fileKey].schedule, state.loggedInUserName, DOMElements.myPersonalCalendarContainer);
                 if (state.selectedPerson) {
