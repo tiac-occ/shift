@@ -4896,6 +4896,33 @@
       }
     ];
 
+    // ★★★ 特例：廖琳瑋 見習班表（硬編碼於前端，不動資料庫） ★★★
+    const internSchedule = [
+      { year: 2026, month: 10, day: 6,  terminal: 'T2' },
+      { year: 2026, month: 10, day: 13, terminal: 'T2' },
+      { year: 2026, month: 10, day: 20, terminal: 'T2' },
+      { year: 2026, month: 10, day: 27, terminal: 'T2' },
+      { year: 2026, month: 11, day: 3,  terminal: 'T1' },
+      { year: 2026, month: 11, day: 10, terminal: 'T1' },
+      { year: 2026, month: 11, day: 17, terminal: 'T1' },
+      { year: 2026, month: 11, day: 24, terminal: 'T1' },
+      { year: 2026, month: 12, day: 1,  terminal: 'T2' },
+      { year: 2026, month: 12, day: 8,  terminal: 'T2' },
+      { year: 2026, month: 12, day: 15, terminal: 'T2' },
+      { year: 2026, month: 12, day: 22, terminal: 'T2' },
+      { year: 2026, month: 12, day: 29, terminal: 'T1' },
+      { year: 2027, month: 1,  day: 5,  terminal: 'T1' },
+      { year: 2027, month: 1,  day: 12, terminal: 'T1' },
+      { year: 2027, month: 1,  day: 19, terminal: 'T1' }
+    ];
+    const internName = '廖琳瑋';
+    const internFirstName = '琳瑋';
+
+    // 工具函式：取得當前月份的見習日期清單
+    function getInternDaysForMonth(year, month) {
+      return internSchedule.filter(s => s.year === year && s.month === month);
+    }
+
     function initializeApp(user) {
       const state = { currentView: 'personalCalendarView', currentPage: 'home', currentDate: new Date(), cachedData: {}, selectedPerson: '', highlightPerson1: '', highlightPerson2: '', loggedInUserName: '', hasScrolledToToday: false, notesData: {}, currentNoteDate: null, unreadNotiDocs: [], renderedViews: new Set() };
 
@@ -4912,7 +4939,7 @@
 '1p-r31sG8EkrwvzEWCj-MlLjEqR6GHcVvx_jScpdBIPI', '2026-8': 
 '1HEzJOhtACpp--pPKA7WQs1nbJDkfm4Z7i4YGbL26I84', '2026-9': '1giTDJbwJ92ejMxF1imiiWct6C5zv8FxMrQSJXHZHiEk', '2026-10': 
 '1w2ly4-HVJepGngObNxbdXplWAi2-q9QmutnhZM_1TXk', '2026-11': '1XtaMMmKd80LCBHsWZW-q16gX0rQzy3HNgxCf-KzkGEg', '2026-12': '1Tn658UsCaWlGA2LjvO5wg4Dx0dnd4uQTXZUdSFlwsbo'};
-      const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君", "貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒", "俊揚": "黃俊揚", "泉延": "林泉延", "曜華": "游曜華", "品蓉": "陳品蓉", "嘉珣": "張嘉珣", "如蘭": "李如蘭", "晴涵": "張晴涵", "瑀芯": "張瑀芯", "微儀": "陳微儀", "心慈": "徐心慈", "李昇": "李昇", "欣伶": "俞欣伶", "沛容": "李沛容", "T1公務帳號": "T1公務帳號", "T2公務帳號": "T2公務帳號" };
+      const staffNameMap = { "宗勳": "謝宗勳", "處長": "陳慶隆 處長", "副座": "黃時彥 副座", "科長": "簡其正 科長", "玉茹": "林玉茹", "玉林": "范玉林", "明榮": "彭明榮", "章育": "戴章育", "義東": "馮義東", "琦祥": "蔡琦祥", "建昌": "劉建昌", "保吉": "賴保吉", "文華": "胡文華", "聲明": "余聲明", "政偉": "許政偉", "政昆": "許政昆", "彥平": "戴彥平", "志祥": "李志祥", "子翔": "陳子翔", "祈雯": "陳祈雯", "宥柔": "沈宥柔", "映蓉": "陳映蓉", "敬舜": "黃敬舜", "仲喬": "虞仲喬", "佑丞": "簡佑丞", "凱程": "詹凱程", "昕珆": "游昕珆", "品妍": "湯品妍", "詳崴": "林詳崴", "家琪": "陳家琪", "家鋐": "趙家鋐", "伊筠": "湯伊筠", "映笛": "黃映笛", "懋荃": "洪懋荃", "偉揚": "徐偉揚", "佳玲": "謝佳玲", "天豪": "許天豪", "怡君": "林怡君", "貞瑜": "陳貞瑜", "璽元": "陳璽元", "翌安": "彭翌安", "暐喬": "林暐喬", "莉詩": "許莉詩", "宜霖": "蔡宜霖", "芃安": "馬芃安", "定國": "周定國", "人鋒": "王人鋒", "俊揚": "黃俊揚", "泉延": "林泉延", "曜華": "游曜華", "品蓉": "陳品蓉", "嘉珣": "張嘉珣", "如蘭": "李如蘭", "晴涵": "張晴涵", "瑀芯": "張瑀芯", "微儀": "陳微儀", "心慈": "徐心慈", "李昇": "李昇", "欣伶": "俞欣伶", "沛容": "李沛容", "琳瑋": "廖琳瑋", "T1公務帳號": "T1公務帳號", "T2公務帳號": "T2公務帳號" };
 
       // ★ 已全面開放：清空隱藏人員名單
       const hiddenStaff = ["健凱"];
@@ -5343,6 +5370,24 @@
             }
           });
 
+          // ★★★ 特例：廖琳瑋見習注入每日值班小卡 ★★★
+          const internEntry = getInternDaysForMonth(viewYear, viewMonth + 1).find(s => s.day === dayData.day);
+          if (internEntry) {
+            const isInternMe = (state.loggedInUserName === internFirstName);
+            const internAssignmentHTML = `
+            <div class="assignment day-shift trainee-shift">
+              <div class="position">見習</div>
+              <div class="name">${internName}</div>
+            </div>`;
+            if (internEntry.terminal === 'T2') {
+              groups.group1.traineeHtml += internAssignmentHTML;
+              if (isInternMe) groups.group1.hasMe = true;
+            } else {
+              groups.group3.traineeHtml += internAssignmentHTML;
+              if (isInternMe) groups.group3.hasMe = true;
+            }
+          }
+
           let detailsHTML = '';
           Object.values(groups).forEach(group => {
             if (group.html || group.traineeHtml) {
@@ -5452,6 +5497,23 @@
                     };
                   }
                 }
+              }
+            });
+          }
+
+          // ★★★ 特例：廖琳瑋見習班表注入個人行事曆 ★★★
+          const pNameForIntern = getDisplayName(personName);
+          if (personName === internFirstName || pNameForIntern === internName) {
+            const internDays = getInternDaysForMonth(year, month + 1);
+            internDays.forEach(entry => {
+              if (!personalShifts[entry.day]) {
+                personalShifts[entry.day] = {
+                  position: '見習',
+                  type: 'DAY',
+                  fullLabel: `${entry.terminal} 見習 (日)`,
+                  backendValue: '見習',
+                  isIntern: true
+                };
               }
             });
           }
